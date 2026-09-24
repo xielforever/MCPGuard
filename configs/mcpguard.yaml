@@ -1,0 +1,34 @@
+server:
+  host: "0.0.0.0"
+  port: 8080
+
+database:
+  driver: "sqlite3"
+  dsn: "mcpguard.db"
+
+proxy:
+  mode: "stdio"
+  backend_command: "node"
+  backend_args:
+    - "path/to/actual/mcp/server.js"
+
+auth:
+  code_length: 6
+  code_expiry: 5m
+  max_attempts: 3
+
+notify:
+  provider: "feishu" # feishu, telegram, slack, email
+  webhook_url: ""
+  api_keys:
+    token: ""
+
+rules:
+  - id: "rule-1"
+    name: "Block Shutdown"
+    description: "Prevent system shutdown"
+    pattern: "shutdown|reboot"
+    tool_name: "execute_command"
+    action: "block"
+    enabled: true
+    priority: 100
