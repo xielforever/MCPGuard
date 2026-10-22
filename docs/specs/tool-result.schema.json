@@ -1,0 +1,589 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcpguard.example.invalid/specs/tool-result.schema.json",
+  "title": "MCPGuard business tool structured result v1",
+  "description": "Design contract only. Validates structuredContent, not the MCP wire wrapper or authorization. No remote schema retrieval.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/executionResult"
+    },
+    {
+      "$ref": "#/$defs/deferredActionResult"
+    }
+  ],
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "actionState": {
+      "enum": [
+        "PENDING_APPROVAL",
+        "READY",
+        "EXECUTING",
+        "SUCCEEDED",
+        "FAILED",
+        "DENIED",
+        "CANCELLED",
+        "EXPIRED",
+        "OUTCOME_UNKNOWN"
+      ]
+    },
+    "requestStatus": {
+      "enum": [
+        "RUNNING",
+        "SUCCEEDED",
+        "FAILED",
+        "CANCELLED",
+        "OUTCOME_UNKNOWN"
+      ]
+    },
+    "dispatchState": {
+      "enum": [
+        "NOT_DISPATCHED",
+        "INTENT_RECORDED",
+        "DISPATCHED",
+        "DISPATCH_UNKNOWN"
+      ]
+    },
+    "sideEffectStatus": {
+      "enum": [
+        "NONE",
+        "APPLIED",
+        "ROLLED_BACK",
+        "PARTIAL",
+        "UNKNOWN"
+      ]
+    },
+    "safeError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "category",
+        "safeMessage",
+        "retryDisposition"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{1,63}$"
+        },
+        "category": {
+          "enum": [
+            "INPUT",
+            "AUTHORIZATION",
+            "POLICY",
+            "APPROVAL",
+            "EXECUTION",
+            "DEPENDENCY",
+            "CANCELLED",
+            "CONFLICT",
+            "OUTCOME_UNKNOWN"
+          ]
+        },
+        "safeMessage": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "nativeCode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 128
+        },
+        "retryDisposition": {
+          "enum": [
+            "NEVER",
+            "QUERY_STATUS",
+            "RECONCILE",
+            "MANUAL_NEW_ACTION"
+          ]
+        }
+      }
+    },
+    "executionResult": {
+      "title": "ExecutionResult",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "actionId",
+        "attemptId",
+        "executionId",
+        "requestStatus",
+        "dispatchState",
+        "sideEffectStatus",
+        "data",
+        "error",
+        "metadata"
+      ],
+      "properties": {
+        "kind": {
+          "const": "FINAL"
+        },
+        "actionId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attemptId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "executionId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "requestStatus": {
+          "enum": [
+            "SUCCEEDED",
+            "FAILED",
+            "CANCELLED",
+            "OUTCOME_UNKNOWN"
+          ]
+        },
+        "dispatchState": {
+          "enum": [
+            "NOT_DISPATCHED",
+            "DISPATCHED",
+            "DISPATCH_UNKNOWN"
+          ]
+        },
+        "sideEffectStatus": {
+          "$ref": "#/$defs/sideEffectStatus"
+        },
+        "data": true,
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/safeError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "encoding": {
+              "enum": [
+                "utf-8",
+                "base64",
+                "json"
+              ]
+            },
+            "truncated": {
+              "type": "boolean"
+            },
+            "observedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "resultExpiresAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "evidenceRef": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "actionId": {
+                "const": null
+              }
+            },
+            "required": [
+              "actionId"
+            ]
+          },
+          "then": {
+            "properties": {
+              "attemptId": {
+                "type": "null"
+              },
+              "executionId": {
+                "type": "null"
+              },
+              "requestStatus": {
+                "const": "FAILED"
+              },
+              "dispatchState": {
+                "const": "NOT_DISPATCHED"
+              },
+              "sideEffectStatus": {
+                "const": "NONE"
+              },
+              "data": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "attemptId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "executionId": {
+                "const": null
+              }
+            },
+            "required": [
+              "executionId"
+            ]
+          },
+          "then": {
+            "properties": {
+              "dispatchState": {
+                "const": "NOT_DISPATCHED"
+              },
+              "sideEffectStatus": {
+                "const": "NONE"
+              },
+              "requestStatus": {
+                "enum": [
+                  "FAILED",
+                  "CANCELLED"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "dispatchState": {
+                "const": "NOT_DISPATCHED"
+              }
+            },
+            "required": [
+              "dispatchState"
+            ]
+          },
+          "then": {
+            "properties": {
+              "sideEffectStatus": {
+                "const": "NONE"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "dispatchState": {
+                "const": "DISPATCH_UNKNOWN"
+              }
+            },
+            "required": [
+              "dispatchState"
+            ]
+          },
+          "then": {
+            "properties": {
+              "executionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "requestStatus": {
+                "const": "OUTCOME_UNKNOWN"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "dispatchState": {
+                "const": "DISPATCHED"
+              }
+            },
+            "required": [
+              "dispatchState"
+            ]
+          },
+          "then": {
+            "properties": {
+              "executionId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "requestStatus": {
+                "const": "SUCCEEDED"
+              }
+            },
+            "required": [
+              "requestStatus"
+            ]
+          },
+          "then": {
+            "properties": {
+              "executionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "dispatchState": {
+                "const": "DISPATCHED"
+              },
+              "sideEffectStatus": {
+                "enum": [
+                  "NONE",
+                  "APPLIED"
+                ]
+              },
+              "error": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "requestStatus": {
+                "enum": [
+                  "FAILED",
+                  "OUTCOME_UNKNOWN"
+                ]
+              }
+            },
+            "required": [
+              "requestStatus"
+            ]
+          },
+          "then": {
+            "properties": {
+              "error": {
+                "$ref": "#/$defs/safeError"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "requestStatus": {
+                "const": "OUTCOME_UNKNOWN"
+              }
+            },
+            "required": [
+              "requestStatus"
+            ]
+          },
+          "then": {
+            "properties": {
+              "executionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "dispatchState": {
+                "enum": [
+                  "DISPATCHED",
+                  "DISPATCH_UNKNOWN"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "sideEffectStatus": {
+                "enum": [
+                  "APPLIED",
+                  "ROLLED_BACK",
+                  "PARTIAL"
+                ]
+              }
+            },
+            "required": [
+              "sideEffectStatus"
+            ]
+          },
+          "then": {
+            "properties": {
+              "executionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "dispatchState": {
+                "const": "DISPATCHED"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "requestStatus": {
+                "enum": [
+                  "FAILED",
+                  "CANCELLED",
+                  "OUTCOME_UNKNOWN"
+                ]
+              }
+            },
+            "required": [
+              "requestStatus"
+            ]
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "deferredActionResult": {
+      "title": "DeferredActionResult",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "actionId",
+        "attemptId",
+        "state",
+        "executionId",
+        "dispatchState",
+        "sideEffectStatus",
+        "approvalUrl",
+        "nextActions",
+        "expiresAt"
+      ],
+      "properties": {
+        "kind": {
+          "const": "DEFERRED"
+        },
+        "actionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "attemptId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "state": {
+          "enum": [
+            "PENDING_APPROVAL",
+            "READY"
+          ]
+        },
+        "executionId": {
+          "type": "null"
+        },
+        "dispatchState": {
+          "const": "NOT_DISPATCHED"
+        },
+        "sideEffectStatus": {
+          "const": "NONE"
+        },
+        "approvalUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://",
+          "maxLength": 2048
+        },
+        "nextActions": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "STATUS",
+              "RESUME",
+              "CANCEL"
+            ]
+          }
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "PENDING_APPROVAL"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "nextActions": {
+                "not": {
+                  "contains": {
+                    "const": "RESUME"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "type": "object"
+}

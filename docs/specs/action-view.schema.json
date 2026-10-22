@@ -1,0 +1,635 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcpguard.example.invalid/specs/action-view.schema.json",
+  "title": "MCPGuard authorized ActionView v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "actionId",
+    "state",
+    "authorizationSource",
+    "interactionMode",
+    "revision",
+    "planHash",
+    "toolName",
+    "resourceId",
+    "createdAt",
+    "expiresAt",
+    "executionId",
+    "dispatchState",
+    "requestStatus",
+    "sideEffectStatus",
+    "availableActions"
+  ],
+  "properties": {
+    "actionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "state": {
+      "$ref": "tool-result.schema.json#/$defs/actionState"
+    },
+    "authorizationSource": {
+      "enum": [
+        null,
+        "POLICY",
+        "HUMAN"
+      ]
+    },
+    "interactionMode": {
+      "enum": [
+        "BOUNDED_WAIT",
+        "CONTROL_FLOW",
+        "MRTR"
+      ]
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "planHash": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "toolName": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+    },
+    "resourceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "requesterId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "requesterDisplayName": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "resourceDisplayName": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "executionId": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "dispatchState": {
+      "$ref": "tool-result.schema.json#/$defs/dispatchState"
+    },
+    "requestStatus": {
+      "anyOf": [
+        {
+          "$ref": "tool-result.schema.json#/$defs/requestStatus"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sideEffectStatus": {
+      "$ref": "tool-result.schema.json#/$defs/sideEffectStatus"
+    },
+    "availableActions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "STATUS",
+          "RESUME",
+          "CANCEL",
+          "APPROVE",
+          "REJECT",
+          "RECONCILE",
+          "VIEW_RESULT"
+        ]
+      }
+    },
+    "terminalReason": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 256
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "self": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        "approval": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "PENDING_APPROVAL",
+              "READY",
+              "DENIED",
+              "EXPIRED"
+            ]
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "executionId": {
+            "type": "null"
+          },
+          "dispatchState": {
+            "const": "NOT_DISPATCHED"
+          },
+          "sideEffectStatus": {
+            "const": "NONE"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "PENDING_APPROVAL",
+              "READY"
+            ]
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "requestStatus": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "PENDING_APPROVAL"
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "authorizationSource": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "READY"
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "authorizationSource": {
+            "enum": [
+              "POLICY",
+              "HUMAN"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "EXECUTING"
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "executionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dispatchState": {
+            "enum": [
+              "INTENT_RECORDED",
+              "DISPATCHED"
+            ]
+          },
+          "requestStatus": {
+            "const": "RUNNING"
+          },
+          "authorizationSource": {
+            "enum": [
+              "POLICY",
+              "HUMAN"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "SUCCEEDED"
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "executionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestStatus": {
+            "const": "SUCCEEDED"
+          },
+          "dispatchState": {
+            "const": "DISPATCHED"
+          },
+          "sideEffectStatus": {
+            "enum": [
+              "NONE",
+              "APPLIED"
+            ]
+          },
+          "authorizationSource": {
+            "enum": [
+              "POLICY",
+              "HUMAN"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "OUTCOME_UNKNOWN"
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "executionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestStatus": {
+            "const": "OUTCOME_UNKNOWN"
+          },
+          "dispatchState": {
+            "enum": [
+              "DISPATCH_UNKNOWN",
+              "DISPATCHED"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "FAILED",
+              "DENIED",
+              "EXPIRED"
+            ]
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "requestStatus": {
+            "const": "FAILED"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "CANCELLED"
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "requestStatus": {
+            "const": "CANCELLED"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "executionId": {
+            "const": null
+          }
+        },
+        "required": [
+          "executionId"
+        ]
+      },
+      "then": {
+        "properties": {
+          "dispatchState": {
+            "const": "NOT_DISPATCHED"
+          },
+          "sideEffectStatus": {
+            "const": "NONE"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "dispatchState": {
+            "const": "DISPATCH_UNKNOWN"
+          }
+        },
+        "required": [
+          "dispatchState"
+        ]
+      },
+      "then": {
+        "properties": {
+          "state": {
+            "const": "OUTCOME_UNKNOWN"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "dispatchState": {
+            "const": "NOT_DISPATCHED"
+          }
+        },
+        "required": [
+          "dispatchState"
+        ]
+      },
+      "then": {
+        "properties": {
+          "sideEffectStatus": {
+            "const": "NONE"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "sideEffectStatus": {
+            "enum": [
+              "APPLIED",
+              "PARTIAL",
+              "ROLLED_BACK"
+            ]
+          }
+        },
+        "required": [
+          "sideEffectStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "executionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dispatchState": {
+            "const": "DISPATCHED"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "availableActions": {
+            "contains": {
+              "const": "RESUME"
+            }
+          }
+        },
+        "required": [
+          "availableActions"
+        ]
+      },
+      "then": {
+        "properties": {
+          "state": {
+            "const": "READY"
+          },
+          "interactionMode": {
+            "const": "CONTROL_FLOW"
+          },
+          "executionId": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "anyOf": [
+          {
+            "properties": {
+              "availableActions": {
+                "contains": {
+                  "const": "APPROVE"
+                }
+              }
+            },
+            "required": [
+              "availableActions"
+            ]
+          },
+          {
+            "properties": {
+              "availableActions": {
+                "contains": {
+                  "const": "REJECT"
+                }
+              }
+            },
+            "required": [
+              "availableActions"
+            ]
+          }
+        ]
+      },
+      "then": {
+        "properties": {
+          "state": {
+            "enum": [
+              "PENDING_APPROVAL",
+              "READY"
+            ]
+          },
+          "executionId": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "availableActions": {
+            "contains": {
+              "const": "CANCEL"
+            }
+          }
+        },
+        "required": [
+          "availableActions"
+        ]
+      },
+      "then": {
+        "properties": {
+          "state": {
+            "enum": [
+              "PENDING_APPROVAL",
+              "READY",
+              "EXECUTING"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "availableActions": {
+            "contains": {
+              "const": "RECONCILE"
+            }
+          }
+        },
+        "required": [
+          "availableActions"
+        ]
+      },
+      "then": {
+        "anyOf": [
+          {
+            "properties": {
+              "state": {
+                "const": "OUTCOME_UNKNOWN"
+              }
+            }
+          },
+          {
+            "properties": {
+              "state": {
+                "const": "FAILED"
+              },
+              "sideEffectStatus": {
+                "const": "UNKNOWN"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "availableActions": {
+            "contains": {
+              "const": "VIEW_RESULT"
+            }
+          }
+        },
+        "required": [
+          "availableActions"
+        ]
+      },
+      "then": {
+        "properties": {
+          "executionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "enum": [
+              "SUCCEEDED",
+              "FAILED",
+              "CANCELLED",
+              "OUTCOME_UNKNOWN"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

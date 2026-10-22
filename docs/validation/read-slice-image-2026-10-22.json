@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "image": "sha256:c43a3afdc15180002f8f11294d198f8978383356dd927dae2160cb1cccfe9f49",
+  "user": "65532",
+  "checks": [
+    "nonroot image",
+    "real native PG read in two scopes",
+    "unauthorized tool directory filtered"
+  ],
+  "network": "Linux host network for local fixture only"
+}

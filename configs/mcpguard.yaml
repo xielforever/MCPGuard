@@ -32,3 +32,5 @@ rules:
     action: "block"
     enabled: true
     priority: 100
+# Legacy scaffold configuration. The read-slice runtime does not load this file.
+# See docs/read-slice.md for MCPGUARD_* environment configuration.

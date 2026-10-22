@@ -1,0 +1,877 @@
+openapi: 3.1.0
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+info:
+  title: MCPGuard management API design
+  version: 0.1.0-draft
+  description: |
+    拟议管理 API 核心子集，尚未实现或完成兼容验证。
+    本 API 服务控制台与管理客户端；MCP 使用独立的 /mcp 入口。
+    浏览器管理会话不能替代 MCP access token；本规范不选择企业 IdP。
+    HTTP 200 表示查询或命令成功，不证明原生操作已成功或无副作用。
+servers:
+  - url: https://mcpguard.example.invalid/api/v1
+    description: 示例地址，不是已部署服务
+security:
+  - BrowserSession: []
+tags:
+  - {name: Identity}
+  - {name: Resources}
+  - {name: Catalog}
+  - {name: Actions}
+  - {name: Approvals}
+  - {name: Executions}
+paths:
+  /me:
+    get:
+      operationId: getCurrentPrincipal
+      tags: [Identity]
+      summary: 读取当前管理主体
+      description: 稳定身份来自已验证会话；不接受客户端自报角色或审批人。
+      responses:
+        '200':
+          description: 当前主体与其管理能力
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PrincipalView'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /resources:
+    get:
+      operationId: listResources
+      tags: [Resources]
+      summary: 按对象权限列举资源
+      parameters:
+        - {$ref: '#/components/parameters/Cursor'}
+        - {$ref: '#/components/parameters/PageSize'}
+      responses:
+        '200':
+          description: 权限过滤后的有界列表；cursor 不授予权限
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ResourcePage'}
+        '400': {$ref: '#/components/responses/InvalidRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '429': {$ref: '#/components/responses/RateLimited'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+    post:
+      operationId: createResource
+      tags: [Resources]
+      summary: 注册停用状态的受控资源
+      description: |
+        endpointConfigRef 指向服务端已登记的版本化端点配置，credentialRef 指向凭据提供方。
+        本子集不包含端点配置和密钥托管的完整管理接口；引用须先通过配置导入或受控管理流程建立。
+        禁止将明文密码、员工 MCP token 或未登记目标写入这些引用字段。
+      parameters:
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+        - {$ref: '#/components/parameters/CsrfToken'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ResourceCreate'}
+      responses:
+        '201':
+          description: 资源与变更审计已在同一本地事务提交
+          headers:
+            Location: {$ref: '#/components/headers/Location'}
+            ETag: {$ref: '#/components/headers/ETag'}
+            Idempotency-Expires-At: {$ref: '#/components/headers/IdempotencyExpiresAt'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ResourceView'}
+        '400': {$ref: '#/components/responses/InvalidRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/ValidationFailed'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /resources/{resourceId}:
+    parameters:
+      - {$ref: '#/components/parameters/ResourceId'}
+    get:
+      operationId: getResource
+      tags: [Resources]
+      summary: 读取资源及其当前版本
+      responses:
+        '200':
+          description: 受权资源视图，凭据只有引用
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ResourceView'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+    patch:
+      operationId: updateResource
+      tags: [Resources]
+      summary: 条件修改资源或停启状态
+      description: |
+        服务端按字段允许集处理局部更新；kind 与 resourceId 不可变。
+        版本比较、当前版本切换、auth_epoch 和审计同一事务。
+        影响批准语义的变更使旧 Action 失效，不替换其冻结计划。
+      parameters:
+        - {$ref: '#/components/parameters/IfMatch'}
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+        - {$ref: '#/components/parameters/CsrfToken'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ResourcePatch'}
+      responses:
+        '200':
+          description: 提交时的资源新版本快照
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+            Idempotency-Expires-At: {$ref: '#/components/headers/IdempotencyExpiresAt'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ResourceView'}
+        '400': {$ref: '#/components/responses/InvalidRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '412': {$ref: '#/components/responses/PreconditionFailed'}
+        '422': {$ref: '#/components/responses/ValidationFailed'}
+        '428': {$ref: '#/components/responses/PreconditionRequired'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /tools/{toolId}:
+    parameters:
+      - {$ref: '#/components/parameters/ToolId'}
+    get:
+      operationId: getToolHead
+      tags: [Catalog]
+      summary: 读取工具当前发布指针与管理版本
+      responses:
+        '200':
+          description: 当前工具 head；供后续 If-Match 使用
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ToolHead'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /tools/{toolId}/versions:
+    parameters:
+      - {$ref: '#/components/parameters/ToolId'}
+    post:
+      operationId: createToolVersion
+      tags: [Catalog]
+      summary: 添加不可变候选工具版本
+      description: |
+        definition 必须通过独立工具 Schema 及资源、模板、数据范围等语义校验。
+        路径工具与 definition.name 不匹配或版本重用时拒绝；新增版本不自动发布。
+      parameters:
+        - {$ref: '#/components/parameters/IfMatch'}
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+        - {$ref: '#/components/parameters/CsrfToken'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ToolVersionCreate'}
+      responses:
+        '201':
+          description: 候选版本已追加；tool head revision 已推进，发布版本仍不变
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+            Idempotency-Expires-At: {$ref: '#/components/headers/IdempotencyExpiresAt'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ToolVersionView'}
+        '400': {$ref: '#/components/responses/InvalidRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '412': {$ref: '#/components/responses/PreconditionFailed'}
+        '422': {$ref: '#/components/responses/ValidationFailed'}
+        '428': {$ref: '#/components/responses/PreconditionRequired'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /tools/{toolId}/publish:
+    parameters:
+      - {$ref: '#/components/parameters/ToolId'}
+    post:
+      operationId: publishToolVersion
+      tags: [Catalog]
+      summary: 原子切换已审核工具版本
+      description: |
+        同事务验证发布资格、版本与资源绑定，切换指针、推进 auth_epoch 并记录审计。
+        此命令不等于 ChatGPT workspace 工具快照已经 refresh；平台刷新另行验收。
+      parameters:
+        - {$ref: '#/components/parameters/IfMatch'}
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+        - {$ref: '#/components/parameters/CsrfToken'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ToolPublish'}
+      responses:
+        '200':
+          description: 当前发布指针的新快照
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+            Idempotency-Expires-At: {$ref: '#/components/headers/IdempotencyExpiresAt'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ToolHead'}
+        '400': {$ref: '#/components/responses/InvalidRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '412': {$ref: '#/components/responses/PreconditionFailed'}
+        '422': {$ref: '#/components/responses/ValidationFailed'}
+        '428': {$ref: '#/components/responses/PreconditionRequired'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /actions:
+    get:
+      operationId: listActions
+      tags: [Actions]
+      summary: 列举本人或明确受权范围的请求
+      parameters:
+        - {$ref: '#/components/parameters/Cursor'}
+        - {$ref: '#/components/parameters/PageSize'}
+        - name: state
+          in: query
+          schema: {$ref: '#/components/schemas/ActionState'}
+      responses:
+        '200':
+          description: 当前授权范围的有界 Action 列表
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ActionPage'}
+        '400': {$ref: '#/components/responses/InvalidRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '429': {$ref: '#/components/responses/RateLimited'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /actions/{actionId}:
+    parameters:
+      - {$ref: '#/components/parameters/ActionId'}
+    get:
+      operationId: getAction
+      tags: [Actions]
+      summary: 读取当前请求状态
+      description: |
+        每次查询重新检查对象权限；ID 不是认证凭据。
+        HTTP 200 与 READY 都不表示原生操作成功，OUTCOME_UNKNOWN 也是可查询的真实状态。
+      responses:
+        '200':
+          description: 当前 ActionView；不包含计划明文或凭据
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ActionView'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /actions/{actionId}/cancel:
+    parameters:
+      - {$ref: '#/components/parameters/ActionId'}
+    post:
+      operationId: cancelAction
+      tags: [Actions]
+      summary: 终止未领取 Action 或请求取消在途执行
+      description: |
+        未领取时以行锁/CAS 转 CANCELLED，返回200。
+        已领取时记录取消意图，返回202；不表示后端回滚、停止或尚未执行。
+        重放同幂等命令返回提交时快照，当前事实需重新 GET。
+      parameters:
+        - {$ref: '#/components/parameters/IfMatch'}
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+        - {$ref: '#/components/parameters/CsrfToken'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ReasonCommand'}
+      responses:
+        '200':
+          description: 未领取路径已终止，或返回兼容的既有终态
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+            Idempotency-Expires-At: {$ref: '#/components/headers/IdempotencyExpiresAt'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ActionView'}
+        '202':
+          description: 仅确认取消意图已持久化；原生副作用仍据实查询
+          headers:
+            Location: {$ref: '#/components/headers/Location'}
+            ETag: {$ref: '#/components/headers/ETag'}
+            Idempotency-Expires-At: {$ref: '#/components/headers/IdempotencyExpiresAt'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ActionView'}
+        '400': {$ref: '#/components/responses/InvalidRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '412': {$ref: '#/components/responses/PreconditionFailed'}
+        '428': {$ref: '#/components/responses/PreconditionRequired'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /approvals:
+    get:
+      operationId: listApprovals
+      tags: [Approvals]
+      summary: 列举当前合格审批者可处理的请求
+      description: |
+        审批资源是 Action 的受控视图，approvalId 等于 actionId。
+        不是全部员工请求列表，审批展示权限不自动授予原生业务数据权限。
+      parameters:
+        - {$ref: '#/components/parameters/Cursor'}
+        - {$ref: '#/components/parameters/PageSize'}
+      responses:
+        '200':
+          description: 当前主体可见的审批列表
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ApprovalPage'}
+        '400': {$ref: '#/components/responses/InvalidRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '429': {$ref: '#/components/responses/RateLimited'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /approvals/{approvalId}:
+    parameters:
+      - {$ref: '#/components/parameters/ApprovalId'}
+    get:
+      operationId: getApprovalDetail
+      tags: [Approvals]
+      summary: 在独立展示权限下读取冻结审批对象
+      description: |
+        与业务调用、结果读取权限分离；返回与Action.planHash绑定的真实目标、参数和约束。
+        不返回凭据值或nonce。缺少查看审批相关敏感字段的权限时不授予盲批，返回403或隐藏对象。
+        后续决定必须带本次Action revision和相同planHash，不能向决定接口提交替代plan。
+      responses:
+        '200':
+          description: 完整受权审批视图；ETag对应Action revision
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ApprovalDetail'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /approvals/{approvalId}/decisions:
+    parameters:
+      - {$ref: '#/components/parameters/ApprovalId'}
+    post:
+      operationId: decideApproval
+      tags: [Approvals]
+      summary: 对冻结计划提交可信人类决定
+      description: |
+        服务端从当前会话取得审批主体，核验当前资格与操作人不同。
+        基础资源准入、DENY、到期、取消或已消费资格不能被批准覆盖。
+        If-Match 与 actionRevision 指向同一 Action 版本，planHash 绑定完整冻结计划。
+        决定只写状态和审计；批准后须由有效等待、MRTR或CONTROL_FLOW resume继续，回调不派发。
+      parameters:
+        - {$ref: '#/components/parameters/IfMatch'}
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+        - {$ref: '#/components/parameters/CsrfToken'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ApprovalDecisionCreate'}
+      responses:
+        '201':
+          description: 新决定已提交，响应为提交时快照，不承诺业务已经执行
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+            Idempotency-Expires-At: {$ref: '#/components/headers/IdempotencyExpiresAt'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ApprovalDecisionView'}
+        '400': {$ref: '#/components/responses/InvalidRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '412': {$ref: '#/components/responses/PreconditionFailed'}
+        '422': {$ref: '#/components/responses/ValidationFailed'}
+        '428': {$ref: '#/components/responses/PreconditionRequired'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /executions/{executionId}:
+    parameters:
+      - {$ref: '#/components/parameters/ExecutionId'}
+    get:
+      operationId: getExecution
+      tags: [Executions]
+      summary: 读取执行跟踪、受控结果和核对事实
+      description: |
+        Execution 存在只证明执行权已领取及意图已记录，不证明原生请求发出或提交。
+        结果查询不重派；权限或保留策略不允许时省略结果内容，不能因此改写副作用事实。
+      responses:
+        '200':
+          description: 执行当前视图；未知结果不转换成404或成功写入
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ExecutionView'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /executions/{executionId}/reconciliation-requests:
+    parameters:
+      - {$ref: '#/components/parameters/ExecutionId'}
+    post:
+      operationId: requestExecutionReconciliation
+      tags: [Executions]
+      summary: 请求对未知执行进行只读核对
+      description: |
+        仅可查询可信业务回执或原生证据并追加观察；不调用 Execute、不重发写入。
+        未具备可靠核对能力时返回明确不可核对，不猜测成功或自动恢复执行资格。
+      parameters:
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+        - {$ref: '#/components/parameters/CsrfToken'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ReasonCommand'}
+      responses:
+        '202':
+          description: 只读核对请求已受理，后续查询原 Execution
+          headers:
+            Location: {$ref: '#/components/headers/Location'}
+            Idempotency-Expires-At: {$ref: '#/components/headers/IdempotencyExpiresAt'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ReconciliationReceipt'}
+        '400': {$ref: '#/components/responses/InvalidRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/ValidationFailed'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+components:
+  securitySchemes:
+    BrowserSession:
+      type: apiKey
+      in: cookie
+      name: mcpguard_session
+      description: |
+        拟议服务端会话cookie，实际企业OIDC登录方案尚未选定。
+        Secure/HttpOnly/SameSite、Origin和CSRF在实现时共同验证。
+        本规范不定义/mcp的OAuth flow，也不默认管理会话或MCP token可互相替代。
+  parameters:
+    ResourceId:
+      name: resourceId
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    ToolId:
+      name: toolId
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    ActionId:
+      name: actionId
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    ApprovalId:
+      name: approvalId
+      in: path
+      required: true
+      description: 首版映射Action ID，不另建分叉的待批状态。
+      schema: {type: string, format: uuid}
+    ExecutionId:
+      name: executionId
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    Cursor:
+      name: cursor
+      in: query
+      description: 服务端签发，绑定主体范围、过滤、排序和视图版本；失效时重新列举。
+      schema: {type: string, minLength: 1}
+    PageSize:
+      name: pageSize
+      in: query
+      description: 生产上限由部署预算约束；不得请求无界列表。
+      schema: {type: integer, minimum: 1}
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: |
+        从目标GET获得的单个强ETag，形如 "rev-7"；首版不支持通配符或条件列表。
+        必须在数据库条件更新中原子比较，不能只在handler先读后写。
+      schema: {type: string, pattern: '^"rev-[1-9][0-9]*"$'}
+      example: '"rev-7"'
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: |
+        作用域为组织+当前主体+命令类型+目标，同键同规范化请求重放原命令响应，
+        同键不同请求409。重放仍重新鉴权，记录清理后不再承诺识别旧键。
+        管理命令去重不是原生写幂等；客户端不得在有效期后静默重放危险命令。
+      schema: {type: string, minLength: 1, maxLength: 128}
+    CsrfToken:
+      name: X-CSRF-Token
+      in: header
+      required: true
+      description: 由管理会话签发并绑定的令牌；写请求还验证Origin，不由模型或URL提供。
+      schema: {type: string, minLength: 1}
+  headers:
+    ETag:
+      description: 提交快照的强版本标识，不包含主体权限。
+      schema: {type: string, pattern: '^"rev-[1-9][0-9]*"$'}
+    Location:
+      description: 新资源或可查询对象的受保护相对URI；知道URI不构成访问授权。
+      schema: {type: string, format: uri-reference}
+    IdempotencyExpiresAt:
+      description: 当前管理命令的去重保证截止时间，不等于Action/凭据/审计保留时间。
+      schema: {type: string, format: date-time}
+    RetryAfter:
+      description: 请求尚未获准进入处理时的建议等待秒数，不是重发未知原生写的许可。
+      schema: {type: integer, minimum: 1}
+  responses:
+    InvalidRequest:
+      description: 格式、游标或条件头不合法；返回脱敏错误。
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    Unauthenticated:
+      description: 管理主体无效或缺失，不冒充原生后端认证错误。
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    Forbidden:
+      description: 当前主体缺少能力、对象范围、审批资格，或CSRF/Origin校验失败。
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    NotFound:
+      description: 对象不存在，或对象访问策略隐藏其存在；不泄漏其他员工的标识与结果。
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    Conflict:
+      description: 状态冲突、版本重用、幂等键异体复用或不兼容决定；不得自动新建原生执行。
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    PreconditionFailed:
+      description: If-Match版本已陈旧；重新读取比较，不能无提示覆盖。
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    PreconditionRequired:
+      description: 缺少必需的If-Match；没有执行目标修改。
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    ValidationFailed:
+      description: 字段或操作语义不合法，包含计划摘要/Action版本不一致等情况。
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    RateLimited:
+      description: 入口预算拒绝；客户端遵守Retry-After，不开启无限轮询。
+      headers:
+        Retry-After: {$ref: '#/components/headers/RetryAfter'}
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    Unavailable:
+      description: |
+        必要依赖不可用或命令结果尚无法确认；不返回密码或原始驱动错误。
+        客户端先核对幂等记录/对象当前状态，不能仅据503重发危险命令或原生写。
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+  schemas:
+    ActionView:
+      $ref: ./action-view.schema.json
+    ToolResult:
+      $ref: ./tool-result.schema.json
+    ErrorEnvelope:
+      $ref: ./error.schema.json
+    ActionState:
+      type: string
+      enum: [PENDING_APPROVAL, READY, EXECUTING, SUCCEEDED, FAILED, DENIED, CANCELLED, EXPIRED, OUTCOME_UNKNOWN]
+    PrincipalView:
+      type: object
+      additionalProperties: false
+      required: [principalId, orgId, displayName, capabilities]
+      properties:
+        principalId: {type: string, format: uuid}
+        orgId: {type: string, format: uuid}
+        displayName: {type: string}
+        capabilities:
+          type: array
+          uniqueItems: true
+          items: {type: string}
+    ResourceCreate:
+      type: object
+      additionalProperties: false
+      required: [name, kind, ownerScope, endpointConfigRef, credentialRef, backendIdentity, enabled]
+      properties:
+        name: {type: string, minLength: 1}
+        kind: {type: string, enum: [POSTGRES, REDIS, HTTP]}
+        ownerScope: {type: string, minLength: 1}
+        endpointConfigRef: {type: string, minLength: 1}
+        credentialRef: {type: string, minLength: 1}
+        backendIdentity: {type: string, minLength: 1}
+        enabled: {const: false}
+    ResourcePatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name: {type: string, minLength: 1}
+        ownerScope: {type: string, minLength: 1}
+        endpointConfigRef: {type: string, minLength: 1}
+        credentialRef: {type: string, minLength: 1}
+        backendIdentity: {type: string, minLength: 1}
+        enabled: {type: boolean}
+    ResourceView:
+      type: object
+      additionalProperties: false
+      required: [resourceId, name, kind, ownerScope, endpointConfigRef, credentialRef, credentialVersion, backendIdentity, enabled, revision]
+      properties:
+        resourceId: {type: string, format: uuid}
+        name: {type: string}
+        kind: {type: string, enum: [POSTGRES, REDIS, HTTP]}
+        ownerScope: {type: string}
+        endpointConfigRef: {type: string}
+        credentialRef: {type: string}
+        credentialVersion: {type: string, minLength: 1}
+        backendIdentity: {type: string}
+        enabled: {type: boolean}
+        revision: {type: integer, minimum: 1}
+    ResourcePage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ResourceView'}
+        nextCursor: {type: [string, 'null']}
+    ToolVersionCreate:
+      type: object
+      additionalProperties: false
+      required: [definition]
+      properties:
+        definition:
+          $ref: ./tool-bundle.schema.json#/$defs/toolDefinition
+    ToolVersionView:
+      type: object
+      additionalProperties: false
+      required: [toolId, revision, published, definition]
+      properties:
+        toolId: {type: string, format: uuid}
+        revision: {type: integer, minimum: 1}
+        published: {const: false}
+        definition:
+          $ref: ./tool-bundle.schema.json#/$defs/toolDefinition
+    ToolPublish:
+      type: object
+      additionalProperties: false
+      required: [version]
+      properties:
+        version: {type: string, pattern: '^[1-9][0-9]{0,8}$'}
+    ToolName:
+      $ref: ./tool-bundle.schema.json#/$defs/toolDefinition/properties/name
+    ToolHead:
+      type: object
+      additionalProperties: false
+      required: [toolId, name, revision, enabled, publishedVersion]
+      properties:
+        toolId: {type: string, format: uuid}
+        name: {$ref: '#/components/schemas/ToolName'}
+        revision: {type: integer, minimum: 1}
+        enabled: {type: boolean}
+        publishedVersion: {type: [string, 'null']}
+    ActionPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ActionView'}
+        nextCursor: {type: [string, 'null']}
+    ApprovalPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ApprovalListItem'}
+        nextCursor: {type: [string, 'null']}
+    ApprovalListItem:
+      type: object
+      additionalProperties: false
+      required: [approvalId, action, requirement]
+      properties:
+        approvalId: {type: string, format: uuid}
+        action: {$ref: '#/components/schemas/ActionView'}
+        requirement:
+          type: object
+          additionalProperties: false
+          required: [mode, minApprovals]
+          properties:
+            mode: {const: OTHER_PERSON}
+            minApprovals: {const: 1}
+    ApprovalDecisionCreate:
+      type: object
+      additionalProperties: false
+      required: [planHash, actionRevision, decision, reason]
+      properties:
+        planHash: {type: string, pattern: '^[A-Za-z0-9_-]{43}$'}
+        actionRevision: {type: integer, minimum: 1}
+        decision: {type: string, enum: [APPROVE, REJECT]}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+      description: 不接受approverId或操作者自报身份；审批人由可信管理会话确定。
+    ApprovalDetail:
+      type: object
+      additionalProperties: false
+      required: [approvalId, action, reviewPlan, requirement]
+      properties:
+        approvalId: {type: string, format: uuid}
+        action: {$ref: '#/components/schemas/ActionView'}
+        reviewPlan: {$ref: '#/components/schemas/ReviewPlan'}
+        requirement:
+          type: object
+          additionalProperties: false
+          required: [mode, minApprovals]
+          properties:
+            mode: {const: OTHER_PERSON}
+            minApprovals: {const: 1}
+    ReviewPlan:
+      type: object
+      additionalProperties: false
+      required: [planHash, encodingVersion, principalId, toolName, toolVersion, resourceId, resourceVersion, backendIdentity, credentialVersion, operation, parameters, scopeBindings, limits, preconditions, expiresAt]
+      properties:
+        planHash: {type: string, pattern: '^[A-Za-z0-9_-]{43}$'}
+        encodingVersion: {type: integer, minimum: 1}
+        principalId: {type: string, format: uuid}
+        toolName: {$ref: '#/components/schemas/ToolName'}
+        toolVersion: {type: string, minLength: 1}
+        resourceId: {type: string, format: uuid}
+        resourceVersion: {type: string, minLength: 1}
+        backendIdentity: {type: string, minLength: 1}
+        credentialVersion: {type: string, minLength: 1}
+        operation:
+          type: object
+          description: 服务端冻结的SQL模板与绑定、Redis命令参数或HTTP方法/路径/查询/请求体；不含认证秘密。
+        parameters:
+          type: object
+          description: 校验后完整业务参数；须按注册工具inputSchema与审批字段权限强校验，不由审批客户端提交。
+        scopeBindings:
+          type: object
+          description: 服务端注入的可信范围绑定，与模型parameters分离；展示权另验，不允许审批客户端覆盖。
+        limits:
+          type: object
+          description: 已冻结的时限、结果与影响范围；应用按具体工具限制字段校验。
+        preconditions:
+          type: array
+          items: {type: object}
+          description: 已冻结的版本/状态前置条件；预览不保证实际执行时仍成立。
+        expiresAt: {type: string, format: date-time}
+      description: |
+        只供已获完整审批展示权的人类审阅，不是可重新提交的执行输入。
+        planHash、版本、参数和目标来自同一不可变服务端计划，摘要不能代替这些事实。
+    ApprovalDecisionView:
+      type: object
+      additionalProperties: false
+      required: [decisionId, actionId, planHash, approverId, decision, decidedAt, actionRevision, actionState]
+      properties:
+        decisionId: {type: string, format: uuid}
+        actionId: {type: string, format: uuid}
+        planHash: {type: string, pattern: '^[A-Za-z0-9_-]{43}$'}
+        approverId: {type: string, format: uuid}
+        decision: {type: string, enum: [APPROVE, REJECT]}
+        decidedAt: {type: string, format: date-time}
+        actionRevision: {type: integer, minimum: 1}
+        actionState: {$ref: '#/components/schemas/ActionState'}
+    ReasonCommand:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason: {type: string, minLength: 1, maxLength: 2000}
+    ExecutionView:
+      type: object
+      additionalProperties: false
+      required: [executionId, actionId, dispatchState, requestStatus, sideEffectStatus]
+      properties:
+        executionId: {type: string, format: uuid}
+        actionId: {type: string, format: uuid}
+        dispatchState:
+          type: string
+          enum: [NOT_DISPATCHED, INTENT_RECORDED, DISPATCHED, DISPATCH_UNKNOWN]
+        requestStatus:
+          type: string
+          enum: [RUNNING, SUCCEEDED, FAILED, CANCELLED, OUTCOME_UNKNOWN]
+        sideEffectStatus:
+          type: string
+          enum: [NONE, APPLIED, ROLLED_BACK, PARTIAL, UNKNOWN]
+        result:
+          allOf:
+            - {$ref: '#/components/schemas/ToolResult'}
+            - type: object
+              required: [kind, actionId, attemptId, executionId]
+              properties:
+                kind: {const: FINAL}
+                actionId: {type: string, format: uuid}
+                attemptId: {type: string, format: uuid}
+                executionId: {type: string, format: uuid}
+        evidenceAvailable: {type: boolean}
+      allOf:
+        - if:
+            properties: {requestStatus: {const: RUNNING}}
+            required: [requestStatus]
+          then:
+            not: {required: [result]}
+        - if:
+            properties: {dispatchState: {const: NOT_DISPATCHED}}
+            required: [dispatchState]
+          then:
+            properties: {sideEffectStatus: {const: NONE}}
+        - if:
+            properties: {dispatchState: {const: DISPATCH_UNKNOWN}}
+            required: [dispatchState]
+          then:
+            properties: {requestStatus: {const: OUTCOME_UNKNOWN}}
+        - if:
+            properties: {requestStatus: {const: SUCCEEDED}}
+            required: [requestStatus]
+          then:
+            properties: {dispatchState: {const: DISPATCHED}}
+      description: |
+        result仅在已形成终态且当前调用者有结果权限、内容未过期时出现；
+        RUNNING只通过状态字段表达，不伪造最终MCP ToolResult。
+        result存在时必须为FINAL分支且executionId/actionId与外层相同，由语义校验保证。
+    ReconciliationReceipt:
+      type: object
+      additionalProperties: false
+      required: [commandId, executionId, acceptedAt, readOnly]
+      properties:
+        commandId: {type: string, format: uuid}
+        executionId: {type: string, format: uuid}
+        acceptedAt: {type: string, format: date-time}
+        readOnly: {const: true}

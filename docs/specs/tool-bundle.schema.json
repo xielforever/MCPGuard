@@ -1,0 +1,714 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcpguard.example.invalid/specs/tool-bundle.schema.json",
+  "title": "MCPGuard controlled tool bundle proposal",
+  "description": "A finite v0.1 configuration profile for registered native operations. Validation proves shape and fixture consistency, not authorization, native read-only semantics or production approval.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "bundleId",
+    "bundleVersion",
+    "fixtureOnly",
+    "description",
+    "tools"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "bundleId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9._-]{0,127}$"
+    },
+    "bundleVersion": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,8}$"
+    },
+    "fixtureOnly": {
+      "const": true
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "tools": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {
+        "$ref": "#/$defs/toolDefinition"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "toolDefinition": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "description",
+        "adapterKind",
+        "resourceBinding",
+        "operation",
+        "scopeBinding",
+        "effectClass",
+        "riskTier",
+        "interactionMode",
+        "policyRefs",
+        "inputSchema",
+        "outputSchema",
+        "resultDataSchema",
+        "annotations",
+        "limits",
+        "examples"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,8}$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "adapterKind": {
+          "enum": [
+            "POSTGRES",
+            "REDIS",
+            "HTTP"
+          ]
+        },
+        "resourceBinding": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "operation": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/pgOperation"
+            },
+            {
+              "$ref": "#/$defs/redisOperation"
+            },
+            {
+              "$ref": "#/$defs/httpOperation"
+            }
+          ]
+        },
+        "scopeBinding": {
+          "type": "object",
+          "required": [
+            "source",
+            "attribute",
+            "target",
+            "valuePattern"
+          ],
+          "properties": {
+            "source": {
+              "const": "AUTHORIZATION"
+            },
+            "attribute": {
+              "const": "scopeId"
+            },
+            "target": {
+              "const": "scopeId"
+            },
+            "valuePattern": {
+              "const": "^[a-z][a-z0-9_]{0,31}$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "effectClass": {
+          "enum": [
+            "READ",
+            "WRITE"
+          ]
+        },
+        "riskTier": {
+          "const": "CONTROLLED"
+        },
+        "interactionMode": {
+          "enum": [
+            "BOUNDED_WAIT",
+            "CONTROL_FLOW"
+          ]
+        },
+        "policyRefs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[a-z][a-z0-9._-]*$"
+          }
+        },
+        "inputSchema": {
+          "$ref": "#/$defs/schemaDocument"
+        },
+        "outputSchema": {
+          "type": "object",
+          "required": [
+            "$ref"
+          ],
+          "properties": {
+            "$ref": {
+              "const": "tool-result.schema.json"
+            }
+          },
+          "additionalProperties": false
+        },
+        "resultDataSchema": {
+          "$ref": "#/$defs/schemaDocument"
+        },
+        "annotations": {
+          "$ref": "#/$defs/annotations"
+        },
+        "limits": {
+          "$ref": "#/$defs/limits"
+        },
+        "examples": {
+          "type": "object",
+          "required": [
+            "validInputs",
+            "invalidInputs",
+            "successDataSamples",
+            "invalidSuccessDataSamples"
+          ],
+          "properties": {
+            "validInputs": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object"
+              }
+            },
+            "invalidInputs": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object"
+              }
+            },
+            "successDataSamples": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object"
+              }
+            },
+            "invalidSuccessDataSamples": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "adapterKind": {
+                "const": "POSTGRES"
+              }
+            },
+            "required": [
+              "adapterKind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "operation": {
+                "$ref": "#/$defs/pgOperation"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapterKind": {
+                "const": "REDIS"
+              }
+            },
+            "required": [
+              "adapterKind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "operation": {
+                "$ref": "#/$defs/redisOperation"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapterKind": {
+                "const": "HTTP"
+              }
+            },
+            "required": [
+              "adapterKind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "operation": {
+                "$ref": "#/$defs/httpOperation"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "effectClass": {
+                "const": "READ"
+              }
+            },
+            "required": [
+              "effectClass"
+            ]
+          },
+          "then": {
+            "properties": {
+              "interactionMode": {
+                "const": "BOUNDED_WAIT"
+              },
+              "annotations": {
+                "properties": {
+                  "readOnlyHint": {
+                    "const": true
+                  },
+                  "destructiveHint": {
+                    "const": false
+                  },
+                  "idempotentHint": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "effectClass": {
+                "const": "WRITE"
+              }
+            },
+            "required": [
+              "effectClass"
+            ]
+          },
+          "then": {
+            "properties": {
+              "interactionMode": {
+                "const": "CONTROL_FLOW"
+              },
+              "annotations": {
+                "properties": {
+                  "readOnlyHint": {
+                    "const": false
+                  },
+                  "idempotentHint": {
+                    "const": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapterKind": {
+                "const": "POSTGRES"
+              },
+              "effectClass": {
+                "const": "READ"
+              }
+            },
+            "required": [
+              "adapterKind",
+              "effectClass"
+            ]
+          },
+          "then": {
+            "properties": {
+              "limits": {
+                "required": [
+                  "maxRows"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapterKind": {
+                "const": "POSTGRES"
+              },
+              "effectClass": {
+                "const": "WRITE"
+              }
+            },
+            "required": [
+              "adapterKind",
+              "effectClass"
+            ]
+          },
+          "then": {
+            "properties": {
+              "limits": {
+                "required": [
+                  "maxAffectedRows"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "schemaDocument": {
+      "type": "object",
+      "description": "Object-root JSON Schema; its vocabulary and all referenced schemas must also pass offline Draft202012Validator.check_schema and local-reference policy.",
+      "required": [
+        "type",
+        "properties",
+        "required",
+        "additionalProperties"
+      ],
+      "properties": {
+        "$schema": {
+          "const": "https://json-schema.org/draft/2020-12/schema"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "type": {
+          "const": "object"
+        },
+        "properties": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": [
+              "object",
+              "boolean"
+            ]
+          }
+        },
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "additionalProperties": {
+          "const": false
+        },
+        "allOf": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object"
+          }
+        },
+        "anyOf": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object"
+          }
+        },
+        "oneOf": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object"
+          }
+        },
+        "if": {
+          "type": "object"
+        },
+        "then": {
+          "type": "object"
+        },
+        "else": {
+          "type": "object"
+        },
+        "$defs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "object",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "pgOperation": {
+      "type": "object",
+      "required": [
+        "operationId",
+        "version",
+        "templateRef"
+      ],
+      "properties": {
+        "operationId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,127}$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,8}$"
+        },
+        "templateRef": {
+          "type": "string",
+          "pattern": "^template://[A-Za-z0-9._/-]+/[1-9][0-9]*$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "redisOperation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "operationId",
+            "version",
+            "command",
+            "keyTemplate"
+          ],
+          "properties": {
+            "operationId": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,127}$"
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,8}$"
+            },
+            "command": {
+              "const": "GET"
+            },
+            "keyTemplate": {
+              "type": "string",
+              "maxLength": 256,
+              "allOf": [
+                {
+                  "pattern": "^[A-Za-z0-9:_{}-]+$"
+                },
+                {
+                  "pattern": "\\{scopeId\\}"
+                },
+                {
+                  "pattern": "\\{noteId\\}"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "operationId",
+            "version",
+            "command",
+            "keyTemplate",
+            "valueArgument",
+            "expiryMode",
+            "ttlArgument"
+          ],
+          "properties": {
+            "operationId": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,127}$"
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,8}$"
+            },
+            "command": {
+              "const": "SET"
+            },
+            "keyTemplate": {
+              "type": "string",
+              "maxLength": 256,
+              "allOf": [
+                {
+                  "pattern": "^[A-Za-z0-9:_{}-]+$"
+                },
+                {
+                  "pattern": "\\{scopeId\\}"
+                },
+                {
+                  "pattern": "\\{noteId\\}"
+                }
+              ]
+            },
+            "valueArgument": {
+              "const": "value"
+            },
+            "expiryMode": {
+              "const": "EX"
+            },
+            "ttlArgument": {
+              "const": "ttlSeconds"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "httpOperation": {
+      "type": "object",
+      "required": [
+        "operationId",
+        "version",
+        "method",
+        "pathTemplate"
+      ],
+      "properties": {
+        "operationId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,127}$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,8}$"
+        },
+        "method": {
+          "enum": [
+            "GET",
+            "POST"
+          ]
+        },
+        "pathTemplate": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^/[A-Za-z0-9_{}./-]*$"
+        },
+        "requestTemplateRef": {
+          "type": "string",
+          "pattern": "^request://[A-Za-z0-9._/-]+/[1-9][0-9]*$"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "method": {
+                "const": "POST"
+              }
+            },
+            "required": [
+              "method"
+            ]
+          },
+          "then": {
+            "required": [
+              "requestTemplateRef"
+            ]
+          }
+        }
+      ]
+    },
+    "annotations": {
+      "type": "object",
+      "required": [
+        "readOnlyHint",
+        "destructiveHint",
+        "idempotentHint",
+        "openWorldHint"
+      ],
+      "properties": {
+        "readOnlyHint": {
+          "type": "boolean"
+        },
+        "destructiveHint": {
+          "type": "boolean"
+        },
+        "idempotentHint": {
+          "type": "boolean"
+        },
+        "openWorldHint": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "limits": {
+      "type": "object",
+      "required": [
+        "timeoutMs",
+        "maxResultBytes"
+      ],
+      "properties": {
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300000
+        },
+        "maxResultBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "maxRows": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "maxAffectedRows": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1
+        },
+        "maxValueBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

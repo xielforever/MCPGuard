@@ -1,0 +1,5 @@
+# Isolated documentation tooling only; no application dependency changes.
+jsonschema==4.26.0
+PyYAML==6.0.3
+openapi-spec-validator==0.7.2
+pglast==7.21

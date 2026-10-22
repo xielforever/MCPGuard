@@ -2,89 +2,94 @@ package main
 
 import (
 	"context"
-	"flag"
+	"errors"
 	"fmt"
-	"log"
+	"github.com/xielforever/MCPGuard/internal/gateway"
+	"github.com/xielforever/MCPGuard/internal/metadata"
+	"github.com/xielforever/MCPGuard/internal/nativepg"
+	"github.com/xielforever/MCPGuard/internal/runtimeconfig"
+	"log/slog"
+	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/xielforever/MCPGuard/internal/api"
-	"github.com/xielforever/MCPGuard/internal/auth"
-	"github.com/xielforever/MCPGuard/internal/config"
-	"github.com/xielforever/MCPGuard/internal/proxy"
-	"github.com/xielforever/MCPGuard/internal/rules"
-	"github.com/xielforever/MCPGuard/internal/store"
 )
 
 func main() {
-	configPath := flag.String("config", "mcpguard.yaml", "config file path")
-	port := flag.Int("port", 8080, "web UI port")
-	flag.Parse()
-
-	// Load Config
-	cfg, err := config.LoadConfig(*configPath)
-	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+	if e := run(); e != nil {
+		slog.Error(e.Error())
+		os.Exit(1)
 	}
-	cfg.Server.Port = *port
-
-	// Init DB
-	dbStore, err := store.NewStore(cfg.Database.Driver, cfg.Database.DSN)
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
-	defer dbStore.Close()
-
-	if err := dbStore.InitSchema(); err != nil {
-		log.Fatalf("Failed to initialize schema: %v", err)
-	}
-
-	// Init Rules Engine
-	ruleEngine := rules.NewEngine()
-	builtinRules := rules.BuiltinRules()
-	for _, r := range builtinRules {
-		ruleEngine.AddRule(r)
-	}
-	// TODO: Load rules from DB and add to engine
-
-	// Init Auth Service
-	authService := auth.NewConfirmService(cfg.Auth)
-
-	// Init API Router
-	router := api.SetupRouter(dbStore, ruleEngine, authService)
-
-	// Start Web Server
-	go func() {
-		addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-		log.Printf("Starting web server on %s\n", addr)
-		if err := router.Run(addr); err != nil {
-			log.Printf("Web server error: %v", err)
+}
+func run() error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	if len(os.Args) == 2 && os.Args[1] == "migrate" {
+		dsn := os.Getenv("MCPGUARD_MIGRATION_DSN")
+		if dsn == "" {
+			return errors.New("MCPGUARD_MIGRATION_DSN is required")
 		}
-	}()
-
-	// Start Proxy
-	if cfg.Proxy.Mode == "stdio" {
-		stdioProxy := proxy.NewStdioProxy(cfg.Proxy, ruleEngine, authService, dbStore)
-		go func() {
-			log.Println("Starting STDIO proxy...")
-			if err := stdioProxy.Start(); err != nil {
-				log.Fatalf("Proxy error: %v", err)
-			}
-		}()
-		defer stdioProxy.Stop()
+		c, cancel := context.WithTimeout(ctx, 20*time.Second)
+		defer cancel()
+		if e := metadata.Migrate(c, dsn); e != nil {
+			return errors.New("metadata migration failed; inspect the database with the migration role")
+		}
+		slog.Info("metadata migrations 1-2 applied/verified")
+		return nil
 	}
-
-	// Graceful Shutdown
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	log.Println("Shutting down gracefully...")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	if len(os.Args) != 1 {
+		return errors.New("usage: mcpguard [migrate]; configuration uses MCPGUARD_* environment variables")
+	}
+	cfg, e := runtimeconfig.Load()
+	if e != nil {
+		return e
+	}
+	v, e := metadata.NewVault(cfg.EncryptionKey, cfg.PlanKey)
+	if e != nil {
+		return e
+	}
+	boot, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-
-	<-ctx.Done()
-	log.Println("Shutdown complete")
+	s, e := metadata.Open(boot, cfg.MetadataDSN, v)
+	if e != nil {
+		return errors.New("metadata startup check failed; migrate first and use the runtime role")
+	}
+	defer s.Close()
+	r, e := nativepg.Open(boot, cfg.BusinessDSN)
+	if e != nil {
+		return errors.New("native PG startup check failed; use the SELECT-only role and demo fixture")
+	}
+	defer r.Close()
+	g := gateway.New(ctx, s, r)
+	defer g.Close()
+	ln, e := net.Listen("tcp", cfg.Listen)
+	if e != nil {
+		return fmt.Errorf("listen failed: %w", e)
+	}
+	srv := &http.Server{Handler: g.Handler(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	serveErr := make(chan error, 1)
+	go func() { serveErr <- srv.Serve(ln) }()
+	recoveryDone := make(chan struct{})
+	go func() { defer close(recoveryDone); g.RunRecovery(ctx) }()
+	slog.Info("local test gateway ready", "listen", cfg.Listen, "profile", gateway.Profile, "auth", "dev-tokens")
+	select {
+	case e = <-serveErr:
+		stop()
+	case <-ctx.Done():
+	}
+	stop()
+	g.Close()
+	shutdown, scancel := context.WithTimeout(context.Background(), 8*time.Second)
+	defer scancel()
+	if se := srv.Shutdown(shutdown); se != nil {
+		_ = srv.Close()
+		return errors.New("HTTP graceful shutdown timed out")
+	}
+	<-recoveryDone
+	if e != nil && !errors.Is(e, http.ErrServerClosed) {
+		return errors.New("HTTP server stopped unexpectedly")
+	}
+	return nil
 }

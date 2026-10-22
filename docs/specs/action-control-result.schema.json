@@ -1,0 +1,429 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcpguard.example.invalid/specs/action-control-result.schema.json",
+  "title": "MCPGuard action control tools output v1",
+  "description": "Public structured results of action.status/resume/cancel. Distinct from business ToolResult; an in-progress execution returns an ActionView, never a fake FINAL result.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/controlResult"
+    },
+    {
+      "$ref": "#/$defs/controlError"
+    }
+  ],
+  "$defs": {
+    "actionIdInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "actionId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "actionId"
+      ]
+    },
+    "controlResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "operation",
+        "requestId",
+        "outcome",
+        "action",
+        "result",
+        "error"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ACTION_CONTROL"
+        },
+        "operation": {
+          "enum": [
+            "STATUS",
+            "RESUME",
+            "CANCEL"
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "outcome": {
+          "enum": [
+            "STATE_RETURNED",
+            "APPROVAL_PENDING",
+            "EXECUTION_IN_PROGRESS",
+            "RESULT_RETURNED",
+            "CANCELLATION_REQUESTED",
+            "CANCELLED",
+            "NOT_RESUMABLE"
+          ]
+        },
+        "action": {
+          "$ref": "action-view.schema.json"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "$ref": "tool-result.schema.json#/$defs/executionResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "tool-result.schema.json#/$defs/safeError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "STATUS"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "outcome": {
+                "const": "STATE_RETURNED"
+              },
+              "error": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "RESUME"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "outcome": {
+                "enum": [
+                  "STATE_RETURNED",
+                  "APPROVAL_PENDING",
+                  "EXECUTION_IN_PROGRESS",
+                  "RESULT_RETURNED",
+                  "NOT_RESUMABLE"
+                ]
+              },
+              "action": {
+                "properties": {
+                  "interactionMode": {
+                    "const": "CONTROL_FLOW"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "CANCEL"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "outcome": {
+                "enum": [
+                  "CANCELLATION_REQUESTED",
+                  "CANCELLED",
+                  "NOT_RESUMABLE"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "APPROVAL_PENDING"
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "properties": {
+                  "state": {
+                    "const": "PENDING_APPROVAL"
+                  }
+                }
+              },
+              "result": {
+                "type": "null"
+              },
+              "error": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "EXECUTION_IN_PROGRESS"
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "properties": {
+                  "state": {
+                    "const": "EXECUTING"
+                  }
+                }
+              },
+              "result": {
+                "type": "null"
+              },
+              "error": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "RESULT_RETURNED"
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "$ref": "tool-result.schema.json#/$defs/executionResult"
+              },
+              "error": {
+                "type": "null"
+              },
+              "action": {
+                "properties": {
+                  "state": {
+                    "enum": [
+                      "SUCCEEDED",
+                      "FAILED",
+                      "CANCELLED",
+                      "OUTCOME_UNKNOWN"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "CANCELLATION_REQUESTED"
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "properties": {
+                  "state": {
+                    "const": "EXECUTING"
+                  }
+                }
+              },
+              "result": {
+                "type": "null"
+              },
+              "error": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "CANCELLED"
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "properties": {
+                  "state": {
+                    "const": "CANCELLED"
+                  }
+                }
+              },
+              "error": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "NOT_RESUMABLE"
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "properties": {
+              "error": {
+                "$ref": "tool-result.schema.json#/$defs/safeError"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "STATE_RETURNED"
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "properties": {
+              "error": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "allOf": [
+              {
+                "properties": {
+                  "operation": {
+                    "const": "RESUME"
+                  }
+                },
+                "required": [
+                  "operation"
+                ]
+              },
+              {
+                "properties": {
+                  "outcome": {
+                    "const": "STATE_RETURNED"
+                  }
+                },
+                "required": [
+                  "outcome"
+                ]
+              }
+            ]
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "properties": {
+                  "state": {
+                    "enum": [
+                      "SUCCEEDED",
+                      "FAILED",
+                      "CANCELLED",
+                      "OUTCOME_UNKNOWN"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "controlError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "operation",
+        "requestId",
+        "error"
+      ],
+      "properties": {
+        "kind": {
+          "const": "CONTROL_ERROR"
+        },
+        "operation": {
+          "enum": [
+            "STATUS",
+            "RESUME",
+            "CANCEL"
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "error": {
+          "$ref": "tool-result.schema.json#/$defs/safeError"
+        }
+      }
+    }
+  }
+}

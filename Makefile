@@ -1,13 +1,28 @@
-.PHONY: build run test clean web all
+.PHONY: build run test clean web all dev-up dev-run dev-test dev-down
+
+GO ?= go
 
 build:
-	go build -o bin/mcpguard cmd/mcpguard/main.go
+	$(GO) build -o bin/mcpguard ./cmd/mcpguard
+	$(GO) build -o bin/mcpguard-connect ./cmd/mcpguard-connect
 
 run:
-	go run cmd/mcpguard/main.go
+	$(GO) run ./cmd/mcpguard
 
 test:
-	go test ./...
+	$(GO) test ./...
+
+dev-up:
+	python3 scripts/dev.py up
+
+dev-run:
+	python3 scripts/dev.py run
+
+dev-test:
+	python3 scripts/dev.py test
+
+dev-down:
+	python3 scripts/dev.py down
 
 clean:
 	rm -rf bin/
@@ -15,4 +30,4 @@ clean:
 web:
 	cd web && npm install && npm run build
 
-all: web build
+all: build

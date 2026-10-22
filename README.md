@@ -1,55 +1,27 @@
 # MCPGuard
-<div align="center">
-  <img src="https://via.placeholder.com/150" alt="MCPGuard Logo" />
-  <h3>MCP Safety Authorization Gateway</h3>
-</div>
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/xielforever/MCPGuard)](https://goreportcard.com/report/github.com/xielforever/MCPGuard)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+企业集中 MCP 网关。客户端通过 HTTP 直连，或经本地 stdio 接入同一网关；网关使用 PostgreSQL 等后端的原生协议执行受控操作。
 
-## Description
+当前已实现并通过沙箱联调的**最小读取闭环**：官方 Go MCP SDK、两种入口、独立员工测试身份、权限过滤、一条真实 PG 查询、加密持久状态和审计。完整运行说明与范围见 [最小读取闭环](docs/read-slice.md)，验证证据见 [验收记录](docs/validation/read-slice-2026-10-22.md)，总体规划见 [设计文档目录](docs/README.md)。
 
-MCPGuard is a Model Context Protocol (MCP) Safety Authorization Gateway written in Go. It acts as a transparent proxy between AI IDEs and MCP Servers, intercepting dangerous operations and requiring confirmation codes before allowing execution.
+## 本地运行
 
-[中文文档](#) (Chinese translation)
+需要 Go（最低 1.25，toolchain 1.26.8）、Python 3、Docker，race 测试另需 C 编译器；不需要大模型 key。
 
-## Features
-- **Transparent Proxy**: Intercepts MCP JSON-RPC messages.
-- **Rule Engine**: Pattern matching for dangerous tools and operations.
-- **Out-of-Band Confirmation**: Requires 2FA via IM (Feishu, Telegram, Slack).
-- **Audit Logs**: Records all tool calls and their results.
-- **Web UI**: Dashboard for configuration and log viewing.
-
-## Architecture
-
-```mermaid
-flowchart LR
-    IDE[AI IDE] <--> Proxy[MCPGuard Proxy]
-    Proxy <-->|JSON-RPC| Server[MCP Server]
-    Proxy -->|Evaluate| Rules[Rule Engine]
-    Rules -->|Confirm| Auth[Auth Service]
-    Auth -->|Code| Notify[Notifier IM]
+```bash
+make dev-up    # 隔离 PG、数据库角色、假数据、测试身份、迁移和构建
+make dev-test  # Go race + 独立 Python HTTP/stdio 联调
+make dev-run   # 网关 http://127.0.0.1:8080/mcp
 ```
 
-## Quick Start
+支持 stdio 的客户端可启动：
 
-1. Build the binary:
-   ```bash
-   make build
-   ```
-2. Configure `configs/mcpguard.yaml`.
-3. Run:
-   ```bash
-   ./bin/mcpguard --config configs/mcpguard.yaml
-   ```
+```bash
+python3 /absolute/path/to/MCPGuard/scripts/dev.py connect --employee alice
+```
 
-## Usage Example in IDE (Cursor/Claude)
+测试工具 `pg.get_demo_item` 只接受 `{"itemId":"item_demo_1"}`；数据范围由网关根据员工注入。Alice、Bob 访问各自范围，Visitor 无调用权。随机秘密位于忽略提交的 `.dev/env.json`（0600）；`make dev-down` 清除本项目的本地测试容器和数据。
 
-Instead of running the actual server, point the IDE to MCPGuard:
-`mcpguard --config /path/to/mcpguard.yaml`
+当前仅支持本地测试身份及 MCP `2025-11-25`。企业 SSO、真实 ChatGPT 接入、写入审批、Redis/API 和新控制台仍待开发/验收；原代理、确认码和页面属于未挂载的旧脚手架。
 
-## Contributing
-Pull requests are welcome!
-
-## License
-MIT License
+License: MIT

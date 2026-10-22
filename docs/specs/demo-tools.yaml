@@ -1,0 +1,596 @@
+# 设计提案与无害测试夹具；尚未实现、未连接真实资源，所有限制是测试值。
+# JSON Schema: tool-bundle.schema.json；成功data须再通过各工具resultDataSchema。
+schemaVersion: '1'
+bundleId: demo-controlled-tools
+bundleVersion: '1'
+fixtureOnly: true
+description: 设计与沙箱夹具提案；所有资源、操作、数据和限制均为演示值，不是生产默认配置或已批准的生产工具。
+tools:
+- name: pg.get_demo_item
+  version: '1'
+  description: 读取当前授权范围内的一条演示记录；scope由网关注入，未找到与越权分别处理。
+  adapterKind: POSTGRES
+  resourceBinding: demo.pg
+  operation:
+    operationId: demo.item.read.v1
+    version: '1'
+    templateRef: template://demo/item.read/1
+  scopeBinding:
+    source: AUTHORIZATION
+    attribute: scopeId
+    target: scopeId
+    valuePattern: ^[a-z][a-z0-9_]{0,31}$
+  effectClass: READ
+  riskTier: CONTROLLED
+  interactionMode: BOUNDED_WAIT
+  policyRefs:
+  - demo-read
+  inputSchema:
+    type: object
+    properties:
+      itemId:
+        type: string
+        pattern: ^item_demo_[a-z0-9_]{1,32}$
+        maxLength: 42
+    required:
+    - itemId
+    additionalProperties: false
+  outputSchema:
+    $ref: tool-result.schema.json
+  resultDataSchema:
+    type: object
+    properties:
+      found:
+        type: boolean
+      item:
+        type:
+        - object
+        - 'null'
+        properties:
+          itemId:
+            type: string
+            pattern: ^item_demo_[a-z0-9_]{1,32}$
+            maxLength: 42
+          note:
+            type: string
+            maxLength: 500
+          version:
+            type: string
+            pattern: ^[1-9][0-9]{0,17}$
+            description: Positive decimal text; this fixture profile stays below 10^18 so PostgreSQL bigint binding
+              is exact.
+        required:
+        - itemId
+        - note
+        - version
+        additionalProperties: false
+    required:
+    - found
+    - item
+    additionalProperties: false
+    allOf:
+    - if:
+        properties:
+          found:
+            const: true
+        required:
+        - found
+      then:
+        properties:
+          item:
+            type: object
+      else:
+        properties:
+          item:
+            type: 'null'
+  annotations:
+    readOnlyHint: true
+    destructiveHint: false
+    idempotentHint: true
+    openWorldHint: false
+  limits:
+    timeoutMs: 3000
+    maxResultBytes: 16384
+    maxRows: 1
+  examples:
+    validInputs:
+    - itemId: item_demo_1
+    invalidInputs:
+    - itemId: item_demo_1
+      scopeId: scope_b
+    - itemId: item_demo_1
+      sql: SELECT * FROM other_scope.items
+    - itemId: ../scope_b
+    successDataSamples:
+    - found: true
+      item:
+        itemId: item_demo_1
+        note: 演示记录
+        version: '1'
+    - found: false
+      item: null
+    invalidSuccessDataSamples:
+    - found: true
+      item:
+        itemId: item_demo_1
+        note: 演示记录
+        version: 1
+    - found: false
+      item: null
+      password: forbidden-field
+- name: pg.update_demo_note
+  version: '1'
+  description: 申请修改当前授权范围内的一条演示记录；冻结旧版本与新文本，由他人批准后显式续传，最多影响一行。
+  adapterKind: POSTGRES
+  resourceBinding: demo.pg
+  operation:
+    operationId: demo.item.note.update.v1
+    version: '1'
+    templateRef: template://demo/item.note.update/1
+  scopeBinding:
+    source: AUTHORIZATION
+    attribute: scopeId
+    target: scopeId
+    valuePattern: ^[a-z][a-z0-9_]{0,31}$
+  effectClass: WRITE
+  riskTier: CONTROLLED
+  interactionMode: CONTROL_FLOW
+  policyRefs:
+  - demo-controlled-write
+  inputSchema:
+    type: object
+    properties:
+      itemId:
+        type: string
+        pattern: ^item_demo_[a-z0-9_]{1,32}$
+        maxLength: 42
+      note:
+        type: string
+        minLength: 1
+        maxLength: 500
+      expectedVersion:
+        type: string
+        pattern: ^[1-9][0-9]{0,17}$
+        description: Positive decimal text; this fixture profile stays below 10^18 so PostgreSQL bigint binding
+          is exact.
+        not:
+          const: '999999999999999999'
+    required:
+    - itemId
+    - note
+    - expectedVersion
+    additionalProperties: false
+  outputSchema:
+    $ref: tool-result.schema.json
+  resultDataSchema:
+    type: object
+    properties:
+      itemId:
+        type: string
+        pattern: ^item_demo_[a-z0-9_]{1,32}$
+        maxLength: 42
+      newVersion:
+        type: string
+        pattern: ^[1-9][0-9]{0,17}$
+        description: Positive decimal text; this fixture profile stays below 10^18 so PostgreSQL bigint binding
+          is exact.
+      affectedRows:
+        type: integer
+        const: 1
+    required:
+    - itemId
+    - newVersion
+    - affectedRows
+    additionalProperties: false
+  annotations:
+    readOnlyHint: false
+    destructiveHint: true
+    idempotentHint: false
+    openWorldHint: false
+  limits:
+    timeoutMs: 3000
+    maxResultBytes: 16384
+    maxAffectedRows: 1
+  examples:
+    validInputs:
+    - itemId: item_demo_1
+      note: 新演示文本
+      expectedVersion: '1'
+    invalidInputs:
+    - itemId: item_demo_1
+      note: 新演示文本
+      expectedVersion: '1'
+      approved: true
+    - itemId: item_demo_1
+      note: 新演示文本
+      expectedVersion: 1
+    - itemId: item_demo_1
+      note: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      expectedVersion: '1'
+    - itemId: item_demo_1
+      note: 新演示文本
+      expectedVersion: '999999999999999999'
+    successDataSamples:
+    - itemId: item_demo_1
+      newVersion: '2'
+      affectedRows: 1
+    invalidSuccessDataSamples:
+    - itemId: item_demo_1
+      newVersion: '2'
+      affectedRows: 2
+    - itemId: item_demo_1
+      newVersion: '2'
+      affectedRows: 1
+      rawSql: forbidden-field
+- name: redis.get_demo_note
+  version: '1'
+  description: 读取当前授权命名空间内的演示文本；仅支持welcome和help，不接收原生key或命令。
+  adapterKind: REDIS
+  resourceBinding: demo.redis
+  operation:
+    operationId: demo.note.get.v1
+    version: '1'
+    command: GET
+    keyTemplate: demo:{scopeId}:notes:{noteId}
+  scopeBinding:
+    source: AUTHORIZATION
+    attribute: scopeId
+    target: scopeId
+    valuePattern: ^[a-z][a-z0-9_]{0,31}$
+  effectClass: READ
+  riskTier: CONTROLLED
+  interactionMode: BOUNDED_WAIT
+  policyRefs:
+  - demo-read
+  inputSchema:
+    type: object
+    properties:
+      noteId:
+        type: string
+        enum:
+        - welcome
+        - help
+    required:
+    - noteId
+    additionalProperties: false
+  outputSchema:
+    $ref: tool-result.schema.json
+  resultDataSchema:
+    type: object
+    properties:
+      found:
+        type: boolean
+      value:
+        type:
+        - string
+        - 'null'
+        maxLength: 1024
+      encoding:
+        const: utf-8
+    required:
+    - found
+    - value
+    - encoding
+    additionalProperties: false
+    allOf:
+    - if:
+        properties:
+          found:
+            const: true
+        required:
+        - found
+      then:
+        properties:
+          value:
+            type: string
+      else:
+        properties:
+          value:
+            type: 'null'
+  annotations:
+    readOnlyHint: true
+    destructiveHint: false
+    idempotentHint: true
+    openWorldHint: false
+  limits:
+    timeoutMs: 3000
+    maxResultBytes: 16384
+    maxValueBytes: 4096
+  examples:
+    validInputs:
+    - noteId: welcome
+    invalidInputs:
+    - noteId: welcome
+      scopeId: scope_b
+    - noteId: '*'
+    - noteId: welcome
+      command: KEYS
+    successDataSamples:
+    - found: true
+      value: 欢迎
+      encoding: utf-8
+    - found: false
+      value: null
+      encoding: utf-8
+    invalidSuccessDataSamples:
+    - found: false
+      value: ''
+      encoding: utf-8
+    - found: true
+      value: 欢迎
+      encoding: utf-8
+      connectionString: forbidden-field
+- name: redis.set_demo_note
+  version: '1'
+  description: 申请覆盖演示文本并设置明确TTL；他人批准后执行固定SET EX，重复新请求可能再次改值和刷新TTL。
+  adapterKind: REDIS
+  resourceBinding: demo.redis
+  operation:
+    operationId: demo.note.set.v1
+    version: '1'
+    command: SET
+    keyTemplate: demo:{scopeId}:notes:{noteId}
+    valueArgument: value
+    expiryMode: EX
+    ttlArgument: ttlSeconds
+  scopeBinding:
+    source: AUTHORIZATION
+    attribute: scopeId
+    target: scopeId
+    valuePattern: ^[a-z][a-z0-9_]{0,31}$
+  effectClass: WRITE
+  riskTier: CONTROLLED
+  interactionMode: CONTROL_FLOW
+  policyRefs:
+  - demo-controlled-write
+  inputSchema:
+    type: object
+    properties:
+      noteId:
+        type: string
+        enum:
+        - welcome
+        - help
+      value:
+        type: string
+        maxLength: 1024
+      ttlSeconds:
+        type: integer
+        minimum: 60
+        maximum: 3600
+    required:
+    - noteId
+    - value
+    - ttlSeconds
+    additionalProperties: false
+  outputSchema:
+    $ref: tool-result.schema.json
+  resultDataSchema:
+    type: object
+    properties:
+      noteId:
+        type: string
+        enum:
+        - welcome
+        - help
+      valueStored:
+        const: true
+      ttlSeconds:
+        type: integer
+        minimum: 60
+        maximum: 3600
+        description: The acknowledged SET expiry argument, not an observed remaining TTL.
+    required:
+    - noteId
+    - valueStored
+    - ttlSeconds
+    additionalProperties: false
+  annotations:
+    readOnlyHint: false
+    destructiveHint: true
+    idempotentHint: false
+    openWorldHint: false
+  limits:
+    timeoutMs: 3000
+    maxResultBytes: 16384
+    maxValueBytes: 4096
+  examples:
+    validInputs:
+    - noteId: welcome
+      value: 新的演示文本
+      ttlSeconds: 300
+    invalidInputs:
+    - noteId: welcome
+      value: 新的演示文本
+      ttlSeconds: 300
+      scopeId: scope_b
+    - noteId: welcome
+      value: 新的演示文本
+      ttlSeconds: 0
+    - noteId: welcome
+      value: 新的演示文本
+      ttlSeconds: 300
+      options:
+      - NX
+    successDataSamples:
+    - noteId: welcome
+      valueStored: true
+      ttlSeconds: 300
+    invalidSuccessDataSamples:
+    - noteId: welcome
+      valueStored: true
+      ttlSeconds: 0
+    - noteId: welcome
+      valueStored: true
+      ttlSeconds: 300
+      redisUrl: forbidden-field
+- name: directory.get_demo_office
+  version: '1'
+  description: 读取当前可见的演示办公地点资料；地址、路由和认证由注册operation固定。
+  adapterKind: HTTP
+  resourceBinding: demo.directory
+  operation:
+    operationId: getDemoOffice
+    version: '1'
+    method: GET
+    pathTemplate: /demo/offices/{officeId}
+  scopeBinding:
+    source: AUTHORIZATION
+    attribute: scopeId
+    target: scopeId
+    valuePattern: ^[a-z][a-z0-9_]{0,31}$
+  effectClass: READ
+  riskTier: CONTROLLED
+  interactionMode: BOUNDED_WAIT
+  policyRefs:
+  - demo-read
+  inputSchema:
+    type: object
+    properties:
+      officeId:
+        type: string
+        enum:
+        - office-demo
+    required:
+    - officeId
+    additionalProperties: false
+  outputSchema:
+    $ref: tool-result.schema.json
+  resultDataSchema:
+    type: object
+    properties:
+      officeId:
+        type: string
+        enum:
+        - office-demo
+      displayName:
+        type: string
+        minLength: 1
+        maxLength: 100
+      timeZone:
+        type: string
+        enum:
+        - Asia/Shanghai
+    required:
+    - officeId
+    - displayName
+    - timeZone
+    additionalProperties: false
+  annotations:
+    readOnlyHint: true
+    destructiveHint: false
+    idempotentHint: true
+    openWorldHint: false
+  limits:
+    timeoutMs: 5000
+    maxResultBytes: 16384
+  examples:
+    validInputs:
+    - officeId: office-demo
+    invalidInputs:
+    - officeId: office-demo
+      scopeId: scope_b
+    - officeId: office-demo
+      url: https://other.example.invalid
+    - officeId: ../offices/private
+    successDataSamples:
+    - officeId: office-demo
+      displayName: 演示办公室
+      timeZone: Asia/Shanghai
+    invalidSuccessDataSamples:
+    - officeId: office-demo
+      displayName: 演示办公室
+      timeZone: Asia/Shanghai
+      authorization: forbidden-field
+- name: inventory.reserve_demo
+  version: '1'
+  description: 申请为当前授权范围预留演示库存；固定业务请求模板与数量上限，另一人批准后显式续传。
+  adapterKind: HTTP
+  resourceBinding: demo.inventory
+  operation:
+    operationId: reserveDemo.v1
+    version: '1'
+    method: POST
+    pathTemplate: /demo/reservations
+    requestTemplateRef: request://demo/reservation.create/1
+  scopeBinding:
+    source: AUTHORIZATION
+    attribute: scopeId
+    target: scopeId
+    valuePattern: ^[a-z][a-z0-9_]{0,31}$
+  effectClass: WRITE
+  riskTier: CONTROLLED
+  interactionMode: CONTROL_FLOW
+  policyRefs:
+  - demo-controlled-write
+  inputSchema:
+    type: object
+    properties:
+      itemId:
+        type: string
+        pattern: ^item_demo_[a-z0-9_]{1,32}$
+        maxLength: 42
+      quantity:
+        type: integer
+        minimum: 1
+        maximum: 10
+    required:
+    - itemId
+    - quantity
+    additionalProperties: false
+  outputSchema:
+    $ref: tool-result.schema.json
+  resultDataSchema:
+    type: object
+    properties:
+      reservationId:
+        type: string
+        pattern: ^reservation_demo_[a-z0-9_]{1,32}$
+      itemId:
+        type: string
+        pattern: ^item_demo_[a-z0-9_]{1,32}$
+        maxLength: 42
+      quantity:
+        type: integer
+        minimum: 1
+        maximum: 10
+      state:
+        const: RESERVED
+    required:
+    - reservationId
+    - itemId
+    - quantity
+    - state
+    additionalProperties: false
+  annotations:
+    readOnlyHint: false
+    destructiveHint: true
+    idempotentHint: false
+    openWorldHint: false
+  limits:
+    timeoutMs: 5000
+    maxResultBytes: 16384
+  examples:
+    validInputs:
+    - itemId: item_demo_1
+      quantity: 2
+    invalidInputs:
+    - itemId: item_demo_1
+      quantity: 2
+      scopeId: scope_b
+    - itemId: item_demo_1
+      quantity: 11
+    - itemId: item_demo_1
+      quantity: 2
+      method: DELETE
+    successDataSamples:
+    - reservationId: reservation_demo_1
+      itemId: item_demo_1
+      quantity: 2
+      state: RESERVED
+    invalidSuccessDataSamples:
+    - reservationId: reservation_demo_1
+      itemId: item_demo_1
+      quantity: 2
+      state: RESERVED
+      serviceToken: forbidden-field

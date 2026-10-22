@@ -1,0 +1,1272 @@
+{
+  "description": "Design fixtures only; expected-valid tests prove shape and selected combinations, not authentication or backend effects.",
+  "schemaVersion": "1",
+  "cases": [
+    {
+      "name": "read_completed",
+      "schema": "tool-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "requestStatus": "SUCCEEDED",
+        "dispatchState": "DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "data": {
+          "found": true,
+          "value": "欢迎"
+        },
+        "error": null,
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "write_completed",
+      "schema": "tool-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "requestStatus": "SUCCEEDED",
+        "dispatchState": "DISPATCHED",
+        "sideEffectStatus": "APPLIED",
+        "data": {
+          "updated": true,
+          "newVersion": "8"
+        },
+        "error": null,
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "rejected_without_execution",
+      "schema": "tool-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": null,
+        "requestStatus": "FAILED",
+        "dispatchState": "NOT_DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "data": null,
+        "error": {
+          "code": "APPROVAL_DENIED",
+          "category": "APPROVAL",
+          "safeMessage": "示例请求未执行或需要核对",
+          "retryDisposition": "NEVER"
+        },
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "validation_before_acceptance",
+      "schema": "tool-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "FINAL",
+        "actionId": null,
+        "attemptId": null,
+        "executionId": null,
+        "requestStatus": "FAILED",
+        "dispatchState": "NOT_DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "data": null,
+        "error": {
+          "code": "INVALID_ARGUMENTS",
+          "category": "INPUT",
+          "safeMessage": "示例请求未执行或需要核对",
+          "retryDisposition": "MANUAL_NEW_ACTION"
+        },
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "write_applied_but_encoding_failed",
+      "schema": "tool-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "requestStatus": "FAILED",
+        "dispatchState": "DISPATCHED",
+        "sideEffectStatus": "APPLIED",
+        "data": null,
+        "error": {
+          "code": "OUTPUT_VALIDATION_FAILED",
+          "category": "EXECUTION",
+          "safeMessage": "示例请求未执行或需要核对",
+          "retryDisposition": "QUERY_STATUS"
+        },
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "write_response_lost",
+      "schema": "tool-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "requestStatus": "OUTCOME_UNKNOWN",
+        "dispatchState": "DISPATCHED",
+        "sideEffectStatus": "UNKNOWN",
+        "data": null,
+        "error": {
+          "code": "NATIVE_OUTCOME_UNKNOWN",
+          "category": "OUTCOME_UNKNOWN",
+          "safeMessage": "示例请求未执行或需要核对",
+          "retryDisposition": "RECONCILE"
+        },
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "write_dispatch_unknown",
+      "schema": "tool-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "requestStatus": "OUTCOME_UNKNOWN",
+        "dispatchState": "DISPATCH_UNKNOWN",
+        "sideEffectStatus": "UNKNOWN",
+        "data": null,
+        "error": {
+          "code": "DISPATCH_UNCONFIRMED",
+          "category": "OUTCOME_UNKNOWN",
+          "safeMessage": "示例请求未执行或需要核对",
+          "retryDisposition": "RECONCILE"
+        },
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "audited_read_dispatch_unknown",
+      "schema": "tool-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "requestStatus": "OUTCOME_UNKNOWN",
+        "dispatchState": "DISPATCH_UNKNOWN",
+        "sideEffectStatus": "NONE",
+        "data": null,
+        "error": {
+          "code": "READ_RESULT_UNKNOWN",
+          "category": "OUTCOME_UNKNOWN",
+          "safeMessage": "示例请求未执行或需要核对",
+          "retryDisposition": "QUERY_STATUS"
+        },
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "transaction_rolled_back",
+      "schema": "tool-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "requestStatus": "FAILED",
+        "dispatchState": "DISPATCHED",
+        "sideEffectStatus": "ROLLED_BACK",
+        "data": null,
+        "error": {
+          "code": "PRECONDITION_FAILED",
+          "category": "EXECUTION",
+          "safeMessage": "示例请求未执行或需要核对",
+          "retryDisposition": "MANUAL_NEW_ACTION"
+        },
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "cancelled_before_claim",
+      "schema": "tool-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": null,
+        "requestStatus": "CANCELLED",
+        "dispatchState": "NOT_DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "data": null,
+        "error": null,
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "deferred_pending",
+      "schema": "tool-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "DEFERRED",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "state": "PENDING_APPROVAL",
+        "executionId": null,
+        "dispatchState": "NOT_DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "approvalUrl": "https://mcpguard.example.invalid/approvals/11111111-1111-4111-8111-111111111111",
+        "nextActions": [
+          "STATUS",
+          "CANCEL"
+        ],
+        "expiresAt": "2026-10-22T12:30:00Z"
+      }
+    },
+    {
+      "name": "deferred_approved",
+      "schema": "tool-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "DEFERRED",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "state": "READY",
+        "executionId": null,
+        "dispatchState": "NOT_DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "approvalUrl": "https://mcpguard.example.invalid/approvals/11111111-1111-4111-8111-111111111111",
+        "nextActions": [
+          "STATUS",
+          "RESUME",
+          "CANCEL"
+        ],
+        "expiresAt": "2026-10-22T12:30:00Z"
+      }
+    },
+    {
+      "name": "success_without_execution",
+      "schema": "tool-result.schema.json",
+      "valid": false,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": null,
+        "requestStatus": "SUCCEEDED",
+        "dispatchState": "DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "data": {
+          "found": true,
+          "value": "欢迎"
+        },
+        "error": null,
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "unknown_marked_success",
+      "schema": "tool-result.schema.json",
+      "valid": false,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "requestStatus": "SUCCEEDED",
+        "dispatchState": "DISPATCH_UNKNOWN",
+        "sideEffectStatus": "UNKNOWN",
+        "data": {
+          "found": true,
+          "value": "欢迎"
+        },
+        "error": null,
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "claimed_intent_returned_as_final_running",
+      "schema": "tool-result.schema.json",
+      "valid": false,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "requestStatus": "RUNNING",
+        "dispatchState": "INTENT_RECORDED",
+        "sideEffectStatus": "NONE",
+        "data": {
+          "found": true,
+          "value": "欢迎"
+        },
+        "error": null,
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "failed_without_error",
+      "schema": "tool-result.schema.json",
+      "valid": false,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "requestStatus": "FAILED",
+        "dispatchState": "DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "data": {
+          "found": true,
+          "value": "欢迎"
+        },
+        "error": null,
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "not_sent_but_applied",
+      "schema": "tool-result.schema.json",
+      "valid": false,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "requestStatus": "FAILED",
+        "dispatchState": "NOT_DISPATCHED",
+        "sideEffectStatus": "APPLIED",
+        "data": {
+          "found": true,
+          "value": "欢迎"
+        },
+        "error": {
+          "code": "APPROVAL_DENIED",
+          "category": "APPROVAL",
+          "safeMessage": "示例请求未执行或需要核对",
+          "retryDisposition": "NEVER"
+        },
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "deferred_already_has_execution",
+      "schema": "tool-result.schema.json",
+      "valid": false,
+      "value": {
+        "kind": "DEFERRED",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "state": "PENDING_APPROVAL",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "dispatchState": "NOT_DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "approvalUrl": "https://mcpguard.example.invalid/approvals/11111111-1111-4111-8111-111111111111",
+        "nextActions": [
+          "STATUS",
+          "CANCEL"
+        ],
+        "expiresAt": "2026-10-22T12:30:00Z"
+      }
+    },
+    {
+      "name": "deferred_contains_approval_capability",
+      "schema": "tool-result.schema.json",
+      "valid": false,
+      "value": {
+        "kind": "DEFERRED",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "state": "PENDING_APPROVAL",
+        "executionId": null,
+        "dispatchState": "NOT_DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "approvalUrl": "https://mcpguard.example.invalid/approvals/11111111-1111-4111-8111-111111111111",
+        "nextActions": [
+          "APPROVE"
+        ],
+        "expiresAt": "2026-10-22T12:30:00Z"
+      }
+    },
+    {
+      "name": "pending_resume_advertised",
+      "schema": "tool-result.schema.json",
+      "valid": false,
+      "value": {
+        "kind": "DEFERRED",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "state": "PENDING_APPROVAL",
+        "executionId": null,
+        "dispatchState": "NOT_DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "approvalUrl": "https://mcpguard.example.invalid/approvals/11111111-1111-4111-8111-111111111111",
+        "nextActions": [
+          "RESUME"
+        ],
+        "expiresAt": "2026-10-22T12:30:00Z"
+      }
+    },
+    {
+      "name": "deferred_unknown_state",
+      "schema": "tool-result.schema.json",
+      "valid": false,
+      "value": {
+        "kind": "DEFERRED",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "state": "OUTCOME_UNKNOWN",
+        "executionId": null,
+        "dispatchState": "NOT_DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "approvalUrl": "https://mcpguard.example.invalid/approvals/11111111-1111-4111-8111-111111111111",
+        "nextActions": [
+          "STATUS",
+          "CANCEL"
+        ],
+        "expiresAt": "2026-10-22T12:30:00Z"
+      }
+    },
+    {
+      "name": "result_contains_secret_extra_field",
+      "schema": "tool-result.schema.json",
+      "valid": false,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "requestStatus": "SUCCEEDED",
+        "dispatchState": "DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "data": {
+          "found": true,
+          "value": "欢迎"
+        },
+        "error": null,
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        },
+        "password": "must-not-be-output"
+      }
+    },
+    {
+      "name": "view_waiting",
+      "schema": "action-view.schema.json",
+      "valid": true,
+      "value": {
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "state": "PENDING_APPROVAL",
+        "authorizationSource": null,
+        "interactionMode": "CONTROL_FLOW",
+        "revision": 1,
+        "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "toolName": "pg.update_demo_note",
+        "resourceId": "44444444-4444-4444-8444-444444444444",
+        "createdAt": "2026-10-22T12:00:00Z",
+        "expiresAt": "2026-10-22T12:30:00Z",
+        "executionId": null,
+        "dispatchState": "NOT_DISPATCHED",
+        "requestStatus": null,
+        "sideEffectStatus": "NONE",
+        "availableActions": [
+          "STATUS",
+          "CANCEL"
+        ]
+      }
+    },
+    {
+      "name": "view_human_ready",
+      "schema": "action-view.schema.json",
+      "valid": true,
+      "value": {
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "state": "READY",
+        "authorizationSource": "HUMAN",
+        "interactionMode": "CONTROL_FLOW",
+        "revision": 2,
+        "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "toolName": "pg.update_demo_note",
+        "resourceId": "44444444-4444-4444-8444-444444444444",
+        "createdAt": "2026-10-22T12:00:00Z",
+        "expiresAt": "2026-10-22T12:30:00Z",
+        "executionId": null,
+        "dispatchState": "NOT_DISPATCHED",
+        "requestStatus": null,
+        "sideEffectStatus": "NONE",
+        "availableActions": [
+          "STATUS",
+          "RESUME",
+          "CANCEL"
+        ]
+      }
+    },
+    {
+      "name": "view_policy_ready",
+      "schema": "action-view.schema.json",
+      "valid": true,
+      "value": {
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "state": "READY",
+        "authorizationSource": "POLICY",
+        "interactionMode": "BOUNDED_WAIT",
+        "revision": 1,
+        "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "toolName": "pg.update_demo_note",
+        "resourceId": "44444444-4444-4444-8444-444444444444",
+        "createdAt": "2026-10-22T12:00:00Z",
+        "expiresAt": "2026-10-22T12:30:00Z",
+        "executionId": null,
+        "dispatchState": "NOT_DISPATCHED",
+        "requestStatus": null,
+        "sideEffectStatus": "NONE",
+        "availableActions": [
+          "STATUS",
+          "CANCEL"
+        ]
+      }
+    },
+    {
+      "name": "view_sending_write_no_receipt",
+      "schema": "action-view.schema.json",
+      "valid": true,
+      "value": {
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "state": "EXECUTING",
+        "authorizationSource": "HUMAN",
+        "interactionMode": "CONTROL_FLOW",
+        "revision": 1,
+        "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "toolName": "pg.update_demo_note",
+        "resourceId": "44444444-4444-4444-8444-444444444444",
+        "createdAt": "2026-10-22T12:00:00Z",
+        "expiresAt": "2026-10-22T12:30:00Z",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "dispatchState": "INTENT_RECORDED",
+        "requestStatus": "RUNNING",
+        "sideEffectStatus": "UNKNOWN",
+        "availableActions": [
+          "STATUS",
+          "CANCEL"
+        ]
+      }
+    },
+    {
+      "name": "view_unknown",
+      "schema": "action-view.schema.json",
+      "valid": true,
+      "value": {
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "state": "OUTCOME_UNKNOWN",
+        "authorizationSource": "HUMAN",
+        "interactionMode": "CONTROL_FLOW",
+        "revision": 1,
+        "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "toolName": "pg.update_demo_note",
+        "resourceId": "44444444-4444-4444-8444-444444444444",
+        "createdAt": "2026-10-22T12:00:00Z",
+        "expiresAt": "2026-10-22T12:30:00Z",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "dispatchState": "DISPATCH_UNKNOWN",
+        "requestStatus": "OUTCOME_UNKNOWN",
+        "sideEffectStatus": "UNKNOWN",
+        "availableActions": [
+          "STATUS",
+          "RECONCILE"
+        ]
+      }
+    },
+    {
+      "name": "view_ready_without_source",
+      "schema": "action-view.schema.json",
+      "valid": false,
+      "value": {
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "state": "READY",
+        "authorizationSource": null,
+        "interactionMode": "CONTROL_FLOW",
+        "revision": 1,
+        "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "toolName": "pg.update_demo_note",
+        "resourceId": "44444444-4444-4444-8444-444444444444",
+        "createdAt": "2026-10-22T12:00:00Z",
+        "expiresAt": "2026-10-22T12:30:00Z",
+        "executionId": null,
+        "dispatchState": "NOT_DISPATCHED",
+        "requestStatus": null,
+        "sideEffectStatus": "NONE",
+        "availableActions": [
+          "STATUS",
+          "CANCEL"
+        ]
+      }
+    },
+    {
+      "name": "view_pending_with_execution",
+      "schema": "action-view.schema.json",
+      "valid": false,
+      "value": {
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "state": "PENDING_APPROVAL",
+        "authorizationSource": null,
+        "interactionMode": "CONTROL_FLOW",
+        "revision": 1,
+        "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "toolName": "pg.update_demo_note",
+        "resourceId": "44444444-4444-4444-8444-444444444444",
+        "createdAt": "2026-10-22T12:00:00Z",
+        "expiresAt": "2026-10-22T12:30:00Z",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "dispatchState": "NOT_DISPATCHED",
+        "requestStatus": null,
+        "sideEffectStatus": "NONE",
+        "availableActions": [
+          "STATUS",
+          "CANCEL"
+        ]
+      }
+    },
+    {
+      "name": "view_executing_without_execution",
+      "schema": "action-view.schema.json",
+      "valid": false,
+      "value": {
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "state": "EXECUTING",
+        "authorizationSource": "HUMAN",
+        "interactionMode": "CONTROL_FLOW",
+        "revision": 1,
+        "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "toolName": "pg.update_demo_note",
+        "resourceId": "44444444-4444-4444-8444-444444444444",
+        "createdAt": "2026-10-22T12:00:00Z",
+        "expiresAt": "2026-10-22T12:30:00Z",
+        "executionId": null,
+        "dispatchState": "INTENT_RECORDED",
+        "requestStatus": "RUNNING",
+        "sideEffectStatus": "NONE",
+        "availableActions": [
+          "STATUS",
+          "CANCEL"
+        ]
+      }
+    },
+    {
+      "name": "view_denied_as_success",
+      "schema": "action-view.schema.json",
+      "valid": false,
+      "value": {
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "state": "DENIED",
+        "authorizationSource": null,
+        "interactionMode": "CONTROL_FLOW",
+        "revision": 1,
+        "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "toolName": "pg.update_demo_note",
+        "resourceId": "44444444-4444-4444-8444-444444444444",
+        "createdAt": "2026-10-22T12:00:00Z",
+        "expiresAt": "2026-10-22T12:30:00Z",
+        "executionId": null,
+        "dispatchState": "NOT_DISPATCHED",
+        "requestStatus": "SUCCEEDED",
+        "sideEffectStatus": "NONE",
+        "availableActions": [
+          "STATUS",
+          "CANCEL"
+        ]
+      }
+    },
+    {
+      "name": "management_error",
+      "schema": "error.schema.json",
+      "valid": true,
+      "value": {
+        "code": "VERSION_CONFLICT",
+        "message": "对象已更新，请重新读取",
+        "requestId": "request_demo_1",
+        "details": {
+          "currentRevision": 8
+        }
+      }
+    },
+    {
+      "name": "management_error_without_trace",
+      "schema": "error.schema.json",
+      "valid": false,
+      "value": {
+        "code": "VERSION_CONFLICT",
+        "message": "对象已更新，请重新读取"
+      }
+    },
+    {
+      "name": "management_error_raw_secret_field",
+      "schema": "error.schema.json",
+      "valid": false,
+      "value": {
+        "code": "DEPENDENCY_UNAVAILABLE",
+        "message": "依赖不可用",
+        "requestId": "request_demo_2",
+        "rawCredential": "must-not-be-output"
+      }
+    },
+    {
+      "name": "status_of_running_execution",
+      "schema": "action-control-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "ACTION_CONTROL",
+        "operation": "STATUS",
+        "requestId": "request_control_demo_1",
+        "outcome": "STATE_RETURNED",
+        "action": {
+          "actionId": "11111111-1111-4111-8111-111111111111",
+          "state": "EXECUTING",
+          "authorizationSource": "HUMAN",
+          "interactionMode": "CONTROL_FLOW",
+          "revision": 1,
+          "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "toolName": "pg.update_demo_note",
+          "resourceId": "44444444-4444-4444-8444-444444444444",
+          "createdAt": "2026-10-22T12:00:00Z",
+          "expiresAt": "2026-10-22T12:30:00Z",
+          "executionId": "33333333-3333-4333-8333-333333333333",
+          "dispatchState": "INTENT_RECORDED",
+          "requestStatus": "RUNNING",
+          "sideEffectStatus": "UNKNOWN",
+          "availableActions": [
+            "STATUS",
+            "CANCEL"
+          ]
+        },
+        "result": null,
+        "error": null
+      }
+    },
+    {
+      "name": "resume_while_pending",
+      "schema": "action-control-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "ACTION_CONTROL",
+        "operation": "RESUME",
+        "requestId": "request_control_demo_1",
+        "outcome": "APPROVAL_PENDING",
+        "action": {
+          "actionId": "11111111-1111-4111-8111-111111111111",
+          "state": "PENDING_APPROVAL",
+          "authorizationSource": null,
+          "interactionMode": "CONTROL_FLOW",
+          "revision": 1,
+          "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "toolName": "pg.update_demo_note",
+          "resourceId": "44444444-4444-4444-8444-444444444444",
+          "createdAt": "2026-10-22T12:00:00Z",
+          "expiresAt": "2026-10-22T12:30:00Z",
+          "executionId": null,
+          "dispatchState": "NOT_DISPATCHED",
+          "requestStatus": null,
+          "sideEffectStatus": "NONE",
+          "availableActions": [
+            "STATUS",
+            "CANCEL"
+          ]
+        },
+        "result": null,
+        "error": null
+      }
+    },
+    {
+      "name": "duplicate_resume_while_running",
+      "schema": "action-control-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "ACTION_CONTROL",
+        "operation": "RESUME",
+        "requestId": "request_control_demo_1",
+        "outcome": "EXECUTION_IN_PROGRESS",
+        "action": {
+          "actionId": "11111111-1111-4111-8111-111111111111",
+          "state": "EXECUTING",
+          "authorizationSource": "HUMAN",
+          "interactionMode": "CONTROL_FLOW",
+          "revision": 1,
+          "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "toolName": "pg.update_demo_note",
+          "resourceId": "44444444-4444-4444-8444-444444444444",
+          "createdAt": "2026-10-22T12:00:00Z",
+          "expiresAt": "2026-10-22T12:30:00Z",
+          "executionId": "33333333-3333-4333-8333-333333333333",
+          "dispatchState": "INTENT_RECORDED",
+          "requestStatus": "RUNNING",
+          "sideEffectStatus": "UNKNOWN",
+          "availableActions": [
+            "STATUS",
+            "CANCEL"
+          ]
+        },
+        "result": null,
+        "error": null
+      }
+    },
+    {
+      "name": "resume_returns_existing_final",
+      "schema": "action-control-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "ACTION_CONTROL",
+        "operation": "RESUME",
+        "requestId": "request_control_demo_1",
+        "outcome": "RESULT_RETURNED",
+        "action": {
+          "actionId": "11111111-1111-4111-8111-111111111111",
+          "state": "SUCCEEDED",
+          "authorizationSource": "HUMAN",
+          "interactionMode": "CONTROL_FLOW",
+          "revision": 1,
+          "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "toolName": "pg.update_demo_note",
+          "resourceId": "44444444-4444-4444-8444-444444444444",
+          "createdAt": "2026-10-22T12:00:00Z",
+          "expiresAt": "2026-10-22T12:30:00Z",
+          "executionId": "33333333-3333-4333-8333-333333333333",
+          "dispatchState": "DISPATCHED",
+          "requestStatus": "SUCCEEDED",
+          "sideEffectStatus": "APPLIED",
+          "availableActions": [
+            "STATUS",
+            "VIEW_RESULT"
+          ]
+        },
+        "result": {
+          "kind": "FINAL",
+          "actionId": "11111111-1111-4111-8111-111111111111",
+          "attemptId": "22222222-2222-4222-8222-222222222222",
+          "executionId": "33333333-3333-4333-8333-333333333333",
+          "requestStatus": "SUCCEEDED",
+          "dispatchState": "DISPATCHED",
+          "sideEffectStatus": "APPLIED",
+          "data": {
+            "itemId": "item_demo_1",
+            "newVersion": "8",
+            "affectedRows": 1
+          },
+          "error": null,
+          "metadata": {
+            "encoding": "utf-8",
+            "truncated": false
+          }
+        },
+        "error": null
+      }
+    },
+    {
+      "name": "cancel_request_still_running",
+      "schema": "action-control-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "ACTION_CONTROL",
+        "operation": "CANCEL",
+        "requestId": "request_control_demo_1",
+        "outcome": "CANCELLATION_REQUESTED",
+        "action": {
+          "actionId": "11111111-1111-4111-8111-111111111111",
+          "state": "EXECUTING",
+          "authorizationSource": "HUMAN",
+          "interactionMode": "CONTROL_FLOW",
+          "revision": 1,
+          "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "toolName": "pg.update_demo_note",
+          "resourceId": "44444444-4444-4444-8444-444444444444",
+          "createdAt": "2026-10-22T12:00:00Z",
+          "expiresAt": "2026-10-22T12:30:00Z",
+          "executionId": "33333333-3333-4333-8333-333333333333",
+          "dispatchState": "INTENT_RECORDED",
+          "requestStatus": "RUNNING",
+          "sideEffectStatus": "UNKNOWN",
+          "availableActions": [
+            "STATUS",
+            "CANCEL"
+          ]
+        },
+        "result": null,
+        "error": null
+      }
+    },
+    {
+      "name": "control_denied_before_object_disclosure",
+      "schema": "action-control-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "CONTROL_ERROR",
+        "operation": "RESUME",
+        "requestId": "request_control_demo_2",
+        "error": {
+          "code": "ACTION_NOT_FOUND_OR_DENIED",
+          "category": "AUTHORIZATION",
+          "safeMessage": "当前请求不能继续执行",
+          "retryDisposition": "NEVER"
+        }
+      }
+    },
+    {
+      "name": "control_running_as_final",
+      "schema": "action-control-result.schema.json",
+      "valid": false,
+      "value": {
+        "kind": "ACTION_CONTROL",
+        "operation": "RESUME",
+        "requestId": "request_control_demo_1",
+        "outcome": "RESULT_RETURNED",
+        "action": {
+          "actionId": "11111111-1111-4111-8111-111111111111",
+          "state": "EXECUTING",
+          "authorizationSource": "HUMAN",
+          "interactionMode": "CONTROL_FLOW",
+          "revision": 1,
+          "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "toolName": "pg.update_demo_note",
+          "resourceId": "44444444-4444-4444-8444-444444444444",
+          "createdAt": "2026-10-22T12:00:00Z",
+          "expiresAt": "2026-10-22T12:30:00Z",
+          "executionId": "33333333-3333-4333-8333-333333333333",
+          "dispatchState": "INTENT_RECORDED",
+          "requestStatus": "RUNNING",
+          "sideEffectStatus": "UNKNOWN",
+          "availableActions": [
+            "STATUS",
+            "CANCEL"
+          ]
+        },
+        "result": {
+          "kind": "FINAL",
+          "actionId": "11111111-1111-4111-8111-111111111111",
+          "attemptId": "22222222-2222-4222-8222-222222222222",
+          "executionId": "33333333-3333-4333-8333-333333333333",
+          "requestStatus": "RUNNING",
+          "dispatchState": "DISPATCHED",
+          "sideEffectStatus": "NONE",
+          "data": {
+            "found": true,
+            "value": "欢迎"
+          },
+          "error": null,
+          "metadata": {
+            "encoding": "utf-8",
+            "truncated": false
+          }
+        },
+        "error": null
+      }
+    },
+    {
+      "name": "control_pending_returns_execution_result",
+      "schema": "action-control-result.schema.json",
+      "valid": false,
+      "value": {
+        "kind": "ACTION_CONTROL",
+        "operation": "RESUME",
+        "requestId": "request_control_demo_1",
+        "outcome": "APPROVAL_PENDING",
+        "action": {
+          "actionId": "11111111-1111-4111-8111-111111111111",
+          "state": "PENDING_APPROVAL",
+          "authorizationSource": null,
+          "interactionMode": "CONTROL_FLOW",
+          "revision": 1,
+          "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "toolName": "pg.update_demo_note",
+          "resourceId": "44444444-4444-4444-8444-444444444444",
+          "createdAt": "2026-10-22T12:00:00Z",
+          "expiresAt": "2026-10-22T12:30:00Z",
+          "executionId": null,
+          "dispatchState": "NOT_DISPATCHED",
+          "requestStatus": null,
+          "sideEffectStatus": "NONE",
+          "availableActions": [
+            "STATUS",
+            "CANCEL"
+          ]
+        },
+        "result": {
+          "kind": "FINAL",
+          "actionId": "11111111-1111-4111-8111-111111111111",
+          "attemptId": "22222222-2222-4222-8222-222222222222",
+          "executionId": "33333333-3333-4333-8333-333333333333",
+          "requestStatus": "SUCCEEDED",
+          "dispatchState": "DISPATCHED",
+          "sideEffectStatus": "NONE",
+          "data": {
+            "found": true,
+            "value": "欢迎"
+          },
+          "error": null,
+          "metadata": {
+            "encoding": "utf-8",
+            "truncated": false
+          }
+        },
+        "error": null
+      }
+    },
+    {
+      "name": "control_failure_discloses_action",
+      "schema": "action-control-result.schema.json",
+      "valid": false,
+      "value": {
+        "kind": "CONTROL_ERROR",
+        "operation": "RESUME",
+        "requestId": "request_control_demo_2",
+        "error": {
+          "code": "ACTION_NOT_RESUMABLE",
+          "category": "CONFLICT",
+          "safeMessage": "当前请求不能继续执行",
+          "retryDisposition": "NEVER"
+        },
+        "action": {
+          "actionId": "11111111-1111-4111-8111-111111111111",
+          "state": "PENDING_APPROVAL",
+          "authorizationSource": null,
+          "interactionMode": "CONTROL_FLOW",
+          "revision": 1,
+          "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "toolName": "pg.update_demo_note",
+          "resourceId": "44444444-4444-4444-8444-444444444444",
+          "createdAt": "2026-10-22T12:00:00Z",
+          "expiresAt": "2026-10-22T12:30:00Z",
+          "executionId": null,
+          "dispatchState": "NOT_DISPATCHED",
+          "requestStatus": null,
+          "sideEffectStatus": "NONE",
+          "availableActions": [
+            "STATUS",
+            "CANCEL"
+          ]
+        }
+      }
+    },
+    {
+      "name": "resume_with_new_business_parameters",
+      "schema": "action-control-result.schema.json#/$defs/actionIdInput",
+      "valid": false,
+      "value": {
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "note": "replacement"
+      }
+    },
+    {
+      "name": "resume_input_action_only",
+      "schema": "action-control-result.schema.json#/$defs/actionIdInput",
+      "valid": true,
+      "value": {
+        "actionId": "11111111-1111-4111-8111-111111111111"
+      }
+    },
+    {
+      "name": "denied_advertises_resume_or_approve",
+      "schema": "action-view.schema.json",
+      "valid": false,
+      "value": {
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "state": "DENIED",
+        "authorizationSource": null,
+        "interactionMode": "CONTROL_FLOW",
+        "revision": 1,
+        "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "toolName": "pg.update_demo_note",
+        "resourceId": "44444444-4444-4444-8444-444444444444",
+        "createdAt": "2026-10-22T12:00:00Z",
+        "expiresAt": "2026-10-22T12:30:00Z",
+        "executionId": null,
+        "dispatchState": "NOT_DISPATCHED",
+        "requestStatus": "FAILED",
+        "sideEffectStatus": "NONE",
+        "availableActions": [
+          "STATUS",
+          "RESUME",
+          "APPROVE"
+        ]
+      }
+    },
+    {
+      "name": "bounded_wait_advertises_resume",
+      "schema": "action-view.schema.json",
+      "valid": false,
+      "value": {
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "state": "READY",
+        "authorizationSource": "POLICY",
+        "interactionMode": "BOUNDED_WAIT",
+        "revision": 2,
+        "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "toolName": "pg.update_demo_note",
+        "resourceId": "44444444-4444-4444-8444-444444444444",
+        "createdAt": "2026-10-22T12:00:00Z",
+        "expiresAt": "2026-10-22T12:30:00Z",
+        "executionId": null,
+        "dispatchState": "NOT_DISPATCHED",
+        "requestStatus": null,
+        "sideEffectStatus": "NONE",
+        "availableActions": [
+          "STATUS",
+          "RESUME",
+          "CANCEL"
+        ]
+      }
+    },
+    {
+      "name": "overlong_tool_name",
+      "schema": "action-view.schema.json",
+      "valid": false,
+      "value": {
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "state": "READY",
+        "authorizationSource": "HUMAN",
+        "interactionMode": "CONTROL_FLOW",
+        "revision": 2,
+        "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "toolName": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "resourceId": "44444444-4444-4444-8444-444444444444",
+        "createdAt": "2026-10-22T12:00:00Z",
+        "expiresAt": "2026-10-22T12:30:00Z",
+        "executionId": null,
+        "dispatchState": "NOT_DISPATCHED",
+        "requestStatus": null,
+        "sideEffectStatus": "NONE",
+        "availableActions": [
+          "STATUS",
+          "RESUME",
+          "CANCEL"
+        ]
+      }
+    },
+    {
+      "name": "failed_payload_bypasses_success_schema",
+      "schema": "tool-result.schema.json",
+      "valid": false,
+      "value": {
+        "kind": "FINAL",
+        "actionId": "11111111-1111-4111-8111-111111111111",
+        "attemptId": "22222222-2222-4222-8222-222222222222",
+        "executionId": "33333333-3333-4333-8333-333333333333",
+        "requestStatus": "FAILED",
+        "dispatchState": "DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "data": {
+          "password": "must-not-be-output"
+        },
+        "error": {
+          "code": "ACTION_NOT_RESUMABLE",
+          "category": "CONFLICT",
+          "safeMessage": "当前请求不能继续执行",
+          "retryDisposition": "NEVER"
+        },
+        "metadata": {
+          "encoding": "utf-8",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "name": "resume_finished_payload_unavailable",
+      "schema": "action-control-result.schema.json",
+      "valid": true,
+      "value": {
+        "kind": "ACTION_CONTROL",
+        "operation": "RESUME",
+        "requestId": "request_control_demo_1",
+        "outcome": "STATE_RETURNED",
+        "action": {
+          "actionId": "11111111-1111-4111-8111-111111111111",
+          "state": "SUCCEEDED",
+          "authorizationSource": "HUMAN",
+          "interactionMode": "CONTROL_FLOW",
+          "revision": 1,
+          "planHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "toolName": "pg.update_demo_note",
+          "resourceId": "44444444-4444-4444-8444-444444444444",
+          "createdAt": "2026-10-22T12:00:00Z",
+          "expiresAt": "2026-10-22T12:30:00Z",
+          "executionId": "33333333-3333-4333-8333-333333333333",
+          "dispatchState": "DISPATCHED",
+          "requestStatus": "SUCCEEDED",
+          "sideEffectStatus": "APPLIED",
+          "availableActions": [
+            "STATUS",
+            "VIEW_RESULT"
+          ]
+        },
+        "result": null,
+        "error": null
+      }
+    },
+    {
+      "name": "management_details_cannot_carry_raw_payload",
+      "schema": "error.schema.json",
+      "valid": false,
+      "value": {
+        "code": "DEPENDENCY_FAILED",
+        "message": "依赖请求未完成",
+        "requestId": "request_demo_3",
+        "details": {
+          "password": "must-not-be-output"
+        }
+      }
+    }
+  ]
+}
