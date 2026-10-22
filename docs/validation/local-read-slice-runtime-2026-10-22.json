@@ -1,0 +1,120 @@
+{
+  "capturedAt": "2026-10-22T22:54:15.095375+08:00",
+  "postgresVersion": "16.14",
+  "postgresVersionNum": "160014",
+  "migrations": [
+    {
+      "version": 1,
+      "checksum": "f7bb95a3995eaf7d26acccae79cfcfbba6ea7e0789dcfbedb9385426166cfab0"
+    },
+    {
+      "version": 2,
+      "checksum": "09e499b4c663d6beb8bc6f60cae42c9f1ac87fafc13f50d8fd52227f921372a6"
+    }
+  ],
+  "endpoint": "http://127.0.0.1:18080/mcp",
+  "containers": [
+    {
+      "name": "mcpguard-local-verified-postgres",
+      "id": "6a787070cd69615469a247494b9c3574c81b7926594c25f826a0d2330eb37eb3",
+      "image": "postgres:16.14-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+      "imageId": "sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+      "status": "running",
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "32770"
+          }
+        ]
+      },
+      "volumes": [
+        "41168e8816673a7af0231b022d6104d6823bd887b0d34aa6e897ffd09f7a7f51"
+      ]
+    },
+    {
+      "name": "mcpguard-local-runner",
+      "id": "6072b861793564a38893435e661a00c446dfa391842aec121728c8b9ab0fe81c",
+      "image": "dbhub-local/golang:1.26.9-bookworm",
+      "imageId": "sha256:bcef992b77b1e2031aaaa51da75cebc32da8e9c182e12e633ea79023c79d9eff",
+      "status": "running",
+      "ports": {},
+      "volumes": [
+        "mcpguard-local-gomodcache",
+        "mcpguard-local-gobuildcache"
+      ]
+    },
+    {
+      "name": "mcpguard-local-gateway",
+      "id": "82e2af410316be5b63f5b5b570725d58d24c6b628b4d4b0e7c9efa71f38b22a1",
+      "image": "dbhub-local/golang:1.26.9-bookworm",
+      "imageId": "sha256:bcef992b77b1e2031aaaa51da75cebc32da8e9c182e12e633ea79023c79d9eff",
+      "status": "running",
+      "ports": {},
+      "volumes": []
+    },
+    {
+      "name": "mcpguard-dev-postgres",
+      "id": "29e9392f22d6ff3e49828bb95b83bd5c5217a23319cba3b41243a2e151986bc1",
+      "image": "postgres:16.14-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+      "imageId": "sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+      "status": "exited",
+      "ports": {},
+      "volumes": [
+        "a82b4a17f2ab63a06fa5e8dfe53fd48d70381a859e1bb67d8545448ae12268b9"
+      ]
+    }
+  ],
+  "pinnedImage": {
+    "indexDigest": "sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+    "platformManifestDigest": "sha256:7a396fd264a2067788b6551122b50f162bf6136312c7fc9d74381cb92c648382",
+    "configDigest": "sha256:de3a4eab8fdfa507ea92aac488b916b08089e515db49b055fe71dfa271ba3a28",
+    "layerDigests": [
+      "sha256:55afa1ecc21d2bb5e5045f32dafee56272ffd89860bac26f6c32123439af26a4",
+      "sha256:0749aef11dca5d7e6069c03b613b6fa4e7632585fb39d7a0cd27db1b3917f640",
+      "sha256:2d3064b8615b03f3d535e4382404cbecb1ecf715b1b04bc1f43d2f62477ad34a",
+      "sha256:ef6ab46d98b26e9a31bf9e4c7c2886a354cd9cbe461589ddbfe030a8ea376531",
+      "sha256:689a434e3a869716a86b499b94e1fb6c02c0b9eef9cf64fea8c2974f146d5647",
+      "sha256:2f537278bc74ecafd3b27bd4298624714d609fff93c7011063810df112bdc930",
+      "sha256:4096c457dc0d75b7c331d5bce72f70b7c8505e4cecf3ae1f004e093ac9601cec",
+      "sha256:c86ab38aa6dbe716b86388c777dd92324a7c9570e08454b9043d65023d61a298",
+      "sha256:713473b5b92b02fb9fe4eb9369a2839beed391986a75af6553ef2243377ee38a",
+      "sha256:7af924000309021b938d56fe512456060a6cb040f199ddc1827cce38966cd58e",
+      "sha256:cc7fa208b8a739a2259173985b8977135a0351f227a6f6d562ba7b268414f6fb"
+    ],
+    "allDownloadedDigestsVerified": true,
+    "postgres": "16.14",
+    "platform": "linux/amd64"
+  },
+  "initialBootstrapFailurePreserved": true,
+  "existingServicesBefore": [
+    {
+      "url": "http://127.0.0.1:8080/api/ready",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/api/ready",
+      "status": 200
+    }
+  ],
+  "readinessAfter": [
+    {
+      "url": "http://127.0.0.1:18080/healthz",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/ready",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/api/ready",
+      "status": 200
+    }
+  ],
+  "privateStatePermissions": {
+    "directoryInheritanceProtected": true,
+    "permittedPrincipalCount": 3,
+    "otherAllowedPrincipals": 0,
+    "access": "Current Windows user, Local System, Administrators"
+  }
+}

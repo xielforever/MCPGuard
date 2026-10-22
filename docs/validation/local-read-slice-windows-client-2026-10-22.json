@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "date": "2026-10-22T14:51:24.443Z",
+  "endpoint": "http://127.0.0.1:18080",
+  "profile": "2025-11-25",
+  "passed": 19,
+  "checks": [
+    "Windows localhost healthz",
+    "Windows HTTP initialize: alice",
+    "Windows HTTP initialized: alice",
+    "Windows HTTP initialize: bob",
+    "Windows HTTP initialized: bob",
+    "Windows HTTP initialize: visitor",
+    "Windows HTTP initialized: visitor",
+    "Windows HTTP employee directory filtering",
+    "Windows HTTP real PostgreSQL scope isolation",
+    "Windows HTTP PostgreSQL bigint precision",
+    "Windows HTTP direct unauthorized tool call denied",
+    "Windows HTTP anonymous request denied",
+    "Windows audit is persistent and isolated",
+    "Windows stdio via WSL/Docker initialize",
+    "Windows stdio directory",
+    "Windows stdio reaches real PostgreSQL",
+    "Windows stdio shuts down on EOF",
+    "Windows stdio stdout contains only protocol frames",
+    "Windows stdio output contains no employee token"
+  ],
+  "modelKeyRequired": false,
+  "realChatGPTValidated": false
+}

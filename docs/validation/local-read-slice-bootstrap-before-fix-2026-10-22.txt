@@ -1,0 +1,70 @@
+Original bootstrap failure (before fix):
+Traceback (most recent call last):
+  File "/mnt/c/dev/projects/MCPGuard/.dev/local-bootstrap.py", line 14, in <module>
+    dev.up()
+  File "/mnt/c/dev/projects/MCPGuard/scripts/dev.py", line 130, in up
+    psql(cfg, "postgres", sql)
+  File "/mnt/c/dev/projects/MCPGuard/scripts/dev.py", line 64, in psql
+    return docker("exec", "-i", cfg["container"], "psql", "-X", "-v", "ON_ERROR_STOP=1", "-U", "postgres", "-d", database, input=sql, capture_output=True, text=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/dev/projects/MCPGuard/scripts/dev.py", line 33, in docker
+    return run(["docker", "--host=unix:///var/run/docker.sock", *args], env=env, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/dev/projects/MCPGuard/scripts/dev.py", line 25, in run
+    return subprocess.run(args, cwd=ROOT, check=True, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['docker', '--host=unix:///var/run/docker.sock', 'exec', '-i', 'mcpguard-dev-postgres', 'psql', '-X', '-v', 'ON_ERROR_STOP=1', '-U', 'postgres', '-d', 'postgres']' returned non-zero exit status 2.
+
+PostgreSQL lifecycle log (redacted):
+
+Data page checksums are disabled.
+
+fixing permissions on existing directory /var/lib/postgresql/data ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... posix
+selecting default max_connections ... 100
+selecting default shared_buffers ... 128MB
+selecting default time zone ... UTC
+creating configuration files ... ok
+running bootstrap script ... ok
+performing post-bootstrap initialization ... ok
+syncing data to disk ... ok
+
+
+Success. You can now start the database server using:
+
+    pg_ctl -D /var/lib/postgresql/data -l logfile start
+
+waiting for server to start....2026-10-22 14:46:57.616 UTC [95] LOG:  starting PostgreSQL 16.14 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+2026-10-22 14:46:57.619 UTC [95] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-10-22 14:46:57.628 UTC [98] LOG:  database system was shut down at 2026-10-22 14:46:57 UTC
+2026-10-22 14:46:57.636 UTC [95] LOG:  database system is ready to accept connections
+ done
+server started
+
+/usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+
+waiting for server to shut down...2026-10-22 14:46:57.714 UTC [95] LOG:  received fast shutdown request
+.2026-10-22 14:46:57.716 UTC [95] LOG:  aborting any active transactions
+2026-10-22 14:46:57.718 UTC [95] LOG:  background worker "logical replication launcher" (PID 101) exited with exit code 1
+2026-10-22 14:46:57.720 UTC [96] LOG:  shutting down
+2026-10-22 14:46:57.722 UTC [96] LOG:  checkpoint starting: shutdown immediate
+2026-10-22 14:46:57.740 UTC [96] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.005 s, sync=0.003 s, total=0.021 s; sync files=2, longest=0.002 s, average=0.002 s; distance=0 kB, estimate=0 kB; lsn=0/14F7180, redo lsn=0/14F7180
+2026-10-22 14:46:57.746 UTC [95] LOG:  database system is shut down
+ done
+server stopped
+
+PostgreSQL init process complete; ready for start up.
+
+sh: locale: not found
+2026-10-22 14:46:56.271 UTC [47] WARNING:  no usable system locales were found
+initdb: warning: enabling "trust" authentication for local connections
+initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-10-22 14:46:57.845 UTC [1] LOG:  starting PostgreSQL 16.14 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+2026-10-22 14:46:57.845 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-10-22 14:46:57.845 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-10-22 14:46:57.852 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-10-22 14:46:57.864 UTC [122] LOG:  database system was shut down at 2026-10-22 14:46:57 UTC
+2026-10-22 14:46:57.875 UTC [1] LOG:  database system is ready to accept connections

@@ -4,6 +4,8 @@
 
 当前已实现并通过沙箱联调的**最小读取闭环**：官方 Go MCP SDK、两种入口、独立员工测试身份、权限过滤、一条真实 PG 查询、加密持久状态和审计。完整运行说明与范围见 [最小读取闭环](docs/read-slice.md)，验证证据见 [验收记录](docs/validation/read-slice-2026-10-22.md)，总体规划见 [设计文档目录](docs/README.md)。
 
+Windows / WSL 本地复验及启动竞态修复见 [本地闭环记录](docs/validation/local-read-slice-windows-wsl-2026-10-22.md)。
+
 ## 本地运行
 
 需要 Go（最低 1.25，toolchain 1.26.8）、Python 3、Docker，race 测试另需 C 编译器；不需要大模型 key。

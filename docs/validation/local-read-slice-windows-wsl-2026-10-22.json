@@ -1,0 +1,261 @@
+{
+  "startedAt": "2026-10-22T22:48:45.066547+08:00",
+  "environment": "Windows 11 / WSL Ubuntu-24.04 / local Docker",
+  "command": "python3 scripts/dev.py test (Go test observed with -json)",
+  "commit": "2871a0018d6a4d22bc65dacdef7f24cd9a4032ae",
+  "goVersion": "go version go1.26.8 linux/amd64",
+  "status": "PASS",
+  "goTestOutcomes": [
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/metadata",
+      "Test": "TestProtectedPayloadBinding",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/gateway",
+      "Test": "TestStrictArgumentsAndContract",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/gateway",
+      "Test": "TestReadSliceIntegration/two_employee_scopes_and_exact_versions",
+      "Elapsed": 0.28
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/gateway",
+      "Test": "TestReadSliceIntegration/hidden_tools_direct_denial_and_tampering",
+      "Elapsed": 0.21
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/gateway",
+      "Test": "TestReadSliceIntegration/permissions_rechecked_in_existing_session",
+      "Elapsed": 0.16
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/gateway",
+      "Test": "TestReadSliceIntegration/native_role_is_select_only_even_without_readonly_setting",
+      "Elapsed": 0.09
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/gateway",
+      "Test": "TestReadSliceIntegration/atomic_qualification_immutable_plan_and_consistent_states",
+      "Elapsed": 0.09
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/gateway",
+      "Test": "TestReadSliceIntegration/audit_failure_rolls_back_qualification_before_native_access",
+      "Elapsed": 0.08
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/runtimeconfig",
+      "Test": "TestLocalOnlyAndFailClosed",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/gateway",
+      "Test": "TestReadSliceIntegration/explicit_mcp_cancel_reaches_real_blocked_query",
+      "Elapsed": 0.32
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/wireids",
+      "Test": "TestTypedExactRoundTripAndCancellation",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/gateway",
+      "Test": "TestReadSliceIntegration/bounded_native_timeout",
+      "Elapsed": 3.15
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/gateway",
+      "Test": "TestReadSliceIntegration/audit_owner_filter_pagination_and_safe_fields",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/gateway",
+      "Test": "TestReadSliceIntegration/crash_left_claim_becomes_unknown_without_native_replay",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/gateway",
+      "Test": "TestReadSliceIntegration",
+      "Elapsed": 4.59
+    }
+  ],
+  "goPackageOutcomes": [
+    {
+      "Action": "skip",
+      "Package": "github.com/xielforever/MCPGuard/cmd/mcpguard",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "github.com/xielforever/MCPGuard/cmd/mcpguard-connect",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "github.com/xielforever/MCPGuard/internal/api",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "github.com/xielforever/MCPGuard/internal/auth",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "github.com/xielforever/MCPGuard/internal/config",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "github.com/xielforever/MCPGuard/internal/connect",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/metadata",
+      "Elapsed": 1.026
+    },
+    {
+      "Action": "skip",
+      "Package": "github.com/xielforever/MCPGuard/internal/nativepg",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "github.com/xielforever/MCPGuard/internal/notify",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "github.com/xielforever/MCPGuard/internal/proxy",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "github.com/xielforever/MCPGuard/internal/rules",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/runtimeconfig",
+      "Elapsed": 1.052
+    },
+    {
+      "Action": "skip",
+      "Package": "github.com/xielforever/MCPGuard/internal/store",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/wireids",
+      "Elapsed": 1.036
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/xielforever/MCPGuard/internal/gateway",
+      "Elapsed": 5.67
+    }
+  ],
+  "goTestCommand": [
+    "go",
+    "test",
+    "-json",
+    "-race",
+    "-p",
+    "2",
+    "-count=1",
+    "./..."
+  ],
+  "independentE2E": {
+    "date": "2026-10-22",
+    "profile": "2025-11-25",
+    "postgres": "16.14",
+    "checks": [
+      "HTTP initialize: alice",
+      "HTTP initialized notification: alice",
+      "HTTP initialize: bob",
+      "HTTP initialized notification: bob",
+      "HTTP initialize: visitor",
+      "HTTP initialized notification: visitor",
+      "directory is filtered per employee",
+      "same large integer RPC ID across employees preserves identity and native bigint precision",
+      "integer and string RPC IDs with the same text remain distinct",
+      "integer RPC ID beyond int64 round trips exactly",
+      "PG query cannot read another scope's exclusive item",
+      "hidden tool also denies direct invocation without fake business IDs",
+      "caller cannot inject scope",
+      "MCP session cannot be reused by another employee",
+      "missing/invalid bearer rejected before business acceptance",
+      "missing/invalid bearer rejected before business acceptance",
+      "missing/invalid bearer rejected before business acceptance",
+      "HTTP request size is bounded",
+      "untrusted browser origin rejected",
+      "audit API refuses caller-supplied identity selectors",
+      "persistent audit is correlated and isolated per employee",
+      "stdio initialize: alice",
+      "stdio forwards authorized directory: alice",
+      "stdio reaches actual native PG result: alice",
+      "stdio preserves RPC integer IDs beyond int64: alice",
+      "stdio initialize: bob",
+      "stdio forwards authorized directory: bob",
+      "stdio reaches actual native PG result: bob",
+      "stdio preserves RPC integer IDs beyond int64: bob",
+      "connector exits cleanly on EOF",
+      "connector output contains no access token",
+      "stdout contains protocol frames only",
+      "connector exits cleanly on EOF",
+      "connector output contains no access token",
+      "stdout contains protocol frames only",
+      "stdio initialize: alice",
+      "stdio processes independent request while native calls are blocked",
+      "stdio cancellation reaches one real PG query before deadline",
+      "cancelling one stdio request does not cancel another",
+      "connector exits cleanly on EOF",
+      "connector output contains no access token",
+      "stdout contains protocol frames only",
+      "gateway exits cleanly on SIGTERM",
+      "HTTP initialize: alice",
+      "HTTP initialized notification: alice",
+      "gateway restart preserves original audit event IDs and correlations",
+      "gateway works after restart with the same encrypted store",
+      "gateway exits cleanly on SIGTERM"
+    ],
+    "passed": 48,
+    "modelKeyRequired": false,
+    "realChatGPTValidated": false
+  },
+  "sourceSHA256": "ed16d3230f0da74b9b1956e30505ae9a208341aacae646a76707abdd3f14dcb6",
+  "normalizedLFSourceSHA256": "63f4380942afe085de54f869e5532dec3c6d8aaa512694c3a20ca6f38a714a25",
+  "archivedSourceSHA256": "643f5be7b0683a4b27634edef08171334cd87536454c7b07391886567d6098fd",
+  "normalizedSourceMatchesArchived": false,
+  "sourceChanges": [
+    "scripts/dev.py"
+  ],
+  "baselineSourceMatchesArchived": true,
+  "binarySHA256": {
+    "bin/mcpguard": "1b81e3d2dcf812f44779abb04418008933fe3a5b4a9bfe7a8e9616a57b848b0e",
+    "bin/mcpguard-connect": "e1eb396df2335cb13262d7f7b564e4c90d452ef34be9ba5ec72a2b81dccadff0"
+  },
+  "goTestsPassed": 15,
+  "goTestsSkipped": 0,
+  "realPGSubtestsPassed": 10,
+  "finishedAt": "2026-10-22T22:50:49.858532+08:00"
+}

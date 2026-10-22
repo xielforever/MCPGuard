@@ -113,6 +113,9 @@ def up():
     port = info["NetworkSettings"]["Ports"]["5432/tcp"][0]["HostPort"]
     for _ in range(100):
         try:
+            # The image's temporary init server accepts Unix sockets before it
+            # shuts down. TCP opens only after initialization has completed.
+            docker("exec", cfg["container"], "pg_isready", "-q", "-h", "127.0.0.1", "-p", "5432", "-U", "postgres", capture_output=True, text=True)
             psql(cfg, "postgres", "SELECT 1;")
             break
         except subprocess.CalledProcessError:
