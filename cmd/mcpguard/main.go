@@ -7,6 +7,7 @@ import (
 	"github.com/xielforever/MCPGuard/internal/gateway"
 	"github.com/xielforever/MCPGuard/internal/metadata"
 	"github.com/xielforever/MCPGuard/internal/nativepg"
+	"github.com/xielforever/MCPGuard/internal/oauthfixture"
 	"github.com/xielforever/MCPGuard/internal/runtimeconfig"
 	"log/slog"
 	"net"
@@ -64,16 +65,24 @@ func run() error {
 	defer r.Close()
 	g := gateway.New(ctx, s, r)
 	defer g.Close()
+	handler := g.Handler()
+	if cfg.AuthMode == "oauth-fixture" {
+		oauth, err := oauthfixture.Load(cfg.OAuthFixtureConfig, s.OAuthPrincipal)
+		if err != nil {
+			return err
+		}
+		handler = g.HandlerWithOptions(gateway.HTTPOptions{AuthMode: cfg.AuthMode, PublicOrigin: oauth.Config.PublicOrigin, ResourceMetadataURL: oauth.MetadataURL(), Verifier: oauth.Verify, Register: oauth.Register})
+	}
 	ln, e := net.Listen("tcp", cfg.Listen)
 	if e != nil {
 		return fmt.Errorf("listen failed: %w", e)
 	}
-	srv := &http.Server{Handler: g.Handler(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	srv := &http.Server{Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	serveErr := make(chan error, 1)
 	go func() { serveErr <- srv.Serve(ln) }()
 	recoveryDone := make(chan struct{})
 	go func() { defer close(recoveryDone); g.RunRecovery(ctx) }()
-	slog.Info("local test gateway ready", "listen", cfg.Listen, "profile", gateway.Profile, "auth", "dev-tokens")
+	slog.Info("local test gateway ready", "listen", cfg.Listen, "profile", gateway.Profile, "auth", cfg.AuthMode)
 	select {
 	case e = <-serveErr:
 		stop()

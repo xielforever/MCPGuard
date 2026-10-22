@@ -1,0 +1,32 @@
+{
+  "command": "go test -race -count=1 -json -p 2 ./internal/oauthfixture ./internal/runtimeconfig ./internal/wireids",
+  "passEventsIncludingParents": 24,
+  "failed": 0,
+  "skipped": 0,
+  "tests": [
+    "TestAuthorizationBindings/client_id",
+    "TestAuthorizationBindings/resource",
+    "TestAuthorizationBindings/scope",
+    "TestAuthorizationBindings/code_challenge_method",
+    "TestAuthorizationBindings/code_challenge",
+    "TestAuthorizationBindings/state",
+    "TestAuthorizationBindings/response_type",
+    "TestAuthorizationBindings/redirect_uri",
+    "TestAuthorizationBindings",
+    "TestConsentCSRFAndCredentials",
+    "TestCodeExchangeAndCurrentPrincipal",
+    "TestGrantRejections/resource",
+    "TestGrantRejections/client_secret",
+    "TestGrantRejections/client_id",
+    "TestGrantRejections/code_verifier",
+    "TestGrantRejections/redirect_uri",
+    "TestGrantRejections",
+    "TestCodeReplayRevokesFamily",
+    "TestRefreshRotationReplayAndRevocation",
+    "TestMetadataAndInvalidConfiguration",
+    "TestBasicClientAndDuplicateParameters",
+    "TestExpiredConsentRefreshAndRestart",
+    "TestLocalOnlyAndFailClosed",
+    "TestTypedExactRoundTripAndCancellation"
+  ]
+}

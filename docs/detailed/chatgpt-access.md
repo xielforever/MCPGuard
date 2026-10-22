@@ -28,7 +28,7 @@ Business 的自定义 workspace 连接创建/发布由管理员或 owner 负责�
 
 优先使用 ChatGPT 的自定义远程 MCP 连接指向企业 HTTPS `/mcp`，网关本身无需提供 ChatGPT 自定义 UI。[S1][S2]
 ChatGPT 实际请求侧需能访问该 HTTPS 入口及适用 OAuth 端点；员工浏览器可达不自动证明平台请求侧可达。
-用户已确认物理互通，本轮只核验既有路径的 TLS、请求与授权证据，不新增 VPN、隧道或网络建设任务。
+原设计以既有物理互通为前提。2026-10-22 用户进一步明确采用 HTTPS + Streamable HTTP 直连，并授权补齐 OAuth 与临时 HTTPS 入口进行真实读取验证；该轮采用独立 OAuth 测试夹具与临时隧道，运行边界见[本地接入说明](../oauth-local-chatgpt.md)。企业网络和生产部署参数仍另行确定。
 stdio 接入仍是整体产品目标；ChatGPT web 的自定义远程连接不能直接配置本地 `command` 来启动 mcpguard-connect。
 Desktop 是否采用本地接入程序，须先确定具体产品面、配置方式及账号权限后另验；不能将 CLI 的配置原样交付给 web。
 

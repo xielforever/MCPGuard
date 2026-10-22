@@ -1,0 +1,28 @@
+{
+  "baseCommit": "c4e56d98852e48148afc5a1519e373a0354b0118",
+  "worktreeChanges": "OAuth increment uncommitted at validation",
+  "sourceHashConvention": "SHA256 of UTF-8 file bytes with CRLF normalized to LF",
+  "sourceSHA256": {
+    "cmd/mcpguard/main.go": "1c2a15749007c3e5a4a965f18c5196c62b75f08478c9981529390dc68562ead1",
+    "internal/gateway/gateway.go": "7cad002b5683b11ab99bb661e2d9d058c90c6762976e9334f4f5ba7ed28aab42",
+    "internal/metadata/store.go": "c59bfc80f533eaca7f84b6c4fae2af71dbf79190a71586525e8a31057bfb97ef",
+    "internal/runtimeconfig/config.go": "a4e2a16ee836a6058b983a9f6420e4c2c59e247a72e96a66d23f8614adae9dad",
+    "internal/runtimeconfig/config_test.go": "0dd2e020d40f68cc1021809c8dc200e0d3c3d89c717d9b1c2f5264e65caf3f14",
+    "internal/oauthfixture/server.go": "de1f75488d4fd737a637363a84e5cdf455a59e58a674e2ac6bc0f7540ed65290",
+    "internal/oauthfixture/server_test.go": "cd7cde293ff48ee8f93f82c43a06cefda38964ab3f74a93ef0fdbc043a97966c",
+    "scripts/oauth_dev.py": "113cd98ef59032317a85d2458823c15581b43b02e8f965106ca1d6cdc6f14d0f",
+    "tests/oauth_e2e.py": "2372ffd3ee4626e100fecd8bf14ae640230096db702aa3ddc9996bb4f45020e6",
+    "scripts/dev.py": "411901e13066c3b28348209fc44df10e4908a70ff8e1d5499f54165bf383d3b6",
+    "go.mod": "44100ef2a47eae55c837943a39cc2f01404e6b413cc0ac10d92340c38aec803f",
+    "go.sum": "d7ca7ac338c4713b86aab8de705805d2e58745be4579ae7cb6b0dfef514f6663"
+  },
+  "gatewayBinarySHA256": "c9f1fdc63367bcfbc26ac7cba37d020e0703662e97332f58f65ce4bff07ed8a0",
+  "go": "go1.26.8 linux/amd64",
+  "sdk": "github.com/modelcontextprotocol/go-sdk v1.8.0",
+  "cloudflared": {
+    "version": "2026.10.3",
+    "asset": "cloudflared-linux-amd64",
+    "verifiedSHA256": "053b80b0a23031a038fdbf3c073f59f82b8f1f152aa67971d7383ffafc0dbab0"
+  },
+  "postgresImage": "postgres:16.14-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777"
+}

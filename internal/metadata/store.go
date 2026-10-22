@@ -93,6 +93,17 @@ func (s *Store) Current(ctx context.Context, p Principal) (Principal, error) {
 	return v, e
 }
 
+// OAuthPrincipal resolves only a subject from the trusted authorization fixture.
+// Scope, permissions and the credential epoch are always loaded from metadata;
+// neither OAuth request parameters nor MCP arguments can choose them.
+func (s *Store) OAuthPrincipal(ctx context.Context, orgID, id string) (Principal, error) {
+	p, e := scanPrincipal(s.Pool.QueryRow(ctx, `SELECT `+principalColumns+` FROM mcpguard.principals WHERE org_id=$1 AND id=$2 AND enabled AND expires_at>clock_timestamp()`, orgID, id))
+	if errors.Is(e, pgx.ErrNoRows) {
+		return p, ErrInvalidToken
+	}
+	return p, e
+}
+
 type Ticket struct {
 	OrgID, PrincipalID, ActionID, AttemptID, ExecutionID, PlanHash string
 	PlanCiphertext                                                 []byte

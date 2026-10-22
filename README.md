@@ -6,6 +6,10 @@
 
 Windows / WSL 本地复验及启动竞态修复见 [本地闭环记录](docs/validation/local-read-slice-windows-wsl-2026-10-22.md)。
 
+独立 OAuth 测试身份、临时 HTTPS 入口与 ChatGPT 联调步骤见 [HTTPS/OAuth 本地接入](docs/oauth-local-chatgpt.md)。原有本地测试模式继续保留。
+
+ChatGPT 已完成 OAuth 并触发真实 PG 读取；当前网页答复加载失败，无工具对照也复现，用户展示尚未验收。[本轮记录与边界](docs/validation/chatgpt-oauth-read-2026-10-22.md)。
+
 ## 本地运行
 
 需要 Go（最低 1.25，toolchain 1.26.8）、Python 3、Docker，race 测试另需 C 编译器；不需要大模型 key。
@@ -24,6 +28,6 @@ python3 /absolute/path/to/MCPGuard/scripts/dev.py connect --employee alice
 
 测试工具 `pg.get_demo_item` 只接受 `{"itemId":"item_demo_1"}`；数据范围由网关根据员工注入。Alice、Bob 访问各自范围，Visitor 无调用权。随机秘密位于忽略提交的 `.dev/env.json`（0600）；`make dev-down` 清除本项目的本地测试容器和数据。
 
-当前仅支持本地测试身份及 MCP `2025-11-25`。企业 SSO、真实 ChatGPT 接入、写入审批、Redis/API 和新控制台仍待开发/验收；原代理、确认码和页面属于未挂载的旧脚手架。
+当前支持 `dev-tokens` 与独立 `oauth-fixture` 测试身份，MCP profile 为 `2025-11-25`。企业 SSO、写入审批、Redis/API 和新控制台仍待开发/验收；ChatGPT 真实客户端结果以独立验收记录为准。原代理、确认码和页面属于未挂载的旧脚手架。
 
 License: MIT

@@ -1,0 +1,18 @@
+go version go1.26.8 linux/amd64
+?   	github.com/xielforever/MCPGuard/cmd/mcpguard	[no test files]
+?   	github.com/xielforever/MCPGuard/cmd/mcpguard-connect	[no test files]
+?   	github.com/xielforever/MCPGuard/internal/api	[no test files]
+?   	github.com/xielforever/MCPGuard/internal/auth	[no test files]
+?   	github.com/xielforever/MCPGuard/internal/config	[no test files]
+?   	github.com/xielforever/MCPGuard/internal/connect	[no test files]
+ok  	github.com/xielforever/MCPGuard/internal/gateway	5.582s
+ok  	github.com/xielforever/MCPGuard/internal/metadata	1.028s
+?   	github.com/xielforever/MCPGuard/internal/nativepg	[no test files]
+?   	github.com/xielforever/MCPGuard/internal/notify	[no test files]
+ok  	github.com/xielforever/MCPGuard/internal/oauthfixture	1.046s
+?   	github.com/xielforever/MCPGuard/internal/proxy	[no test files]
+?   	github.com/xielforever/MCPGuard/internal/rules	[no test files]
+ok  	github.com/xielforever/MCPGuard/internal/runtimeconfig	1.020s
+?   	github.com/xielforever/MCPGuard/internal/store	[no test files]
+ok  	github.com/xielforever/MCPGuard/internal/wireids	1.024s
+Independent Python E2E passed: 48 checks; HTTP + stdio + real PG + cancellation isolation + persistent audit/restart. No model key.

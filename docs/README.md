@@ -4,6 +4,8 @@
 
 实现入口：[最小读取闭环](read-slice.md)。该增量包含本地测试身份、两种 MCP 入口、真实 PG 读取和持久审计；下列完整企业方案仍按各文件的设计状态理解。
 
+后续本地联调入口：[OAuth + HTTPS + ChatGPT](oauth-local-chatgpt.md)。该测试身份服务与原有本地模式隔离，企业 SSO 仍待接入。
+
 **MCPGuard 本身就是企业 MCP 网关。**支持 IDE 通过 HTTP MCP 直连，或通过本地 stdio 转 HTTP 程序连接同一网关；网关再通过 PG、RESP、HTTP/HTTPS 等原生协议访问后端。企业服务器与员工本地资源已可互通。
 
 当前评审入口：[详细设计](detailed/README.md)，覆盖模块与API、身份策略、存储DDL、两入口、原生执行和验证。用户决定与剩余平台信息集中在[决策记录](detailed/decisions.md)。

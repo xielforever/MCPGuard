@@ -1,0 +1,105 @@
+{
+  "status": "PASS",
+  "checks": [
+    "unauthenticated MCP discovers OAuth",
+    "HTTPS canonical discovery: resource",
+    "HTTPS canonical discovery: issuer",
+    "secure login form: alice",
+    "explicit test login and consent: alice",
+    "OAuth callback issuer/state: alice",
+    "PKCE code exchange: alice",
+    "OAuth MCP initialization",
+    "OAuth MCP initialized notification",
+    "OAuth directory permission: alice",
+    "OAuth real PG read: alice",
+    "OAuth native scope isolation: alice",
+    "OAuth text/structured result agreement: alice",
+    "OAuth read correlates durable audit: alice",
+    "secure login form: bob",
+    "explicit test login and consent: bob",
+    "OAuth callback issuer/state: bob",
+    "PKCE code exchange: bob",
+    "OAuth MCP initialization",
+    "OAuth MCP initialized notification",
+    "OAuth directory permission: bob",
+    "OAuth real PG read: bob",
+    "OAuth native scope isolation: bob",
+    "OAuth text/structured result agreement: bob",
+    "OAuth read correlates durable audit: bob",
+    "secure login form: visitor",
+    "explicit test login and consent: visitor",
+    "OAuth callback issuer/state: visitor",
+    "PKCE code exchange: visitor",
+    "OAuth MCP initialization",
+    "OAuth MCP initialized notification",
+    "OAuth directory permission: visitor",
+    "OAuth visitor direct call denied",
+    "OAuth identity cannot hijack another session",
+    "OAuth cannot read another scope's exclusive row",
+    "temporary public profile excludes audit management API",
+    "optional standalone SSE explicitly disabled",
+    "OAuth refresh token rotates",
+    "renewed identity retains its MCP session",
+    "OAuth revocation accepted",
+    "revocation invalidates access on next request"
+  ],
+  "checkCount": 41,
+  "baseURL": "https://maiden-assuming-arrived-admitted.trycloudflare.com",
+  "transport": "MCP Streamable HTTP, JSON POST responses; standalone SSE disabled",
+  "profile": "2025-11-25",
+  "identityProvider": "isolated OAuth test fixture; not enterprise SSO",
+  "reads": [
+    {
+      "employee": "alice",
+      "result": {
+        "kind": "FINAL",
+        "actionId": "71b86590-dcc9-42d4-8b1c-e138203cce47",
+        "attemptId": "276a4352-695c-4afe-aa35-60aed2d47236",
+        "executionId": "ac176b4c-5f87-4227-9ebc-2de3e9c8e260",
+        "requestStatus": "SUCCEEDED",
+        "dispatchState": "DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "data": {
+          "found": true,
+          "item": {
+            "itemId": "item_demo_1",
+            "note": "Alice scope A",
+            "version": "1"
+          }
+        },
+        "error": null,
+        "metadata": {
+          "encoding": "json",
+          "observedAt": "2026-10-22T15:37:36.55355461Z",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "employee": "bob",
+      "result": {
+        "kind": "FINAL",
+        "actionId": "4a506ee6-7668-4da2-9929-57969589fd77",
+        "attemptId": "0ecfb0ca-7a3e-4f37-afec-6048b924a779",
+        "executionId": "2acea38c-af4d-4b0e-8b27-6245996fc642",
+        "requestStatus": "SUCCEEDED",
+        "dispatchState": "DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "data": {
+          "found": true,
+          "item": {
+            "itemId": "item_demo_1",
+            "note": "Bob scope B",
+            "version": "9007199254740993"
+          }
+        },
+        "error": null,
+        "metadata": {
+          "encoding": "json",
+          "observedAt": "2026-10-22T15:37:47.880218672Z",
+          "truncated": false
+        }
+      }
+    }
+  ]
+}

@@ -12,6 +12,7 @@ import (
 type Config struct {
 	Listen, MetadataDSN, BusinessDSN string
 	EncryptionKey, PlanKey           []byte
+	AuthMode, OAuthFixtureConfig     string
 }
 
 func Load() (Config, error) {
@@ -23,8 +24,16 @@ func Load() (Config, error) {
 	if err != nil || net.ParseIP(host) == nil || !net.ParseIP(host).IsLoopback() {
 		return c, errors.New("test identity mode requires an explicit loopback listen address")
 	}
-	if os.Getenv("MCPGUARD_AUTH_MODE") != "dev-tokens" {
-		return c, errors.New("set MCPGUARD_AUTH_MODE=dev-tokens for this local test slice; enterprise OAuth is not implemented")
+	c.AuthMode = os.Getenv("MCPGUARD_AUTH_MODE")
+	switch c.AuthMode {
+	case "dev-tokens":
+	case "oauth-fixture":
+		c.OAuthFixtureConfig = os.Getenv("MCPGUARD_OAUTH_FIXTURE_CONFIG")
+		if c.OAuthFixtureConfig == "" {
+			return c, errors.New("oauth-fixture requires MCPGUARD_OAUTH_FIXTURE_CONFIG")
+		}
+	default:
+		return c, errors.New("explicit MCPGUARD_AUTH_MODE=dev-tokens or oauth-fixture is required; enterprise SSO is not implemented")
 	}
 	if c.MetadataDSN == "" || c.BusinessDSN == "" {
 		return c, errors.New("both MCPGUARD_METADATA_DSN and MCPGUARD_BUSINESS_DSN are required")

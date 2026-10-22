@@ -198,11 +198,21 @@ func (g *Gateway) call(ctx context.Context, req *mcp.CallToolRequest) (*mcp.Call
 	return r.MCP(), nil
 }
 
+type HTTPOptions struct {
+	AuthMode, PublicOrigin, ResourceMetadataURL string
+	Verifier                                    auth.TokenVerifier
+	Register                                    func(*http.ServeMux)
+}
+
 func (g *Gateway) Handler() http.Handler {
+	return g.HandlerWithOptions(HTTPOptions{AuthMode: "dev-tokens"})
+}
+
+func (g *Gateway) HandlerWithOptions(opts HTTPOptions) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = io.WriteString(w, `{"status":"up","auth":"dev-tokens"}`)
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "up", "auth": opts.AuthMode})
 	})
 	verify := func(ctx context.Context, token string, _ *http.Request) (*auth.TokenInfo, error) {
 		c, cancel := context.WithTimeout(ctx, 2*time.Second)
@@ -216,14 +226,45 @@ func (g *Gateway) Handler() http.Handler {
 		}
 		return &auth.TokenInfo{UserID: p.OrgID + "/" + p.ID, Expiration: p.ExpiresAt, Extra: map[string]any{"principal": p}}, nil
 	}
-	secured := auth.RequireBearerToken(verify, nil)
+	var authOptions *auth.RequireBearerTokenOptions
+	if opts.Verifier != nil {
+		verify = opts.Verifier
+		authOptions = &auth.RequireBearerTokenOptions{ResourceMetadataURL: opts.ResourceMetadataURL, Scopes: []string{"mcp:read"}}
+	}
+	secured := auth.RequireBearerToken(verify, authOptions)
 	h := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return g.MCP }, &mcp.StreamableHTTPOptions{JSONResponse: true, SessionTimeout: 2 * time.Minute, MaxRequestBodyBytes: 70 << 10})
-	mux.Handle("/mcp", secured(wireids.HTTP(h)))
-	mux.Handle("GET /api/v1/audit", secured(http.HandlerFunc(g.auditHTTP)))
+	var transport http.Handler = wireids.HTTP(h)
+	if opts.PublicOrigin != "" {
+		// Standalone SSE is optional in Streamable HTTP. This temporary ingress
+		// profile uses JSON POST responses; it does not claim SSE delivery.
+		protected := transport
+		transport = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet {
+				w.Header().Set("Allow", "POST, DELETE")
+				http.Error(w, "standalone SSE is disabled for this fixture", 405)
+				return
+			}
+			protected.ServeHTTP(w, r)
+		})
+	}
+	mux.Handle("/mcp", secured(transport))
+	if opts.PublicOrigin == "" {
+		mux.Handle("GET /api/v1/audit", secured(http.HandlerFunc(g.auditHTTP)))
+	}
+	if opts.Register != nil {
+		opts.Register(mux)
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
-		if r.Header.Get("Origin") != "" && r.Header.Get("Origin") != "http://"+r.Host {
+		origin := "http://" + r.Host
+		if opts.PublicOrigin != "" {
+			origin = opts.PublicOrigin
+		}
+		if r.Header.Get("Origin") != "" && r.Header.Get("Origin") != origin {
+			if opts.PublicOrigin != "" {
+				slog.Warn("OAuth fixture origin rejected", "origin", r.Header.Get("Origin"), "expected", origin, "path", r.URL.Path)
+			}
 			http.Error(w, "origin is not allowed", http.StatusForbidden)
 			return
 		}

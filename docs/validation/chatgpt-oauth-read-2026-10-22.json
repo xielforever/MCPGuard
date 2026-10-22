@@ -1,0 +1,111 @@
+{
+  "status": "PARTIAL: real ChatGPT invocation and PG execution verified; ChatGPT answer display not accepted",
+  "client": {
+    "product": "ChatGPT web",
+    "pluginName": "MCPGuard Local Read",
+    "pluginURL": "https://chatgpt.com/plugins/plugin_asdk_app_6ada2c1ed9e48191af1e36dd6e0c45e8",
+    "conversationURL": "https://chatgpt.com/c/6ada2e60-429c-83e8-84d9-2fe41a987e7a",
+    "workspaceOrPlan": "not independently inspected; no enterprise SSO or workspace publication claimed",
+    "modelLabelObserved": "Extra High; exact model identity not inspected"
+  },
+  "connection": {
+    "resource": "https://maiden-assuming-arrived-admitted.trycloudflare.com/mcp",
+    "transport": "MCP Streamable HTTP with JSON POST responses",
+    "serverSelectedProfile": "2025-11-25",
+    "rawClientInitializeProtocolVersion": "not captured",
+    "authorization": "pre-registered confidential client, client_secret_basic, PKCE S256, mcp:read",
+    "callbackURI": "https://chatgpt.com/connector_platform_oauth_redirect",
+    "subject": "alice, isolated OAuth fixture",
+    "oauthBrowserConsent": "completed and returned to ChatGPT",
+    "chatgptToolConfirmation": "Allow once; exact tool and itemId inspected before clicking"
+  },
+  "request": {
+    "tool": "pg.get_demo_item",
+    "arguments": {
+      "itemId": "item_demo_1"
+    },
+    "expectedResultSuppliedInPrompt": false
+  },
+  "execution": {
+    "resultSource": "authenticated decryption of the original persistent execution result, using the existing vault; not a fabricated ChatGPT answer",
+    "storedResult": {
+      "kind": "FINAL",
+      "actionId": "1121e990-ba09-4da0-b9ea-5c7783e3f951",
+      "attemptId": "ed356916-9492-4ac8-a99f-851720672dab",
+      "executionId": "25297d15-0469-4391-844e-a149ea1fe9c3",
+      "requestStatus": "SUCCEEDED",
+      "dispatchState": "DISPATCHED",
+      "sideEffectStatus": "NONE",
+      "data": {
+        "found": true,
+        "item": {
+          "itemId": "item_demo_1",
+          "note": "Alice scope A",
+          "version": "1"
+        }
+      },
+      "error": null,
+      "metadata": {
+        "encoding": "json",
+        "observedAt": "2026-10-22T15:41:36.192988516Z",
+        "truncated": false
+      }
+    },
+    "actionId": "1121e990-ba09-4da0-b9ea-5c7783e3f951",
+    "auditEvents": [
+      {
+        "seq": "22",
+        "org_id": "10000000-0000-4000-8000-000000000001",
+        "principal_id": "20000000-0000-4000-8000-000000000001",
+        "action_id": "1121e990-ba09-4da0-b9ea-5c7783e3f951",
+        "attempt_id": "ed356916-9492-4ac8-a99f-851720672dab",
+        "execution_id": "25297d15-0469-4391-844e-a149ea1fe9c3",
+        "event_type": "EXECUTION_INTENT",
+        "created_at": "2026-10-22T15:41:36.171838+00:00"
+      },
+      {
+        "seq": "23",
+        "org_id": "10000000-0000-4000-8000-000000000001",
+        "principal_id": "20000000-0000-4000-8000-000000000001",
+        "action_id": "1121e990-ba09-4da0-b9ea-5c7783e3f951",
+        "attempt_id": "ed356916-9492-4ac8-a99f-851720672dab",
+        "execution_id": "25297d15-0469-4391-844e-a149ea1fe9c3",
+        "event_type": "SUCCEEDED",
+        "created_at": "2026-10-22T15:41:36.199979+00:00"
+      }
+    ],
+    "executions": [
+      {
+        "id": "25297d15-0469-4391-844e-a149ea1fe9c3",
+        "org_id": "10000000-0000-4000-8000-000000000001",
+        "action_id": "1121e990-ba09-4da0-b9ea-5c7783e3f951",
+        "attempt_id": "ed356916-9492-4ac8-a99f-851720672dab",
+        "request_status": "SUCCEEDED",
+        "dispatch_state": "DISPATCHED",
+        "encrypted_result_present": true
+      }
+    ]
+  },
+  "clientDisplay": {
+    "firstAnswer": "This response couldn’t load",
+    "sameConversationReload": "same error remained; no regeneration performed",
+    "followUpWithoutAnotherToolCall": "same error",
+    "cleanNoToolControl": {
+      "prompt": "请只回复 OK，不调用任何工具。",
+      "conversationURL": "https://chatgpt.com/c/6ada2fc6-ba04-83e8-9e25-ac06e2711c65",
+      "result": "This response couldn’t load"
+    },
+    "conclusion": "A response failure reproduces without the MCP plugin; exact ChatGPT failure cause remains undetermined. Full user-visible acceptance is pending."
+  },
+  "artifacts": {
+    "chatgpt-read-ui-2026-10-22.png": "5e449b02ec91137a88371cdd400b1556441f639931800abc0fe00686a6f3f0db",
+    "chatgpt-no-tools-ui-2026-10-22.png": "54de24e5f797f053de22106f65487fad856b9ac3f9580a239da2c884a7a89872"
+  },
+  "unverified": [
+    "enterprise IdP and group synchronization",
+    "SSE streaming and notifications",
+    "stdio OAuth login",
+    "production deployment",
+    "ChatGPT readable final answer"
+  ]
+}

@@ -26,4 +26,17 @@ func TestLocalOnlyAndFailClosed(t *testing.T) {
 	if _, e := Load(); e == nil {
 		t.Fatal("silently enabled test identity mode")
 	}
+	t.Setenv("MCPGUARD_AUTH_MODE", "oauth-fixture")
+	t.Setenv("MCPGUARD_OAUTH_FIXTURE_CONFIG", "")
+	if _, e := Load(); e == nil {
+		t.Fatal("OAuth fixture silently accepted missing configuration")
+	}
+	t.Setenv("MCPGUARD_OAUTH_FIXTURE_CONFIG", ".dev/oauth/server.json")
+	if c, e := Load(); e != nil || c.AuthMode != "oauth-fixture" {
+		t.Fatal("explicit OAuth mode rejected", e)
+	}
+	t.Setenv("MCPGUARD_LISTEN", "0.0.0.0:18081")
+	if _, e := Load(); e == nil {
+		t.Fatal("OAuth fixture bypassed loopback boundary")
+	}
 }
