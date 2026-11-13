@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-29",
+  "purpose": "Original current-console sources before D migration",
+  "files": {
+    "internal/controlled/console.html": {
+      "archive": "console.html.txt",
+      "sha256": "a49096306835c1a1f87015b987ccf2f9ff9c7fe1f2b0c7486865d23f44d4c52b"
+    },
+    "internal/controlled/console.js": {
+      "archive": "console.js.txt",
+      "sha256": "171b67e1eeefbf237adf74a814fa49de7482e7314c352366e7f5abd81f818be4"
+    },
+    "internal/controlled/console.go": {
+      "archive": "console.go.txt",
+      "sha256": "708daf12ffbd1a0b9e54c105a110778141c781b45f7c88db2ce5b14a105d1636"
+    }
+  }
+}

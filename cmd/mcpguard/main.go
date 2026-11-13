@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/xielforever/MCPGuard/internal/controlled"
 	"github.com/xielforever/MCPGuard/internal/gateway"
 	"github.com/xielforever/MCPGuard/internal/metadata"
 	"github.com/xielforever/MCPGuard/internal/nativepg"
 	"github.com/xielforever/MCPGuard/internal/oauthfixture"
+	"github.com/xielforever/MCPGuard/internal/resources"
 	"github.com/xielforever/MCPGuard/internal/runtimeconfig"
 	"log/slog"
 	"net"
@@ -37,7 +39,7 @@ func run() error {
 		if e := metadata.Migrate(c, dsn); e != nil {
 			return errors.New("metadata migration failed; inspect the database with the migration role")
 		}
-		slog.Info("metadata migrations 1-2 applied/verified")
+		slog.Info("metadata migrations 1-4 applied/verified")
 		return nil
 	}
 	if len(os.Args) != 1 {
@@ -65,6 +67,94 @@ func run() error {
 	defer r.Close()
 	g := gateway.New(ctx, s, r)
 	defer g.Close()
+	if cfg.ResourceCatalog {
+		catalog, err := resources.NewCatalog(boot, s)
+		if err != nil {
+			return errors.New("optional resource catalog is not ready; migrate it explicitly first")
+		}
+		g.AttachResources(catalog)
+	}
+	native, e := controlled.OpenAdapters(boot, cfg.NativeConfig)
+	if e != nil {
+		return e
+	}
+	defer native.Close()
+	control, e := controlled.New(s, native, "http://"+cfg.Listen)
+	if e != nil {
+		return e
+	}
+	console, e := controlled.OpenConsole(control, cfg.ConsoleConfig)
+	if e != nil {
+		return e
+	}
+	notifier, e := controlled.OpenNotifier(control, cfg.NotificationConfig)
+	if e != nil {
+		return e
+	}
+	console.Notifications = notifier
+	g.AttachControlled(control, console, notifier)
+	if cfg.ResourceAccess {
+		access, err := resources.NewAccessService(g.Resources)
+		if err != nil {
+			return errors.New("resource access workflow is not ready; migrate and configure explicitly")
+		}
+		g.AttachAccess(access, console)
+	}
+	if cfg.ResourceCredentials {
+		keys, err := resources.LoadPackageKeys(cfg.CredentialKeys, cfg.EncryptionKey, cfg.PlanKey)
+		if err != nil {
+			return errors.New("credential key provider is not ready")
+		}
+		credentials, err := resources.NewCredentialService(g.Resources, keys)
+		if err != nil {
+			return errors.New("credential lifecycle is not ready; migrate and configure explicitly")
+		}
+		g.AttachCredentials(credentials)
+		if cfg.ResourceDownloads {
+			deliveryStore, err := metadata.Open(boot, cfg.DeliveryDSN, v)
+			if err != nil {
+				return errors.New("private delivery runtime is unavailable")
+			}
+			defer deliveryStore.Close()
+			catalog, err := resources.NewCatalog(boot, deliveryStore)
+			if err != nil {
+				return errors.New("private delivery catalog is unavailable")
+			}
+			issuer, err := resources.NewCredentialService(catalog, keys)
+			if err != nil {
+				return errors.New("private delivery issuer is unavailable")
+			}
+			downloads, err := resources.NewDownloadService(issuer, cfg.DownloadTTL, cfg.DownloadMaxReady)
+			if err != nil {
+				return errors.New("private delivery policy is unavailable")
+			}
+			g.AttachDownloads(downloads)
+			if cfg.ResourceContexts {
+				contextStore, err := metadata.Open(boot, cfg.ContextDSN, v)
+				if err != nil {
+					return errors.New("context runtime is unavailable")
+				}
+				defer contextStore.Close()
+				catalog, err := resources.NewCatalog(boot, contextStore)
+				if err != nil {
+					return errors.New("context catalog is unavailable")
+				}
+				credentials, err := resources.NewCredentialService(catalog, keys)
+				if err != nil {
+					return errors.New("context issuer is unavailable")
+				}
+				downloads, err := resources.NewDownloadService(credentials, cfg.DownloadTTL, cfg.DownloadMaxReady)
+				if err != nil {
+					return errors.New("context download runtime is unavailable")
+				}
+				contexts, err := resources.NewContextService(downloads, cfg.ContextTTL, cfg.ContextLifetime, cfg.ContextMaxActivations, cfg.SyncPageLimit)
+				if err != nil {
+					return errors.New("context policy is unavailable")
+				}
+				g.AttachContexts(contexts)
+			}
+		}
+	}
 	handler := g.Handler()
 	if cfg.AuthMode == "oauth-fixture" {
 		oauth, err := oauthfixture.Load(cfg.OAuthFixtureConfig, s.OAuthPrincipal)

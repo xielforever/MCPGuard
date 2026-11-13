@@ -1,8 +1,18 @@
 REVOKE ALL ON SCHEMA public,mcpguard FROM PUBLIC;
 GRANT USAGE ON SCHEMA mcpguard TO mcpguard_app;
 GRANT EXECUTE ON FUNCTION mcpguard.lock_auth_epoch(uuid) TO mcpguard_app;
+GRANT EXECUTE ON FUNCTION mcpguard.lock_auth_epoch_exclusive(uuid) TO mcpguard_app;
 GRANT SELECT ON ALL TABLES IN SCHEMA mcpguard TO mcpguard_app;
 GRANT INSERT ON mcpguard.actions,mcpguard.attempts,mcpguard.executions,mcpguard.audit_events TO mcpguard_app;
 GRANT UPDATE(state) ON mcpguard.actions,mcpguard.attempts TO mcpguard_app;
 GRANT UPDATE(dispatch_state,request_status,result_ciphertext) ON mcpguard.executions TO mcpguard_app;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA mcpguard TO mcpguard_app;
+GRANT INSERT ON mcpguard.managed_actions,mcpguard.managed_executions,mcpguard.managed_decisions,mcpguard.managed_audit,mcpguard.control_operations,mcpguard.notification_outbox TO mcpguard_app;
+GRANT UPDATE(state,revision,cancel_requested) ON mcpguard.managed_actions TO mcpguard_app;
+GRANT UPDATE(request_status,dispatch_state,side_effect_status,result_ciphertext) ON mcpguard.managed_executions TO mcpguard_app;
+GRANT UPDATE ON mcpguard.notification_outbox TO mcpguard_app;
+GRANT INSERT,UPDATE,DELETE ON mcpguard.control_members,mcpguard.control_resources,mcpguard.tool_grants,mcpguard.reviewer_grants,mcpguard.control_rules TO mcpguard_app;
+GRANT UPDATE(revision) ON mcpguard.control_heads TO mcpguard_app;
+GRANT UPDATE(enabled,can_read,scope_id) ON mcpguard.principals TO mcpguard_app;
+GRANT INSERT,UPDATE,DELETE ON mcpguard.control_groups,mcpguard.group_members,mcpguard.group_tool_grants,mcpguard.group_reviewer_grants TO mcpguard_app;
+GRANT EXECUTE ON FUNCTION mcpguard.has_tool_grant(uuid,uuid,text),mcpguard.has_reviewer_grant(uuid,uuid,text) TO mcpguard_app;

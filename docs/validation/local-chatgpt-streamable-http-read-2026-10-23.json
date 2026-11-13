@@ -1,0 +1,98 @@
+{
+  "capturedAt": "2026-10-23T02:14:29.304Z",
+  "status": "HTTP_READ_PASS_DESKTOP_TOOL_UNAVAILABLE",
+  "client": "Windows Node HTTP diagnostic initiated by the assistant",
+  "endpoint": "http://127.0.0.1:18080/mcp",
+  "transport": "Streamable HTTP",
+  "profile": "2025-11-25",
+  "serverInfo": {
+    "name": "MCPGuard",
+    "version": "0.1.0-read-slice"
+  },
+  "identity": {
+    "name": "alice",
+    "scope": "scope_a"
+  },
+  "tool": "pg.get_demo_item",
+  "arguments": {
+    "itemId": "item_demo_1"
+  },
+  "jsonRpcId": "local-diagnostic-17e03c25-2320-4920-bbfb-9af7dfce4a89",
+  "result": {
+    "kind": "FINAL",
+    "actionId": "e3468f69-068a-4979-8c57-191cfb0ee581",
+    "attemptId": "2285e662-ea8c-4a33-85ae-71f97f1f07c1",
+    "executionId": "e8ed9c98-52a2-4f85-8e2c-044df0e564d2",
+    "requestStatus": "SUCCEEDED",
+    "dispatchState": "DISPATCHED",
+    "sideEffectStatus": "NONE",
+    "data": {
+      "found": true,
+      "item": {
+        "itemId": "item_demo_1",
+        "note": "Alice scope A",
+        "version": "1"
+      }
+    },
+    "error": null,
+    "metadata": {
+      "encoding": "json",
+      "observedAt": "2026-10-23T02:14:29.323656169Z",
+      "truncated": false
+    }
+  },
+  "desktopNativeToolInvoked": false,
+  "desktopAcceptancePassed": false,
+  "auditVerification": {
+    "capturedAt": "2026-10-23T02:15:06.641544+00:00",
+    "status": "PASS",
+    "actionId": "e3468f69-068a-4979-8c57-191cfb0ee581",
+    "checks": {
+      "executionIdentifiersMatch": true,
+      "auditIdentifiersMatch": true,
+      "organizationAndPrincipalMatch": true,
+      "eventsAfterBaseline": true,
+      "encryptedResultPersisted": true,
+      "executionSucceeded": true
+    },
+    "auditEvents": [
+      {
+        "seq": "176",
+        "org_id": "10000000-0000-4000-8000-000000000001",
+        "principal_id": "20000000-0000-4000-8000-000000000001",
+        "action_id": "e3468f69-068a-4979-8c57-191cfb0ee581",
+        "attempt_id": "2285e662-ea8c-4a33-85ae-71f97f1f07c1",
+        "execution_id": "e8ed9c98-52a2-4f85-8e2c-044df0e564d2",
+        "event_type": "EXECUTION_INTENT",
+        "created_at": "2026-10-23T02:14:29.312568+00:00"
+      },
+      {
+        "seq": "177",
+        "org_id": "10000000-0000-4000-8000-000000000001",
+        "principal_id": "20000000-0000-4000-8000-000000000001",
+        "action_id": "e3468f69-068a-4979-8c57-191cfb0ee581",
+        "attempt_id": "2285e662-ea8c-4a33-85ae-71f97f1f07c1",
+        "execution_id": "e8ed9c98-52a2-4f85-8e2c-044df0e564d2",
+        "event_type": "SUCCEEDED",
+        "created_at": "2026-10-23T02:14:29.330181+00:00"
+      }
+    ],
+    "executions": [
+      {
+        "id": "e8ed9c98-52a2-4f85-8e2c-044df0e564d2",
+        "org_id": "10000000-0000-4000-8000-000000000001",
+        "action_id": "e3468f69-068a-4979-8c57-191cfb0ee581",
+        "attempt_id": "2285e662-ea8c-4a33-85ae-71f97f1f07c1",
+        "request_status": "SUCCEEDED",
+        "dispatch_state": "DISPATCHED",
+        "encrypted_result_present": true
+      }
+    ]
+  },
+  "desktopToolAvailability": {
+    "available": false,
+    "observedError": "resources/list failed: unknown MCP server 'mcpguard_local'",
+    "userRestartConfirmed": true,
+    "newTurnRetest": "FAILED_TO_LOAD_TOOL"
+  }
+}

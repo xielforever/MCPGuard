@@ -132,3 +132,10 @@ CONTROL_FLOW 不需要普通 ChatGPT 调用管理 REST，也不依赖 MRTR；若
 - [S5 Codex host/Desktop/CLI 的 MCP 边界](https://developers.openai.com/codex/mcp)
 - [S6 Plugins 产品面与 Desktop-only/local apps](https://help.openai.com/en/articles/20001256-plugins-in-chatgpt)
 - [S7 Responses API MCP，非 ChatGPT workspace 配置](https://developers.openai.com/api/docs/guides/tools-connectors-mcp)
+
+
+## 2026-10-24 多资源自助访问补充
+
+新增加密文件私有交付与多资源 Context 是独立客户端能力。共享工具快照、网页下载或旧 PG/审计原生通过不证明能安装本地凭据；HTTP 与 stdio 分别实测，不推定远程 ChatGPT 能启动本地 helper。
+
+完整语义见[架构](../revisions/2026-10-24-resource-access/architecture.md)、[契约](../revisions/2026-10-24-resource-access/contracts.md)、[凭据生命周期](../revisions/2026-10-24-resource-access/credential-lifecycle.md)及[验收矩阵](../revisions/2026-10-24-resource-access/acceptance.md)。本节追加当前设计目标，原文和原验收保持；新增流程尚未实现。

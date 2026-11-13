@@ -1,0 +1,68 @@
+[
+  {
+    "name": "resource.list",
+    "input": "ListResourcesInput",
+    "output": "ListResourcesResult",
+    "stage": "RA-02"
+  },
+  {
+    "name": "resource.get",
+    "input": "GetResourceInput",
+    "output": "GetResourceResult",
+    "stage": "RA-02"
+  },
+  {
+    "name": "access.request",
+    "input": "AccessRequestInput",
+    "output": "AccessRequest",
+    "stage": "RA-04"
+  },
+  {
+    "name": "access.status",
+    "input": "RequestIDInput",
+    "output": "AccessStatusResult",
+    "stage": "RA-04"
+  },
+  {
+    "name": "access.cancel",
+    "input": "CancelAccessInput",
+    "output": "AccessRequest",
+    "stage": "RA-04"
+  },
+  {
+    "name": "credential.prepare_download",
+    "input": "PrepareDownloadInput",
+    "output": "PrepareDownloadResult",
+    "stage": "PLANNED"
+  },
+  {
+    "name": "credential.status",
+    "input": "CredentialIDInput",
+    "output": "CredentialStatus",
+    "stage": "PLANNED"
+  },
+  {
+    "name": "credential.revoke",
+    "input": "RevokeCredentialInput",
+    "output": "Revocation",
+    "stage": "PLANNED"
+  },
+  {
+    "name": "pg.get_item",
+    "input": "ReadItemInput",
+    "stage": "RA-11",
+    "x-result-contract": "../tool-result.schema.json"
+  },
+  {
+    "name": "access.grants",
+    "input": "ListGrantsInput",
+    "output": "ListGrantsResult",
+    "stage": "RA-04"
+  },
+  {
+    "name": "pg.update_note",
+    "input": "UpdateNoteInput",
+    "stage": "RA-12",
+    "x-result-contract": "../tool-result.schema.json"
+  }
+]

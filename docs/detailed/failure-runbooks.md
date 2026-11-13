@@ -163,3 +163,20 @@ PG当前行、Redis当前值或HTTP当前资源恰好等于期望值，通常不
 演练至少覆盖：提交后丢响应、元数据库断连、通知重复、轮换旧池、过期扫描快照、旧worker暂停后恢复、SIGTERM排空、备份中缺失已发生写入及旧续传重放。关联[验证计划](validation-plan.md)的AC-07/09/10/11/12/13。
 
 证据以真实运行结果填写PASS/FAIL/NOT_RUN；当前手册尚未演练，不能以评审、截图或旧脚手架构建代替恢复通过。企业网络已互通，本规程只验证既有接入与原生请求路径，不增加VPN、隧道或网络建设任务。
+
+
+## 2026-10-24 多资源自助访问补充
+
+补充领取回执丢失、原生账号开通未知、撤权后迟到开通、跨副本旧缓存、在途停止未确认、原生清理失败和恢复旧备份的处置。网关保持拒绝时单独跟踪清理；恢复 fence 未解除前不签发或执行。
+
+完整语义见[架构](../revisions/2026-10-24-resource-access/architecture.md)、[契约](../revisions/2026-10-24-resource-access/contracts.md)、[凭据生命周期](../revisions/2026-10-24-resource-access/credential-lifecycle.md)及[验收矩阵](../revisions/2026-10-24-resource-access/acceptance.md)。本节追加当前设计目标，原文和原验收保持；新增流程尚未实现。
+
+
+## 后续 RA-09 追加（2026-10-26）
+
+当前补齐登记客户端绑定的 CredentialContext、私有安全缓存、有界待领取队列、多资源激活和续期。Context 及凭据终态不续活，新 Context 不继承激活，重领与续期不创建原生账号；旧手动流程保留。具体协议、事务、Windows/Linux 权限、失败恢复和后续阶段边界见[RA-09 说明](../credential-contexts-local.md)，实际证明见[验收](../validation/local-ra09-2026-10-26.md)。前文保留各原时点记录。
+
+
+## 后续 RA-10 追加（2026-10-26）
+
+HTTP 宿主私有头 helper、有界 worker 与可选 stdio 私有模式已接通 RA-09 生命周期。模型输出和宿主头通道分开，MCP capability 不授予权限；过期、主动关闭、文件丢失与包撤销分别恢复或拒绝，未知结果不重放业务。具体协议、命令、能力与限制见[RA-10](../private-client-adapters-local.md)，分层成绩见[验收](../validation/local-ra10-2026-10-26.md)。原时点继续保留。

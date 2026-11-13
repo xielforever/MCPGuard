@@ -1,0 +1,88 @@
+{
+  "status": "OLD_CLOUD_PLUGINS_ABSENT_LOCAL_NATIVE_READ_PASS",
+  "observedAt": "2026-10-23T06:09:22.140187598Z",
+  "pluginResults": [
+    {
+      "name": "MCPGuard Local Read",
+      "status": "not_installed"
+    },
+    {
+      "name": "MCPGuard Local Read Restored",
+      "status": "uninstalled"
+    }
+  ],
+  "retainedServer": "mcpguard_local",
+  "endpoint": "http://127.0.0.1:18080/mcp",
+  "localNativeTool": "mcp__mcpguard_local__pg_get_demo_item",
+  "verificationArguments": {
+    "itemId": "item_demo_1"
+  },
+  "verifierScriptUsed": false,
+  "cloudPluginToolUsed": false,
+  "uninstallResult": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "Uninstalled MCPGuard Local Read Restored. MCPGuard Local Read was not installed.",
+          "annotations": null,
+          "meta": null
+        }
+      ],
+      "structuredContent": {
+        "results": [
+          {
+            "app_id": "MCPGuard Local Read",
+            "status": "not_installed",
+            "reason": "仅保留本机 mcpguard_local，避免误调用旧云端插件。"
+          },
+          {
+            "app_id": "MCPGuard Local Read Restored",
+            "status": "uninstalled",
+            "reason": "仅保留本机 mcpguard_local，避免误调用旧云端插件。"
+          }
+        ]
+      },
+      "isError": false
+    },
+    "isError": false
+  },
+  "localNativeResult": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"kind\":\"FINAL\",\"actionId\":\"e56017bf-1692-41cf-b910-b8c4c8f4bfcf\",\"attemptId\":\"66dd0746-7535-4fd8-b861-aade2cbf7ab0\",\"executionId\":\"4eb3c478-d2a5-4ef0-b709-b2307b75f4ee\",\"requestStatus\":\"SUCCEEDED\",\"dispatchState\":\"DISPATCHED\",\"sideEffectStatus\":\"NONE\",\"data\":{\"found\":true,\"item\":{\"itemId\":\"item_demo_1\",\"note\":\"Alice scope A\",\"version\":\"1\"}},\"error\":null,\"metadata\":{\"encoding\":\"json\",\"observedAt\":\"2026-10-23T06:09:22.140187598Z\",\"truncated\":false}}"
+      }
+    ],
+    "structuredContent": {
+      "kind": "FINAL",
+      "actionId": "e56017bf-1692-41cf-b910-b8c4c8f4bfcf",
+      "attemptId": "66dd0746-7535-4fd8-b861-aade2cbf7ab0",
+      "executionId": "4eb3c478-d2a5-4ef0-b709-b2307b75f4ee",
+      "requestStatus": "SUCCEEDED",
+      "dispatchState": "DISPATCHED",
+      "sideEffectStatus": "NONE",
+      "data": {
+        "found": true,
+        "item": {
+          "itemId": "item_demo_1",
+          "note": "Alice scope A",
+          "version": "1"
+        }
+      },
+      "error": null,
+      "metadata": {
+        "encoding": "json",
+        "observedAt": "2026-10-23T06:09:22.140187598Z",
+        "truncated": false
+      }
+    }
+  }
+}

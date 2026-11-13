@@ -186,3 +186,20 @@ SIGTERM 按以下顺序处理：readiness 关闭并停止新领取，停止 outb
 | web | 保留 Vue 外壳，移除 mock 成功路径，按管理 API 与真实状态重接页面 |
 
 实现验收见[验证计划](validation-plan.md)。本文件不新增运行环境要求到企业网络，也不把当前旧脚手架的构建结果当成新架构验证。
+
+
+## 2026-10-24 多资源自助访问补充
+
+新增资源自助目录、AccessService、受限开通提供方、CredentialService 和 Context 管理。动态资源配置替代新路径的全局业务连接；普通查询、账号开通和密钥访问使用独立权限。
+
+完整语义见[架构](../revisions/2026-10-24-resource-access/architecture.md)、[契约](../revisions/2026-10-24-resource-access/contracts.md)、[凭据生命周期](../revisions/2026-10-24-resource-access/credential-lifecycle.md)及[验收矩阵](../revisions/2026-10-24-resource-access/acceptance.md)。本节追加当前设计目标，原文和原验收保持；新增流程尚未实现。
+
+
+## 后续 RA-09 追加（2026-10-26）
+
+当前补齐登记客户端绑定的 CredentialContext、私有安全缓存、有界待领取队列、多资源激活和续期。Context 及凭据终态不续活，新 Context 不继承激活，重领与续期不创建原生账号；旧手动流程保留。具体协议、事务、Windows/Linux 权限、失败恢复和后续阶段边界见[RA-09 说明](../credential-contexts-local.md)，实际证明见[验收](../validation/local-ra09-2026-10-26.md)。前文保留各原时点记录。
+
+
+## 后续 RA-10 追加（2026-10-26）
+
+HTTP 宿主私有头 helper、有界 worker 与可选 stdio 私有模式已接通 RA-09 生命周期。模型输出和宿主头通道分开，MCP capability 不授予权限；过期、主动关闭、文件丢失与包撤销分别恢复或拒绝，未知结果不重放业务。具体协议、命令、能力与限制见[RA-10](../private-client-adapters-local.md)，分层成绩见[验收](../validation/local-ra10-2026-10-26.md)。原时点继续保留。

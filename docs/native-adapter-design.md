@@ -101,3 +101,10 @@ GET 不天然代表无副作用，POST 也不自动等于高风险；操作语�
 - [PostgreSQL 连接设置](https://www.postgresql.org/docs/current/runtime-config-connection.html)
 - [PostgreSQL 角色](https://www.postgresql.org/docs/current/user-manag.html)
 - [PostgreSQL 事务](https://www.postgresql.org/docs/current/sql-begin.html)
+
+
+## 2026-10-24 多资源及个人原生身份补充
+
+新路径从当前主体、资源、有效授权和加密包绑定解析原生身份及秘密版本，不接受模型指定 DSN/密码。池默认按主体、资源、原生身份、绑定/秘密和配置版本隔离，连接复用仍需当次授权校验。
+
+账号开通使用独立受限 ProvisioningProvider，查询角色不负责建账号。PG 实际数据权限由原生角色、视图、对象权限和必要 RLS 落实；旧 demo scope_id 条件仍仅适用于该模板。开通未知、服务端执行及撤权边界见[完整流程](revisions/2026-10-24-resource-access/architecture.md)。

@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-29",
+  "files": {
+    "design-system/mcpguard/MASTER.md": {
+      "archive": "MASTER.v1.0.0.md.txt",
+      "sha256": "2fc0efb7ae621458c7145c48f43570c21671be46c014f4afade6095a9445e829"
+    },
+    "design-system/mcpguard/acceptance.md": {
+      "archive": "acceptance.v1.0.0.md.txt",
+      "sha256": "7a56e0d6edcf25dfa61cb416230da6cdd0d1d1c7b2a708f38cb233f6c8594c24"
+    },
+    "design-system/mcpguard/CHANGELOG.md": {
+      "archive": "CHANGELOG.v1.0.0.md.txt",
+      "sha256": "04850e1a8ec30528faaa4021ea0341c10ca646d6d181614fc5218132d212b6e3"
+    }
+  }
+}

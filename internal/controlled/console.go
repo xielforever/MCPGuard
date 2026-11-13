@@ -1,0 +1,781 @@
+package controlled
+
+import (
+	"bytes"
+	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"crypto/subtle"
+	_ "embed"
+	"encoding/base64"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"io"
+	"net/http"
+	"net/url"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/xielforever/MCPGuard/internal/metadata"
+	"github.com/xielforever/MCPGuard/internal/uitheme"
+)
+
+// Browser credentials are independent random secrets, never the MCP bearer.
+// Configuration contains only hashes of >=256-bit generated login secrets.
+type Login struct{ Username, OrgID, PrincipalID, PasswordHash string }
+type session struct {
+	Principal metadata.Principal
+	CSRF      string
+	Expires   time.Time
+}
+type Console struct {
+	Service       *Service
+	Logins        []Login
+	Notifications *Notifier
+	// APIExtension runs only after browser session, current identity and CSRF
+	// validation. It cannot accept a bearer token in place of browser login.
+	APIExtension func(http.ResponseWriter, *http.Request, metadata.Principal) bool
+	mu           sync.Mutex
+	sessions     map[string]session
+	attempts     map[string][]time.Time
+	host         string
+}
+
+//go:embed console.html
+var consoleHTML []byte
+
+//go:embed console.js
+var consoleJS []byte
+
+//go:embed console.css
+var consoleCSS []byte
+
+func OpenConsole(s *Service, path string) (*Console, error) {
+	c := &Console{Service: s, sessions: map[string]session{}, attempts: map[string][]time.Time{}}
+	u, e := url.Parse(s.Origin)
+	if e != nil || u.Scheme != "http" || !loopbackAddress(u.Host) {
+		return nil, errors.New("console requires fixed loopback origin")
+	}
+	c.host = u.Host
+	if path != "" {
+		b, e := os.ReadFile(path)
+		if e != nil {
+			return nil, errors.New("console configuration unavailable")
+		}
+		d := json.NewDecoder(bytes.NewReader(b))
+		d.DisallowUnknownFields()
+		if e = d.Decode(&c.Logins); e != nil {
+			return nil, errors.New("invalid console configuration")
+		}
+		names := map[string]bool{}
+		for _, l := range c.Logins {
+			h, e := hex.DecodeString(l.PasswordHash)
+			_, o := uuid.Parse(l.OrgID)
+			_, p := uuid.Parse(l.PrincipalID)
+			if e != nil || len(h) != 32 || o != nil || p != nil || l.Username == "" || len(l.Username) > 64 || names[l.Username] {
+				return nil, errors.New("invalid console login")
+			}
+			names[l.Username] = true
+		}
+	}
+	return c, nil
+}
+func secret() string {
+	b := make([]byte, 32)
+	if _, e := rand.Read(b); e != nil {
+		panic(e)
+	}
+	return base64.RawURLEncoding.EncodeToString(b)
+}
+func jsonReply(w http.ResponseWriter, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(v)
+}
+func safeHTTPError(w http.ResponseWriter, e error) {
+	code := 503
+	message := "Service unavailable; no execution was dispatched by this management request."
+	if errors.Is(e, ErrDenied) || errors.Is(e, metadata.ErrDenied) {
+		code = 403
+		message = ErrDenied.Error()
+	}
+	if errors.Is(e, ErrInput) {
+		code = 400
+		message = ErrInput.Error()
+	}
+	if errors.Is(e, ErrConflict) {
+		code = 409
+		message = ErrConflict.Error()
+	}
+	http.Error(w, message, code)
+}
+func readObject(w http.ResponseWriter, r *http.Request) (map[string]any, error) {
+	b, e := io.ReadAll(http.MaxBytesReader(w, r.Body, 8192))
+	if e != nil {
+		return nil, ErrInput
+	}
+	v, e := Object(b)
+	if e != nil {
+		return nil, ErrInput
+	}
+	return v, nil
+}
+func exact(v map[string]any, keys ...string) bool {
+	if len(v) != len(keys) {
+		return false
+	}
+	for _, k := range keys {
+		if _, ok := v[k]; !ok {
+			return false
+		}
+	}
+	return true
+}
+func text(v map[string]any, k string) string { s, _ := v[k].(string); return s }
+
+func (c *Console) Register(mux *http.ServeMux) {
+	mux.HandleFunc("GET /web/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Host != c.host {
+			http.Error(w, "host not allowed", 403)
+			return
+		}
+		w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+		w.Header().Set("Referrer-Policy", "no-referrer")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Cache-Control", "no-store")
+		switch r.URL.Path {
+		case "/web/":
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			_, _ = w.Write(consoleHTML)
+		case "/web/console.js":
+			w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+			_, _ = w.Write(consoleJS)
+		case "/web/console.css":
+			w.Header().Set("Content-Type", "text/css; charset=utf-8")
+			_, _ = w.Write(consoleCSS)
+		case "/web/ui/tokens.css", "/web/ui/components.css", "/web/ui/state-labels.js", "/web/ui/components.js":
+			name := strings.TrimPrefix(r.URL.Path, "/web/ui/")
+			if name == "tokens.css" {
+				name = "tokens.generated.css"
+			}
+			if name == "state-labels.js" {
+				name = "state-labels.generated.js"
+			}
+			asset, ok := uitheme.Asset(name)
+			if !ok {
+				http.NotFound(w, r)
+				return
+			}
+			mime := "text/javascript; charset=utf-8"
+			if strings.HasSuffix(name, ".css") {
+				mime = "text/css; charset=utf-8"
+			}
+			w.Header().Set("Content-Type", mime)
+			_, _ = w.Write(asset)
+		default:
+			http.NotFound(w, r)
+		}
+	})
+	mux.HandleFunc("POST /console/login", c.login)
+	mux.Handle("/console/api/", http.HandlerFunc(c.serveAPI))
+}
+func (c *Console) login(w http.ResponseWriter, r *http.Request) {
+	if r.Host != c.host || r.Header.Get("Origin") != c.Service.Origin {
+		http.Error(w, "origin not allowed", 403)
+		return
+	}
+	c.mu.Lock()
+	now := time.Now()
+	recent := []time.Time{}
+	for _, t := range c.attempts["local"] {
+		if now.Sub(t) < time.Minute {
+			recent = append(recent, t)
+		}
+	}
+	c.attempts["local"] = append(recent, now)
+	c.mu.Unlock()
+	if len(recent) >= 10 {
+		http.Error(w, "Too many login attempts", 429)
+		return
+	}
+	v, e := readObject(w, r)
+	if e != nil || !exact(v, "username", "password") || len(text(v, "password")) < 32 {
+		http.Error(w, "Login failed", 401)
+		return
+	}
+	hash := sha256.Sum256([]byte(text(v, "password")))
+	encoded := hex.EncodeToString(hash[:])
+	var selected *Login
+	for i := range c.Logins {
+		l := &c.Logins[i]
+		match := subtle.ConstantTimeCompare([]byte(l.PasswordHash), []byte(encoded))
+		if l.Username == text(v, "username") && match == 1 {
+			selected = l
+		}
+	}
+	if selected == nil {
+		http.Error(w, "Login failed", 401)
+		return
+	}
+	ctx, done := context.WithTimeout(r.Context(), 2*time.Second)
+	defer done()
+	p, e := c.Service.Store.OAuthPrincipal(ctx, selected.OrgID, selected.PrincipalID)
+	if e != nil {
+		http.Error(w, "Login failed", 401)
+		return
+	}
+	id := secret()
+	s := session{p, secret(), now.Add(30 * time.Minute)}
+	c.mu.Lock()
+	for key, old := range c.sessions {
+		if now.After(old.Expires) {
+			delete(c.sessions, key)
+		}
+	}
+	if len(c.sessions) >= 128 {
+		c.mu.Unlock()
+		http.Error(w, "Session limit reached", 429)
+		return
+	}
+	c.sessions[id] = s
+	c.mu.Unlock()
+	http.SetCookie(w, &http.Cookie{Name: "mcpguard_console", Value: id, Path: "/console/", HttpOnly: true, SameSite: http.SameSiteStrictMode, MaxAge: 1800})
+	jsonReply(w, map[string]any{"csrf": s.CSRF, "expiresAt": s.Expires})
+}
+func (c *Console) serveAPI(w http.ResponseWriter, r *http.Request) {
+	if r.Host != c.host {
+		http.Error(w, "host not allowed", 403)
+		return
+	}
+	cookie, e := r.Cookie("mcpguard_console")
+	if e != nil {
+		http.Error(w, "Browser login required", 401)
+		return
+	}
+	c.mu.Lock()
+	s, ok := c.sessions[cookie.Value]
+	c.mu.Unlock()
+	if !ok || time.Now().After(s.Expires) {
+		http.Error(w, "Browser login required", 401)
+		return
+	}
+	ctx, done := context.WithTimeout(r.Context(), 5*time.Second)
+	defer done()
+	p, e := c.Service.Store.Current(ctx, s.Principal)
+	if e != nil {
+		http.Error(w, "Browser identity unavailable", 401)
+		return
+	}
+	if r.Method != "GET" && (r.Header.Get("Origin") != c.Service.Origin || subtle.ConstantTimeCompare([]byte(r.Header.Get("X-CSRF-Token")), []byte(s.CSRF)) != 1) {
+		http.Error(w, "CSRF validation failed", 403)
+		return
+	}
+	path := strings.TrimPrefix(r.URL.Path, "/console/api/")
+	if c.APIExtension != nil && c.APIExtension(w, r.WithContext(ctx), p) {
+		return
+	}
+	if path == "logout" && r.Method == "POST" {
+		c.mu.Lock()
+		delete(c.sessions, cookie.Value)
+		c.mu.Unlock()
+		http.SetCookie(w, &http.Cookie{Name: "mcpguard_console", Value: "", Path: "/console/", HttpOnly: true, SameSite: http.SameSiteStrictMode, MaxAge: -1})
+		jsonReply(w, map[string]bool{"loggedOut": true})
+		return
+	}
+	if path == "state" && r.Method == "GET" {
+		out, e := c.Service.Snapshot(ctx, p)
+		if e != nil {
+			safeHTTPError(w, e)
+			return
+		}
+		out["csrf"] = s.CSRF
+		out["notificationConfigured"] = c.Notifications.Configured()
+		jsonReply(w, out)
+		return
+	}
+	if path == "audit" && r.Method == "GET" {
+		after, e := strconv.ParseInt(r.URL.Query().Get("after"), 10, 64)
+		limit, e2 := strconv.Atoi(r.URL.Query().Get("limit"))
+		if e != nil || e2 != nil || after < 0 || limit < 1 || limit > 100 || len(r.URL.Query()) != 2 {
+			safeHTTPError(w, ErrInput)
+			return
+		}
+		events, e := c.Service.Store.Audit(ctx, p, after, limit)
+		if e != nil {
+			safeHTTPError(w, e)
+			return
+		}
+		out := []any{}
+		for _, a := range events {
+			out = append(out, map[string]any{"seq": strconv.FormatInt(a.Seq, 10), "eventType": a.EventType, "actionId": a.ActionID, "createdAt": a.CreatedAt})
+			after = a.Seq
+		}
+		jsonReply(w, map[string]any{"events": out, "nextAfter": strconv.FormatInt(after, 10)})
+		return
+	}
+	if strings.HasPrefix(path, "actions/") {
+		rest := strings.TrimPrefix(path, "actions/")
+		if r.Method == "GET" && !strings.Contains(rest, "/") {
+			v, e := c.Service.Review(ctx, p, rest)
+			if e != nil {
+				safeHTTPError(w, e)
+				return
+			}
+			jsonReply(w, v)
+			return
+		}
+		if r.Method == "POST" && strings.HasSuffix(rest, "/decision") {
+			id := strings.TrimSuffix(rest, "/decision")
+			v, e := readObject(w, r)
+			if e != nil || !exact(v, "vote", "planHash") {
+				safeHTTPError(w, ErrInput)
+				return
+			}
+			out, e := c.Service.Decide(ctx, p, id, text(v, "vote"), text(v, "planHash"), r.Header.Get("If-Match"), r.Header.Get("Idempotency-Key"))
+			if e != nil {
+				safeHTTPError(w, e)
+				return
+			}
+			jsonReply(w, out)
+			return
+		}
+	}
+	if path == "config" && r.Method == "PATCH" {
+		v, e := readObject(w, r)
+		if e != nil {
+			safeHTTPError(w, e)
+			return
+		}
+		out, e := c.Service.Configure(ctx, p, v, r.Header.Get("If-Match"), r.Header.Get("Idempotency-Key"))
+		if e != nil {
+			safeHTTPError(w, e)
+			return
+		}
+		jsonReply(w, out)
+		return
+	}
+	http.NotFound(w, r)
+}
+func (s *Service) isAdmin(ctx context.Context, tx pgx.Tx, p metadata.Principal) bool {
+	var yes bool
+	e := tx.QueryRow(ctx, `SELECT is_admin FROM mcpguard.control_members WHERE org_id=$1 AND principal_id=$2`, p.OrgID, p.ID).Scan(&yes)
+	return e == nil && yes
+}
+func (s *Service) canReview(ctx context.Context, tx pgx.Tx, p metadata.Principal, a action) bool {
+	if p.ID == a.Owner {
+		return false
+	}
+	var yes bool
+	e := tx.QueryRow(ctx, `SELECT mcpguard.has_reviewer_grant($1,$2,$3)`, p.OrgID, p.ID, a.Resource).Scan(&yes)
+	return e == nil && yes
+}
+func revisionMatches(header string, v int64) bool { return header == `"`+strconv.FormatInt(v, 10)+`"` }
+func (s *Service) operation(ctx context.Context, tx pgx.Tx, p metadata.Principal, route, key string, payload any) (map[string]any, string, error) {
+	if len(key) < 16 || len(key) > 128 {
+		return nil, "", ErrInput
+	}
+	b, _ := json.Marshal(payload)
+	hash := s.Store.Vault.Hash(b)
+	var saved string
+	var raw []byte
+	e := tx.QueryRow(ctx, `SELECT payload_hash,response FROM mcpguard.control_operations WHERE org_id=$1 AND actor_id=$2 AND route=$3 AND key=$4`, p.OrgID, p.ID, route, key).Scan(&saved, &raw)
+	if errors.Is(e, pgx.ErrNoRows) {
+		return nil, hash, nil
+	}
+	if e != nil {
+		return nil, "", e
+	}
+	if saved != hash {
+		return nil, "", ErrConflict
+	}
+	var out map[string]any
+	e = json.Unmarshal(raw, &out)
+	return out, hash, e
+}
+func (s *Service) saveOperation(ctx context.Context, tx pgx.Tx, p metadata.Principal, route, key, hash string, out map[string]any) error {
+	b, _ := json.Marshal(out)
+	_, e := tx.Exec(ctx, `INSERT INTO mcpguard.control_operations VALUES($1,$2,$3,$4,$5,$6)`, p.OrgID, p.ID, route, key, hash, b)
+	return e
+}
+func (s *Service) Decide(ctx context.Context, p metadata.Principal, id, vote, hash, match, key string) (map[string]any, error) {
+	if _, e := uuid.Parse(id); e != nil || vote != "APPROVE" && vote != "REJECT" {
+		return nil, ErrInput
+	}
+	tx, e := s.Store.Pool.Begin(ctx)
+	if e != nil {
+		return nil, e
+	}
+	defer rollback(tx)
+	if _, e = s.current(ctx, tx, p); e != nil {
+		return nil, e
+	}
+	v, e := s.head(ctx, tx, p.OrgID)
+	if e != nil {
+		return nil, e
+	}
+	a, e := scan(tx.QueryRow(ctx, actionSelect+` WHERE a.org_id=$1 AND a.id=$2 FOR UPDATE OF a`, p.OrgID, id))
+	if e != nil {
+		return nil, e
+	}
+	if !s.canReview(ctx, tx, p, a) {
+		return nil, ErrDenied
+	}
+	route := "decision/" + id
+	old, digest, e := s.operation(ctx, tx, p, route, key, map[string]any{"vote": vote, "planHash": hash})
+	if e != nil {
+		return nil, e
+	}
+	if old != nil {
+		return old, nil
+	}
+	if !revisionMatches(match, a.Revision) || a.State != "PENDING_APPROVAL" || hash != a.Hash || !a.Expires.After(time.Now()) || a.Config != v || a.Binding != s.Native.Binding() {
+		return nil, ErrConflict
+	}
+	if _, e = s.plan(a); e != nil {
+		return nil, e
+	}
+	// A decision is data only. It never consumes an execution qualification.
+	_, e = tx.Exec(ctx, `INSERT INTO mcpguard.managed_decisions(org_id,action_id,reviewer_id,vote,plan_hash) VALUES($1,$2,$3,$4,$5)`, a.Org, a.ID, p.ID, vote, hash)
+	if e != nil {
+		return nil, e
+	}
+	next := "READY"
+	if vote == "REJECT" {
+		next = "DENIED"
+	}
+	if e = s.state(ctx, tx, &a, next, "APPROVAL_"+vote); e != nil {
+		return nil, e
+	}
+	if e = s.audit(ctx, tx, a, p.ID, "REVIEW_"+vote); e != nil {
+		return nil, e
+	}
+	out := map[string]any{"actionId": a.ID, "state": a.State, "revision": a.Revision}
+	if e = s.saveOperation(ctx, tx, p, route, key, digest, out); e != nil {
+		return nil, e
+	}
+	if e = tx.Commit(ctx); e != nil {
+		return nil, e
+	}
+	return out, nil
+}
+func (s *Service) Review(ctx context.Context, p metadata.Principal, id string) (map[string]any, error) {
+	if _, e := uuid.Parse(id); e != nil {
+		return nil, ErrInput
+	}
+	tx, e := s.Store.Pool.Begin(ctx)
+	if e != nil {
+		return nil, e
+	}
+	defer rollback(tx)
+	if _, e = s.current(ctx, tx, p); e != nil {
+		return nil, e
+	}
+	a, e := scan(tx.QueryRow(ctx, actionSelect+` WHERE a.org_id=$1 AND a.id=$2`, p.OrgID, id))
+	if e != nil {
+		return nil, e
+	}
+	can := s.canReview(ctx, tx, p, a)
+	if a.Owner != p.ID && !can {
+		return nil, ErrDenied
+	}
+	args, e := s.plan(a)
+	if e != nil {
+		return nil, e
+	}
+	view := s.view(ctx, a)
+	view["arguments"] = args
+	view["scopeId"] = a.Scope
+	view["canReview"] = can && a.State == "PENDING_APPROVAL" && a.Expires.After(time.Now())
+	return view, nil
+}
+func (s *Service) Snapshot(ctx context.Context, p metadata.Principal) (map[string]any, error) {
+	tx, e := s.Store.Pool.Begin(ctx)
+	if e != nil {
+		return nil, e
+	}
+	defer rollback(tx)
+	if _, e = s.current(ctx, tx, p); e != nil {
+		return nil, e
+	}
+	revision, e := s.head(ctx, tx, p.OrgID)
+	if e != nil {
+		return nil, e
+	}
+	admin := s.isAdmin(ctx, tx, p)
+	out := map[string]any{"principalId": p.ID, "scopeId": p.ScopeID, "admin": admin, "revision": strconv.FormatInt(revision, 10), "sso": "PENDING_PROVIDER_SELECTION"}
+	resources := []any{}
+	rows, e := tx.Query(ctx, `SELECT name,id::text,enabled FROM mcpguard.control_resources WHERE org_id=$1 ORDER BY name`, p.OrgID)
+	if e != nil {
+		return nil, e
+	}
+	for rows.Next() {
+		var n, id string
+		var enabled bool
+		if e = rows.Scan(&n, &id, &enabled); e != nil {
+			rows.Close()
+			return nil, e
+		}
+		resources = append(resources, map[string]any{"name": n, "id": id, "enabled": enabled, "configured": s.Native.Available(n)})
+	}
+	e = rows.Err()
+	rows.Close()
+	if e != nil {
+		return nil, e
+	}
+	out["resources"] = resources
+	actions := []any{}
+	rows, e = tx.Query(ctx, `SELECT a.id::text,a.tool_name,a.state,a.principal_id::text,a.revision,a.plan_hash,a.expires_at FROM mcpguard.managed_actions a WHERE a.org_id=$1 AND (a.principal_id=$2 OR (mcpguard.has_reviewer_grant(a.org_id,$2,a.resource_name) AND a.principal_id<>$2)) ORDER BY a.created_at DESC,a.id LIMIT 100`, p.OrgID, p.ID)
+	if e != nil {
+		return nil, e
+	}
+	for rows.Next() {
+		var id, t, state, owner, h string
+		var rev int64
+		var expiry time.Time
+		if e = rows.Scan(&id, &t, &state, &owner, &rev, &h, &expiry); e != nil {
+			rows.Close()
+			return nil, e
+		}
+		actions = append(actions, map[string]any{"actionId": id, "toolName": t, "state": state, "requesterId": owner, "revision": rev, "planHash": h, "expiresAt": expiry})
+	}
+	e = rows.Err()
+	rows.Close()
+	if e != nil {
+		return nil, e
+	}
+	out["actions"] = actions
+	if admin {
+		for key, query := range map[string]string{
+			"groups":         `SELECT json_build_object('id',id,'name',name,'enabled',enabled) FROM mcpguard.control_groups WHERE org_id=$1 ORDER BY id LIMIT 100`,
+			"groupMembers":   `SELECT json_build_object('groupId',group_id,'principalId',principal_id) FROM mcpguard.group_members WHERE org_id=$1 ORDER BY group_id,principal_id LIMIT 100`,
+			"groupGrants":    `SELECT json_build_object('groupId',group_id,'toolName',tool_name,'allowed',allowed) FROM mcpguard.group_tool_grants WHERE org_id=$1 ORDER BY group_id,tool_name LIMIT 100`,
+			"groupReviewers": `SELECT json_build_object('groupId',group_id,'resource',resource_name,'allowed',allowed) FROM mcpguard.group_reviewer_grants WHERE org_id=$1 ORDER BY group_id,resource_name LIMIT 100`,
+			"users":          `SELECT json_build_object('id',p.id,'name',p.display_name,'enabled',p.enabled,'canRead',p.can_read,'scopeId',p.scope_id,'admin',coalesce(m.is_admin,false)) FROM mcpguard.principals p LEFT JOIN mcpguard.control_members m ON (m.org_id,m.principal_id)=(p.org_id,p.id) WHERE p.org_id=$1 ORDER BY p.id LIMIT 100`,
+			"rules":          `SELECT json_build_object('id',id,'toolName',tool_name,'effect',effect,'pattern',pattern,'enabled',enabled) FROM mcpguard.control_rules WHERE org_id=$1 ORDER BY id LIMIT 100`,
+			"grants":         `SELECT json_build_object('principalId',principal_id,'toolName',tool_name,'allowed',allowed) FROM mcpguard.tool_grants WHERE org_id=$1 ORDER BY principal_id,tool_name LIMIT 100`,
+			"reviewers":      `SELECT json_build_object('principalId',principal_id,'resource',resource_name,'allowed',allowed) FROM mcpguard.reviewer_grants WHERE org_id=$1 ORDER BY principal_id,resource_name LIMIT 100`,
+			"notifications":  `SELECT json_build_object('actionId',action_id,'state',state,'attempts',attempts,'nextAt',next_at) FROM mcpguard.notification_outbox WHERE org_id=$1 ORDER BY next_at DESC LIMIT 100`,
+		} {
+			rs, e := tx.Query(ctx, query, p.OrgID)
+			if e != nil {
+				return nil, e
+			}
+			vals := []any{}
+			for rs.Next() {
+				var raw []byte
+				if e = rs.Scan(&raw); e != nil {
+					rs.Close()
+					return nil, e
+				}
+				var v any
+				if e = json.Unmarshal(raw, &v); e != nil {
+					rs.Close()
+					return nil, e
+				}
+				vals = append(vals, v)
+			}
+			e = rs.Err()
+			rs.Close()
+			if e != nil {
+				return nil, e
+			}
+			out[key] = vals
+		}
+	}
+	return out, nil
+}
+func (s *Service) Configure(ctx context.Context, p metadata.Principal, v map[string]any, match, key string) (map[string]any, error) {
+	kind := text(v, "kind")
+	tx, e := s.Store.Pool.Begin(ctx)
+	if e != nil {
+		return nil, e
+	}
+	defer rollback(tx)
+	// Exclusive auth lock precedes control lock, including principal edits. This
+	// avoids lock upgrades racing ordinary shared authorization checks.
+	if _, e = tx.Exec(ctx, `SELECT mcpguard.lock_auth_epoch_exclusive($1)`, p.OrgID); e != nil {
+		return nil, e
+	}
+	if _, e = s.current(ctx, tx, p); e != nil {
+		return nil, e
+	}
+	var rev int64
+	if e = tx.QueryRow(ctx, `SELECT revision FROM mcpguard.control_heads WHERE org_id=$1 FOR UPDATE`, p.OrgID).Scan(&rev); e != nil {
+		return nil, e
+	}
+	if !s.isAdmin(ctx, tx, p) {
+		return nil, ErrDenied
+	}
+	old, digest, e := s.operation(ctx, tx, p, "config", key, v)
+	if e != nil {
+		return nil, e
+	}
+	if old != nil {
+		return old, nil
+	}
+	if !revisionMatches(match, rev) {
+		return nil, ErrConflict
+	}
+	ident := text(v, "principalId")
+	if ident != "" {
+		if _, e = uuid.Parse(ident); e != nil {
+			return nil, ErrInput
+		}
+	}
+	switch kind {
+	case "group":
+		if !exact(v, "kind", "id", "name", "enabled") {
+			return nil, ErrInput
+		}
+		id := text(v, "id")
+		if _, e = uuid.Parse(id); e != nil {
+			return nil, ErrInput
+		}
+		enabled, ok := v["enabled"].(bool)
+		name := text(v, "name")
+		if !ok || name == "" || len([]rune(name)) > 100 {
+			return nil, ErrInput
+		}
+		_, e = tx.Exec(ctx, `INSERT INTO mcpguard.control_groups VALUES($1,$2,$3,$4) ON CONFLICT(org_id,id) DO UPDATE SET name=EXCLUDED.name,enabled=EXCLUDED.enabled`, p.OrgID, id, name, enabled)
+	case "groupMember", "groupGrant", "groupReviewer":
+		gid := text(v, "groupId")
+		if _, e = uuid.Parse(gid); e != nil {
+			return nil, ErrInput
+		}
+		allowed, ok := v["allowed"].(bool)
+		if !ok {
+			return nil, ErrInput
+		}
+		if kind == "groupMember" {
+			if !exact(v, "kind", "groupId", "principalId", "allowed") {
+				return nil, ErrInput
+			}
+			if allowed {
+				_, e = tx.Exec(ctx, `INSERT INTO mcpguard.group_members VALUES($1,$2,$3) ON CONFLICT DO NOTHING`, p.OrgID, gid, ident)
+			} else {
+				_, e = tx.Exec(ctx, `DELETE FROM mcpguard.group_members WHERE org_id=$1 AND group_id=$2 AND principal_id=$3`, p.OrgID, gid, ident)
+			}
+		}
+		if kind == "groupGrant" {
+			if !exact(v, "kind", "groupId", "toolName", "allowed") {
+				return nil, ErrInput
+			}
+			tool, yes := s.Tool(text(v, "toolName"))
+			if !yes || tool.Name == "pg.get_demo_item" {
+				return nil, ErrInput
+			}
+			_, e = tx.Exec(ctx, `INSERT INTO mcpguard.group_tool_grants VALUES($1,$2,$3,$4) ON CONFLICT(org_id,group_id,tool_name) DO UPDATE SET allowed=EXCLUDED.allowed`, p.OrgID, gid, tool.Name, allowed)
+		}
+		if kind == "groupReviewer" {
+			if !exact(v, "kind", "groupId", "resource", "allowed") {
+				return nil, ErrInput
+			}
+			_, e = tx.Exec(ctx, `INSERT INTO mcpguard.group_reviewer_grants VALUES($1,$2,$3,$4) ON CONFLICT(org_id,group_id,resource_name) DO UPDATE SET allowed=EXCLUDED.allowed`, p.OrgID, gid, text(v, "resource"), allowed)
+		}
+	case "resource":
+		if !exact(v, "kind", "resource", "enabled") {
+			return nil, ErrInput
+		}
+		enabled, ok := v["enabled"].(bool)
+		if !ok {
+			return nil, ErrInput
+		}
+		tag, err := tx.Exec(ctx, `UPDATE mcpguard.control_resources SET enabled=$3 WHERE org_id=$1 AND name=$2`, p.OrgID, text(v, "resource"), enabled)
+		e = err
+		if e == nil && tag.RowsAffected() != 1 {
+			return nil, ErrInput
+		}
+	case "grant":
+		if !exact(v, "kind", "principalId", "toolName", "allowed") {
+			return nil, ErrInput
+		}
+		t, ok := s.Tool(text(v, "toolName"))
+		allow, valid := v["allowed"].(bool)
+		if !ok || t.Name == "pg.get_demo_item" || !valid {
+			return nil, ErrInput
+		}
+		_, e = tx.Exec(ctx, `INSERT INTO mcpguard.tool_grants VALUES($1,$2,$3,$4) ON CONFLICT(org_id,principal_id,tool_name) DO UPDATE SET allowed=EXCLUDED.allowed`, p.OrgID, ident, t.Name, allow)
+	case "reviewer":
+		if !exact(v, "kind", "principalId", "resource", "allowed") {
+			return nil, ErrInput
+		}
+		allow, ok := v["allowed"].(bool)
+		if !ok {
+			return nil, ErrInput
+		}
+		_, e = tx.Exec(ctx, `INSERT INTO mcpguard.reviewer_grants VALUES($1,$2,$3,$4) ON CONFLICT(org_id,principal_id,resource_name) DO UPDATE SET allowed=EXCLUDED.allowed`, p.OrgID, ident, text(v, "resource"), allow)
+	case "rule":
+		if !exact(v, "kind", "id", "toolName", "effect", "pattern", "enabled") {
+			return nil, ErrInput
+		}
+		id := text(v, "id")
+		if _, e = uuid.Parse(id); e != nil {
+			return nil, ErrInput
+		}
+		t, ok := s.Tool(text(v, "toolName"))
+		effect := text(v, "effect")
+		if !ok || t.Name == "pg.get_demo_item" || effect != "ALLOW" && effect != "DENY" && effect != "REQUIRE_APPROVAL" || len(text(v, "pattern")) > 512 {
+			return nil, ErrInput
+		}
+		if _, e = regexp.Compile(text(v, "pattern")); e != nil {
+			return nil, ErrInput
+		}
+		enabled, ok := v["enabled"].(bool)
+		if !ok {
+			return nil, ErrInput
+		}
+		_, e = tx.Exec(ctx, `INSERT INTO mcpguard.control_rules VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(org_id,id) DO UPDATE SET tool_name=EXCLUDED.tool_name,effect=EXCLUDED.effect,pattern=EXCLUDED.pattern,enabled=EXCLUDED.enabled`, p.OrgID, id, t.Name, effect, text(v, "pattern"), enabled)
+	case "member":
+		if !exact(v, "kind", "principalId", "admin") {
+			return nil, ErrInput
+		}
+		admin, ok := v["admin"].(bool)
+		if !ok || ident == p.ID {
+			return nil, ErrDenied
+		}
+		_, e = tx.Exec(ctx, `INSERT INTO mcpguard.control_members VALUES($1,$2,$3) ON CONFLICT(org_id,principal_id) DO UPDATE SET is_admin=EXCLUDED.is_admin`, p.OrgID, ident, admin)
+	case "principal":
+		if !exact(v, "kind", "principalId", "enabled", "canRead", "scopeId") {
+			return nil, ErrInput
+		}
+		enabled, ok := v["enabled"].(bool)
+		can, ok2 := v["canRead"].(bool)
+		if !ok || !ok2 || !scopePattern.MatchString(text(v, "scopeId")) || ident == p.ID {
+			return nil, ErrInput
+		}
+		tag, err := tx.Exec(ctx, `UPDATE mcpguard.principals SET enabled=$3,can_read=$4,scope_id=$5 WHERE org_id=$1 AND id=$2`, p.OrgID, ident, enabled, can, text(v, "scopeId"))
+		e = err
+		if e == nil && tag.RowsAffected() != 1 {
+			return nil, ErrInput
+		}
+		if e == nil {
+			_, e = tx.Exec(ctx, `UPDATE mcpguard.control_heads SET revision=revision+1 WHERE org_id=$1`, p.OrgID)
+		}
+	default:
+		return nil, ErrInput
+	}
+	if e != nil {
+		return nil, e
+	}
+	if e = tx.QueryRow(ctx, `SELECT revision FROM mcpguard.control_heads WHERE org_id=$1`, p.OrgID).Scan(&rev); e != nil {
+		return nil, e
+	}
+	_, e = tx.Exec(ctx, `INSERT INTO mcpguard.managed_audit(id,org_id,principal_id,event_type) VALUES($1,$2,$3,$4)`, uuid.NewString(), p.OrgID, p.ID, "CONFIG_"+strings.ToUpper(kind))
+	if e != nil {
+		return nil, e
+	}
+	out := map[string]any{"revision": strconv.FormatInt(rev, 10), "saved": true}
+	if e = s.saveOperation(ctx, tx, p, "config", key, digest, out); e != nil {
+		return nil, e
+	}
+	if e = tx.Commit(ctx); e != nil {
+		return nil, e
+	}
+	return out, nil
+}

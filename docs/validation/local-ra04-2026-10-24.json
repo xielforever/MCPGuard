@@ -1,0 +1,919 @@
+{
+  "date": "2026-10-24",
+  "phase": "RA-04",
+  "status": "LOCAL_PASS",
+  "sourceManifestSha256": "a1c545c1d046b6a4dee137f8662278a8a8679254907a786e47a5f359d2926f9d",
+  "sourceManifest": "local-ra04-source-2026-10-24.json",
+  "fixture": {
+    "runId": "f5fd137f11",
+    "privateState": "/home/dzz/.local/state/mcpguard-ra04/mcpguard-ra01-03-f5fd137f11",
+    "go": "1.26.9",
+    "postgres": "16.14",
+    "databaseFacts": {
+      "legacyMigrationVersion": 4,
+      "resourceMigrationVersion": 2,
+      "requestStates": {
+        "EXPIRED": 1,
+        "REJECTED": 1,
+        "STALE": 4,
+        "CANCELLED": 3,
+        "APPROVED": 9,
+        "PENDING_APPROVAL": 7
+      },
+      "grantStates": {
+        "EXPIRED": 1,
+        "REVOKED": 1,
+        "PROVISIONING": 7
+      },
+      "decisions": 10,
+      "accessAudit": 64,
+      "activeGrants": 0,
+      "runningNativeReadProbes": 0,
+      "upgradeDatabases": 1,
+      "identityBindingVersions": 5
+    },
+    "migrationChecksums": {
+      "1": "51783a639c578d7301af2ec5f57ddb616d77e37cc51630fd9cebabbd26085e0b",
+      "2": "ffb3554d34bd69526e1d4f811a3285f1b3e3d6e6368727cc1487902842128da8"
+    },
+    "nativeRoleInventory": [
+      {
+        "cluster": "mcpguard-ra-pg1-f5fd137f11",
+        "existingNativeRoles": [
+          {
+            "identity": "ra_alice",
+            "safe": true
+          },
+          {
+            "identity": "ra_bob",
+            "safe": true
+          }
+        ]
+      },
+      {
+        "cluster": "mcpguard-ra-pg2-f5fd137f11",
+        "existingNativeRoles": [
+          {
+            "identity": "ra_bob",
+            "safe": true
+          },
+          {
+            "identity": "ra_alice",
+            "safe": true
+          }
+        ]
+      }
+    ]
+  },
+  "goRace": {
+    "command": "go test -race -p 1 -count=1 -json ./...",
+    "passedIncludingSubtests": 114,
+    "failed": [],
+    "skipped": [],
+    "passedTests": [
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/contracts/v02",
+        "test": "TestCanonicalExamples"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/contracts/v02",
+        "test": "TestRejectAmbiguousOrOversizedInput"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestCatalogContracts/pg.get_demo_item"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestCatalogContracts/pg.update_demo_note"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestCatalogContracts/redis.get_demo_note"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestCatalogContracts/redis.set_demo_note"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestCatalogContracts/directory.get_demo_office"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestCatalogContracts/inventory.reserve_demo"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestCatalogContracts"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestStrictObjects"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestControlledIntegration/approval-authentication-and-single-execution"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestControlledIntegration/optimistic-version"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestControlledIntegration/redis-fixed-namespace-and-ttl"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestControlledIntegration/http-fixed-operations"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestControlledIntegration/reject-cancel-expire"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestControlledIntegration/config-and-grant-revocation"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestControlledIntegration/deny-wins-and-allow-never-skips-write-approval"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestControlledIntegration/configuration-idempotency-before-revision"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestControlledIntegration/owner-audit-and-history"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestControlledIntegration/database-guards"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestControlledIntegration"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestUnknownNeverReplays"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestConsoleAuthentication"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestTelegramOutbox"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestControlledMCPIntegration"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestControlledCrashRecovery"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestControlledCancellation"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/controlled",
+        "test": "TestGroupAuthorization"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestAuditQueryBoundariesAndIdentitySelectors"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestAuditPageContract"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestControlledOutputContracts/PENDING_APPROVAL"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestControlledOutputContracts/READY"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestControlledOutputContracts/EXECUTING"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestControlledOutputContracts/SUCCEEDED"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestControlledOutputContracts/FAILED"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestControlledOutputContracts/DENIED"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestControlledOutputContracts/EXPIRED"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestControlledOutputContracts/CANCELLED"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestControlledOutputContracts/OUTCOME_UNKNOWN"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestControlledOutputContracts"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestStrictArgumentsAndContract"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestHealthArgumentsAndSafeOutput"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestHealthProbesRunConcurrentlyAndRespectDeadline"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestHealthzIsOnlyLivenessWithoutDependencies"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestReadSliceIntegration/two_employee_scopes_and_exact_versions"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestReadSliceIntegration/hidden_tools_direct_denial_and_tampering"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestReadSliceIntegration/permissions_rechecked_in_existing_session"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestReadSliceIntegration/health_separates_liveness_readiness_and_checks_runtime_dependencies"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestReadSliceIntegration/native_role_is_select_only_even_without_readonly_setting"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestReadSliceIntegration/atomic_qualification_immutable_plan_and_consistent_states"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestReadSliceIntegration/audit_failure_rolls_back_qualification_before_native_access"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestReadSliceIntegration/explicit_mcp_cancel_reaches_real_blocked_query"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestReadSliceIntegration/bounded_native_timeout"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestReadSliceIntegration/audit_owner_filter_pagination_and_safe_fields"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestReadSliceIntegration/mcp_audit_identity_isolation_pagination_and_revocation"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestReadSliceIntegration/crash_left_claim_becomes_unknown_without_native_replay"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestReadSliceIntegration"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestResourceReadIntegration/discovery_requestability_and_safe_views"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestResourceReadIntegration/two_clusters_two_users_distinct_native_roles"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestResourceReadIntegration/cursor_authentication_filter_and_epoch"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestResourceReadIntegration/hidden_request_only_and_unsupported_routes"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestResourceReadIntegration/rest_mcp_parity_and_input_rejection"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestResourceReadIntegration/disabled_resource_and_no_binding_fallback"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestResourceReadIntegration/postgres_role_drift_and_cancellation"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestResourceReadIntegration/runtime_role_cannot_mutate_catalog_history"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestResourceReadIntegration/catalog_opt_in_keeps_legacy_default"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/gateway",
+        "test": "TestResourceReadIntegration"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/metadata",
+        "test": "TestProtectedPayloadBinding"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestAuthorizationBindings/redirect_uri"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestAuthorizationBindings/client_id"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestAuthorizationBindings/resource"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestAuthorizationBindings/scope"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestAuthorizationBindings/code_challenge_method"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestAuthorizationBindings/code_challenge"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestAuthorizationBindings/state"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestAuthorizationBindings/response_type"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestAuthorizationBindings"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestConsentCSRFAndCredentials"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestCodeExchangeAndCurrentPrincipal"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestGrantRejections/client_secret"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestGrantRejections/client_id"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestGrantRejections/code_verifier"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestGrantRejections/redirect_uri"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestGrantRejections/resource"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestGrantRejections"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestCodeReplayRevokesFamily"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestRefreshRotationReplayAndRevocation"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestMetadataAndInvalidConfiguration"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestBasicClientAndDuplicateParameters"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/oauthfixture",
+        "test": "TestExpiredConsentRefreshAndRestart"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration/approve_is_atomic_and_never_active"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration/self_other_resource_scope_hash_and_expiry_denied"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration/request_idempotency_concurrency_and_current_authorization"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration/decision_concurrency_has_one_winner"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration/decision_replay_and_reviewer_removal"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration/rejection_and_cancel_are_terminal"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration/frozen_qualification_resource"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration/frozen_qualification_policy"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration/frozen_qualification_request-right"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration/frozen_qualification_principal"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration/review_deadline_and_grant_expiry_persist"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration/grant_invalidates_without_rewriting_decision"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration/review_queue_and_grant_cursor_scope"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration/audit_failure_rolls_back_decision_grant_and_command"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessWorkflowIntegration"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessCancelDecisionRaceIntegration"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessOrganizationAndPolicyIsolationIntegration"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestAccessV1CatalogUpgradeIntegration"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestCatalogVersioningIntegration"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestPrivateProviderRejectsAmbiguousAndPublicFiles"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/resources",
+        "test": "TestNativePoolHygieneIntegration"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/runtimeconfig",
+        "test": "TestLocalOnlyAndFailClosed"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/runtimeconfig",
+        "test": "TestResourceCatalogRequiresExplicitOptIn"
+      },
+      {
+        "package": "github.com/xielforever/MCPGuard/internal/wireids",
+        "test": "TestTypedExactRoundTripAndCancellation"
+      }
+    ],
+    "rawEvidence": "/home/dzz/.local/state/mcpguard-ra04/mcpguard-ra01-03-f5fd137f11/go-tests-20261024T153555Z.jsonl"
+  },
+  "newProcessWire": {
+    "passed": 32,
+    "checks": [
+      "production MCP advertises RA-04 tools",
+      "approval and future native/credential tools are absent",
+      "MCP rejects caller-selected ownerId",
+      "MCP rejects caller-selected deciderId",
+      "MCP rejects caller-selected nativeIdentity",
+      "MCP rejects caller-selected sql",
+      "visible but non-requestable Bob cannot apply",
+      "MCP request reaches durable pending state",
+      "HTTP and stdio share exact idempotency snapshot",
+      "idempotency conflict is explicit",
+      "Bob cannot read Alice request",
+      "independent browser login: visitor",
+      "independent browser login: alice",
+      "scoped reviewer discovers pending queue",
+      "MCP bearer cannot replace browser session for approval",
+      "approval requires CSRF",
+      "approval requires trusted origin",
+      "resource reviewer still cannot approve own request",
+      "browser If-Match agrees with command revision",
+      "approval rejects changed request hash",
+      "bearer REST has no approval alias",
+      "protected approval atomically produces provisioning grant",
+      "no placeholder account or binding is fabricated",
+      "browser approval replay does not create another grant",
+      "stdio observes the linked request decision and grant",
+      "owner sees new grant in resource-filtered list",
+      "Bob grant list remains isolated",
+      "directory reflects current provisioning state",
+      "approved request cannot be cancelled as pending",
+      "stdio cancellation closes a pending request",
+      "process restart preserves request decision and encrypted state",
+      "workflow outputs contain no native configuration or ciphertext"
+    ],
+    "rawEvidence": "/home/dzz/.local/state/mcpguard-ra04/mcpguard-ra01-03-f5fd137f11/access-e2e-results.json",
+    "entrypoints": [
+      "HTTP/MCP",
+      "stdio",
+      "protected browser API"
+    ]
+  },
+  "oldProcessWire": {
+    "passed": 56,
+    "checks": [
+      "HTTP initialize: alice",
+      "HTTP initialized notification: alice",
+      "HTTP initialize: bob",
+      "HTTP initialized notification: bob",
+      "HTTP initialize: visitor",
+      "HTTP initialized notification: visitor",
+      "directory preserves PG permissions and exposes own control tools per employee",
+      "HTTP health separates process and dependency status",
+      "HTTP health separates process and dependency status",
+      "HTTP audit tool advances exact string cursor",
+      "HTTP audit tool rejects oversized page without records",
+      "same large integer RPC ID across employees preserves identity and native bigint precision",
+      "integer and string RPC IDs with the same text remain distinct",
+      "integer RPC ID beyond int64 round trips exactly",
+      "PG query cannot read another scope's exclusive item",
+      "hidden tool also denies direct invocation without fake business IDs",
+      "caller cannot inject scope",
+      "MCP session cannot be reused by another employee",
+      "missing/invalid bearer rejected before business acceptance",
+      "missing/invalid bearer rejected before business acceptance",
+      "missing/invalid bearer rejected before business acceptance",
+      "HTTP request size is bounded",
+      "untrusted browser origin rejected",
+      "audit API refuses caller-supplied identity selectors",
+      "persistent audit is correlated and isolated per employee",
+      "stdio initialize: alice",
+      "stdio forwards authorized directory: alice",
+      "stdio forwards gateway health: alice",
+      "stdio forwards own audit tool: alice",
+      "stdio reaches actual native PG result: alice",
+      "stdio preserves RPC integer IDs beyond int64: alice",
+      "stdio initialize: bob",
+      "stdio forwards authorized directory: bob",
+      "stdio forwards gateway health: bob",
+      "stdio forwards own audit tool: bob",
+      "stdio reaches actual native PG result: bob",
+      "stdio preserves RPC integer IDs beyond int64: bob",
+      "connector exits cleanly on EOF",
+      "connector output contains no access token",
+      "stdout contains protocol frames only",
+      "connector exits cleanly on EOF",
+      "connector output contains no access token",
+      "stdout contains protocol frames only",
+      "stdio initialize: alice",
+      "stdio processes independent request while native calls are blocked",
+      "stdio cancellation reaches one real PG query before deadline",
+      "cancelling one stdio request does not cancel another",
+      "connector exits cleanly on EOF",
+      "connector output contains no access token",
+      "stdout contains protocol frames only",
+      "gateway exits cleanly on SIGTERM",
+      "HTTP initialize: alice",
+      "HTTP initialized notification: alice",
+      "gateway restart preserves original audit event IDs and correlations",
+      "gateway works after restart with the same encrypted store",
+      "gateway exits cleanly on SIGTERM"
+    ],
+    "rawEvidence": "/home/dzz/.local/state/mcpguard-ra04/mcpguard-ra01-03-f5fd137f11/e2e-results.json"
+  },
+  "legacyPython": {
+    "localService": 9,
+    "localCredentials": 11,
+    "status": "PASS"
+  },
+  "contracts": {
+    "revision": "0.2.1",
+    "definitions": 66,
+    "examples": 38,
+    "httpOperations": 23,
+    "mcpContracts": 11,
+    "generatedArtifacts": 5,
+    "currentValidator": "PASS",
+    "oldV01Validator": "PASS",
+    "archivedV020Validator": "PASS",
+    "sqlFilesParsed": 3,
+    "goVet": "PASS",
+    "generationCheck": "PASS"
+  },
+  "preservation": {
+    "baselineFiles": 241,
+    "baselineArchiveSha256": "30f07463d77ba5c9cdbce1203956ffc971be0764d4863ba26494f2590bf48f6a",
+    "unchangedFiles": 214,
+    "appendedDocs": [
+      "docs/README.md",
+      "docs/resource-access-local.md",
+      "docs/revisions/2026-10-24-resource-access/acceptance.md",
+      "docs/revisions/2026-10-24-resource-access/contracts.md",
+      "docs/revisions/2026-10-24-resource-access/development-plan.md",
+      "docs/revisions/2026-10-24-resource-access/history.md",
+      "docs/revisions/2026-10-24-resource-access/README.md",
+      "docs/specs/v0.2/README.md",
+      "README.md"
+    ],
+    "codeAndContractChanges": [
+      "cmd/mcpguard-catalog/main.go",
+      "cmd/mcpguard/main.go",
+      "docs/specs/v0.2/contract.schema.json",
+      "docs/specs/v0.2/examples.json",
+      "docs/specs/v0.2/mcp-tools.json",
+      "docs/specs/v0.2/openapi.json",
+      "docs/specs/v0.2/validate.py",
+      "internal/contracts/v02/source.json",
+      "internal/contracts/v02/types_generated.go",
+      "internal/controlled/console.go",
+      "internal/gateway/gateway.go",
+      "internal/gateway/resources.go",
+      "internal/resources/catalog.go",
+      "internal/resources/import.go",
+      "internal/resources/migrate.go",
+      "internal/runtimeconfig/config.go",
+      "internal/runtimeconfig/resources_test.go",
+      "scripts/generate_v02_contracts.py"
+    ],
+    "missingFiles": [],
+    "historicalValidationFilesExact": true,
+    "legacyMigrationsExact": true,
+    "catalogV1MigrationExact": true,
+    "lifecycleDraftExact": true,
+    "archivedV020FilesExact": 6,
+    "checkedLinks": 96,
+    "linkErrors": [],
+    "gitDiffCheck": "PASS",
+    "newFileTrailingWhitespace": [],
+    "secretValuesChecked": 27,
+    "secretMatches": []
+  },
+  "intermediateScenes": [
+    {
+      "run": "a78619a0d8",
+      "status": "ENVIRONMENT_RESET",
+      "note": "bootstrap only; /tmp configuration lost after WSL restart; containers retained"
+    },
+    {
+      "run": "1d369d36f5",
+      "status": "ENVIRONMENT_RESET",
+      "note": "test could not start after /tmp configuration loss; containers retained"
+    },
+    {
+      "run": "ae93e56fea",
+      "status": "INTERMEDIATE_LOCAL_PASS",
+      "goTests": 111,
+      "newWireChecks": 32,
+      "privateState": "/home/dzz/.local/state/mcpguard-ra04/mcpguard-ra01-03-ae93e56fea"
+    }
+  ],
+  "existingServicesAtVerification": [
+    {
+      "name": "mcpguard-local-gateway",
+      "running": true,
+      "startedAt": "2026-10-24T15:26:55.707883089Z"
+    },
+    {
+      "name": "mcpguard-local-demo-http",
+      "running": true,
+      "startedAt": "2026-10-24T15:26:55.718214394Z"
+    },
+    {
+      "name": "mcpguard-local-redis",
+      "running": true,
+      "startedAt": "2026-10-24T15:26:55.711396713Z"
+    },
+    {
+      "name": "mcpguard-local-verified-postgres",
+      "running": true,
+      "startedAt": "2026-10-24T15:26:55.709143432Z"
+    }
+  ],
+  "environmentContinuousUptime": "NOT_CLAIMED_WSL_RESTART_OBSERVED",
+  "boundaries": {
+    "productionWorkflow": "OPT_IN",
+    "humanDecision": "BROWSER_SESSION_ONLY",
+    "approvedGrant": "PROVISIONING_ONLY",
+    "nativeAccountProvisioning": "NOT_IMPLEMENTED",
+    "activeGrant": "NOT_ALLOWED",
+    "encryptedCredentialLifecycle": "NOT_IMPLEMENTED",
+    "newBusinessReadTool": "NOT_REGISTERED",
+    "newFullConsolePages": "RA-16_PENDING",
+    "desktopNativeAcceptance": "NOT_RUN",
+    "humanAcceptance": "NOT_RUN",
+    "deployed": false,
+    "existingServiceRestartedByTask": false
+  },
+  "fixtureRetention": {
+    "factsCapturedBeforeStop": true,
+    "removedContainers": 0,
+    "removedVolumes": 0,
+    "retainedContainers": [
+      {
+        "name": "mcpguard-ra-meta-a78619a0d8",
+        "run": "a78619a0d8",
+        "wasRunning": false,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/a78619a0d8/mcpguard-ra-meta-a78619a0d8.log"
+      },
+      {
+        "name": "mcpguard-ra-pg1-a78619a0d8",
+        "run": "a78619a0d8",
+        "wasRunning": false,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/a78619a0d8/mcpguard-ra-pg1-a78619a0d8.log"
+      },
+      {
+        "name": "mcpguard-ra-pg2-a78619a0d8",
+        "run": "a78619a0d8",
+        "wasRunning": false,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/a78619a0d8/mcpguard-ra-pg2-a78619a0d8.log"
+      },
+      {
+        "name": "mcpguard-ra-redis-a78619a0d8",
+        "run": "a78619a0d8",
+        "wasRunning": false,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/a78619a0d8/mcpguard-ra-redis-a78619a0d8.log"
+      },
+      {
+        "name": "mcpguard-ra-meta-1d369d36f5",
+        "run": "1d369d36f5",
+        "wasRunning": false,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/1d369d36f5/mcpguard-ra-meta-1d369d36f5.log"
+      },
+      {
+        "name": "mcpguard-ra-pg1-1d369d36f5",
+        "run": "1d369d36f5",
+        "wasRunning": false,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/1d369d36f5/mcpguard-ra-pg1-1d369d36f5.log"
+      },
+      {
+        "name": "mcpguard-ra-pg2-1d369d36f5",
+        "run": "1d369d36f5",
+        "wasRunning": false,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/1d369d36f5/mcpguard-ra-pg2-1d369d36f5.log"
+      },
+      {
+        "name": "mcpguard-ra-redis-1d369d36f5",
+        "run": "1d369d36f5",
+        "wasRunning": false,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/1d369d36f5/mcpguard-ra-redis-1d369d36f5.log"
+      },
+      {
+        "name": "mcpguard-ra-meta-ae93e56fea",
+        "run": "ae93e56fea",
+        "wasRunning": true,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/ae93e56fea/mcpguard-ra-meta-ae93e56fea.log"
+      },
+      {
+        "name": "mcpguard-ra-pg1-ae93e56fea",
+        "run": "ae93e56fea",
+        "wasRunning": true,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/ae93e56fea/mcpguard-ra-pg1-ae93e56fea.log"
+      },
+      {
+        "name": "mcpguard-ra-pg2-ae93e56fea",
+        "run": "ae93e56fea",
+        "wasRunning": true,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/ae93e56fea/mcpguard-ra-pg2-ae93e56fea.log"
+      },
+      {
+        "name": "mcpguard-ra-redis-ae93e56fea",
+        "run": "ae93e56fea",
+        "wasRunning": true,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/ae93e56fea/mcpguard-ra-redis-ae93e56fea.log"
+      },
+      {
+        "name": "mcpguard-ra-meta-f5fd137f11",
+        "run": "f5fd137f11",
+        "wasRunning": true,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/f5fd137f11/mcpguard-ra-meta-f5fd137f11.log"
+      },
+      {
+        "name": "mcpguard-ra-pg1-f5fd137f11",
+        "run": "f5fd137f11",
+        "wasRunning": true,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/f5fd137f11/mcpguard-ra-pg1-f5fd137f11.log"
+      },
+      {
+        "name": "mcpguard-ra-pg2-f5fd137f11",
+        "run": "f5fd137f11",
+        "wasRunning": true,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/f5fd137f11/mcpguard-ra-pg2-f5fd137f11.log"
+      },
+      {
+        "name": "mcpguard-ra-redis-f5fd137f11",
+        "run": "f5fd137f11",
+        "wasRunning": true,
+        "running": false,
+        "retained": true,
+        "privateLog": "/home/dzz/.local/state/mcpguard-ra04/retention/f5fd137f11/mcpguard-ra-redis-f5fd137f11.log"
+      }
+    ],
+    "existingServicesAfterVerification": [
+      {
+        "name": "mcpguard-local-gateway",
+        "running": true,
+        "startedAt": "2026-10-24T15:26:55.707883089Z"
+      },
+      {
+        "name": "mcpguard-local-demo-http",
+        "running": true,
+        "startedAt": "2026-10-24T15:26:55.718214394Z"
+      },
+      {
+        "name": "mcpguard-local-redis",
+        "running": true,
+        "startedAt": "2026-10-24T15:26:55.711396713Z"
+      },
+      {
+        "name": "mcpguard-local-verified-postgres",
+        "running": true,
+        "startedAt": "2026-10-24T15:26:55.709143432Z"
+      }
+    ],
+    "startTimesStableDuringFinalVerification": true
+  }
+}

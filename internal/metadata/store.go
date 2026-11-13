@@ -54,7 +54,7 @@ func Open(ctx context.Context, dsn string, vault *Vault) (*Store, error) {
 	if e == nil {
 		var version int
 		e = p.QueryRow(ctx, "SELECT max(version) FROM mcpguard.schema_versions").Scan(&version)
-		if e == nil && version != 2 {
+		if e == nil && version != 4 {
 			e = errors.New("unsupported metadata schema")
 		}
 	}
@@ -133,6 +133,20 @@ func (s *Store) Claim(ctx context.Context, p Principal, item string) (t Ticket, 
 	}
 	if e != nil {
 		return t, e
+	}
+	// The old read ledger retains its original immutable contract. Once this
+	// organization has a managed PG resource, its disable switch also gates reads.
+	var configRevision int64
+	e = tx.QueryRow(ctx, `SELECT revision FROM mcpguard.control_heads WHERE org_id=$1 FOR SHARE`, p.OrgID).Scan(&configRevision)
+	if e != nil && !errors.Is(e, pgx.ErrNoRows) {
+		return t, e
+	}
+	var enabled bool
+	if e = tx.QueryRow(ctx, `SELECT coalesce((SELECT enabled FROM mcpguard.control_resources WHERE org_id=$1 AND name='demo.pg'),true)`, p.OrgID).Scan(&enabled); e != nil {
+		return t, e
+	}
+	if !enabled {
+		return t, ErrDenied
 	}
 	// Only ASCII strings and integers-as-strings: sorted map encoding is the
 	// RFC8785-compatible subset used by this one fixed plan, not a general JCS encoder.
@@ -229,7 +243,7 @@ func (s *Store) Audit(ctx context.Context, p Principal, after int64, limit int) 
 	if _, e := s.Current(ctx, p); e != nil {
 		return nil, e
 	}
-	rows, e := s.Pool.Query(ctx, `SELECT seq,id::text,action_id::text,attempt_id::text,execution_id::text,event_type,created_at FROM mcpguard.audit_events WHERE org_id=$1 AND principal_id=$2 AND seq>$3 ORDER BY seq LIMIT $4`, p.OrgID, p.ID, after, limit)
+	rows, e := s.Pool.Query(ctx, `SELECT seq,id::text,action_id::text,attempt_id::text,execution_id::text,event_type,created_at FROM (SELECT * FROM mcpguard.audit_events WHERE org_id=$1 AND principal_id=$2 AND seq>$3 UNION ALL SELECT * FROM mcpguard.managed_audit WHERE org_id=$1 AND principal_id=$2 AND seq>$3) events ORDER BY seq LIMIT $4`, p.OrgID, p.ID, after, limit)
 	if e != nil {
 		return nil, e
 	}

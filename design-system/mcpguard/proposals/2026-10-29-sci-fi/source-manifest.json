@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-29",
+  "status": "DRAFT_AWAITING_SELECTION",
+  "sha256": {
+    "index.html": "5ff38de5bdfd3962dbcea372b1c87cb89d83f4ab9efc406ea1c3ffe4c3742978",
+    "styles.css": "cfd60ffc99642813ced4dac8623e7d2301ad5ab08beff58acb0e50303eed8c34",
+    "preview.js": "fd58bb2cde17fd57768fd3132daeb59ff3c7c92a43ab8b0f878b205103d251e9",
+    "preview-offline.html": "5ab9fb1c54a252a2bd6efe712435d128603205011f64732477ae7a91ab8b76ee"
+  }
+}

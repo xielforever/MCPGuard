@@ -1,0 +1,38 @@
+{
+  "capturedAt": "2026-10-23T10:37:01.746993+08:00",
+  "baselineMaxAuditSeq": 30,
+  "auditEvents": [
+    {
+      "seq": 31,
+      "org_id": "10000000-0000-4000-8000-000000000001",
+      "principal_id": "20000000-0000-4000-8000-000000000001",
+      "action_id": "1e87e0c4-6d0c-40f3-83e5-78173e5486ed",
+      "attempt_id": "a843c9cb-390c-4a4e-8df6-c54fa49e171e",
+      "execution_id": "e059e213-e3d3-4519-9965-590bc00d9e9f",
+      "event_type": "EXECUTION_INTENT",
+      "created_at": "2026-10-23T10:36:33.140903+08:00"
+    },
+    {
+      "seq": 32,
+      "org_id": "10000000-0000-4000-8000-000000000001",
+      "principal_id": "20000000-0000-4000-8000-000000000001",
+      "action_id": "1e87e0c4-6d0c-40f3-83e5-78173e5486ed",
+      "attempt_id": "a843c9cb-390c-4a4e-8df6-c54fa49e171e",
+      "execution_id": "e059e213-e3d3-4519-9965-590bc00d9e9f",
+      "event_type": "SUCCEEDED",
+      "created_at": "2026-10-23T10:36:33.149615+08:00"
+    }
+  ],
+  "executions": [
+    {
+      "id": "e059e213-e3d3-4519-9965-590bc00d9e9f",
+      "org_id": "10000000-0000-4000-8000-000000000001",
+      "action_id": "1e87e0c4-6d0c-40f3-83e5-78173e5486ed",
+      "attempt_id": "a843c9cb-390c-4a4e-8df6-c54fa49e171e",
+      "request_status": "SUCCEEDED",
+      "dispatch_state": "DISPATCHED",
+      "encrypted_result_present": true
+    }
+  ],
+  "verified": true
+}

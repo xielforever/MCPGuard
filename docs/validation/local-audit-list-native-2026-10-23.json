@@ -1,0 +1,97 @@
+{
+  "status": "PASS",
+  "verifiedAtUTC": "2026-10-23 13:55:48 UTC",
+  "server": "mcpguard_local",
+  "tool": "audit.list",
+  "invocation": "Current chat native tool mcp__mcpguard_local__audit_list",
+  "nativeToolCatalog": [
+    "mcp__mcpguard_local__audit_list",
+    "mcp__mcpguard_local__pg_get_demo_item"
+  ],
+  "calls": [
+    {
+      "arguments": {
+        "after": "0",
+        "limit": 2
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"events\":[{\"seq\":\"1\",\"id\":\"a97f4d27-eb2d-41de-8665-e3224e6c9f3a\",\"actionId\":\"2c742fb0-0f92-4eae-8b52-866e81fdb8d5\",\"attemptId\":\"94173e38-8a08-433d-8a8a-023e26850664\",\"executionId\":\"08d049e1-7cc4-41e4-a90d-b02230f24d5a\",\"eventType\":\"EXECUTION_INTENT\",\"createdAt\":\"2026-10-22T14:50:41.199546Z\"},{\"seq\":\"2\",\"id\":\"645dbf2a-8ecc-4240-8e41-c760f55de71d\",\"actionId\":\"2c742fb0-0f92-4eae-8b52-866e81fdb8d5\",\"attemptId\":\"94173e38-8a08-433d-8a8a-023e26850664\",\"executionId\":\"08d049e1-7cc4-41e4-a90d-b02230f24d5a\",\"eventType\":\"SUCCEEDED\",\"createdAt\":\"2026-10-22T14:50:41.221868Z\"}],\"nextAfter\":\"2\"}"
+          }
+        ],
+        "structuredContent": {
+          "events": [
+            {
+              "seq": "1",
+              "id": "a97f4d27-eb2d-41de-8665-e3224e6c9f3a",
+              "actionId": "2c742fb0-0f92-4eae-8b52-866e81fdb8d5",
+              "attemptId": "94173e38-8a08-433d-8a8a-023e26850664",
+              "executionId": "08d049e1-7cc4-41e4-a90d-b02230f24d5a",
+              "eventType": "EXECUTION_INTENT",
+              "createdAt": "2026-10-22T14:50:41.199546Z"
+            },
+            {
+              "seq": "2",
+              "id": "645dbf2a-8ecc-4240-8e41-c760f55de71d",
+              "actionId": "2c742fb0-0f92-4eae-8b52-866e81fdb8d5",
+              "attemptId": "94173e38-8a08-433d-8a8a-023e26850664",
+              "executionId": "08d049e1-7cc4-41e4-a90d-b02230f24d5a",
+              "eventType": "SUCCEEDED",
+              "createdAt": "2026-10-22T14:50:41.221868Z"
+            }
+          ],
+          "nextAfter": "2"
+        }
+      }
+    },
+    {
+      "arguments": {
+        "after": "2",
+        "limit": 2
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"events\":[{\"seq\":\"5\",\"id\":\"2b52f2b5-2ef2-4ae5-8fa4-a084c336eb14\",\"actionId\":\"56071102-dc6d-4b53-bca4-ce80c9f2d30b\",\"attemptId\":\"a9e3692a-fa9d-4bf3-b19a-13c8d49b018d\",\"executionId\":\"22b34b91-54b8-4c9f-9da2-92ebcef665f6\",\"eventType\":\"EXECUTION_INTENT\",\"createdAt\":\"2026-10-22T14:50:41.351144Z\"},{\"seq\":\"6\",\"id\":\"20de0e05-cee3-4519-bc59-b09e4b994cab\",\"actionId\":\"56071102-dc6d-4b53-bca4-ce80c9f2d30b\",\"attemptId\":\"a9e3692a-fa9d-4bf3-b19a-13c8d49b018d\",\"executionId\":\"22b34b91-54b8-4c9f-9da2-92ebcef665f6\",\"eventType\":\"SUCCEEDED\",\"createdAt\":\"2026-10-22T14:50:41.360904Z\"}],\"nextAfter\":\"6\"}"
+          }
+        ],
+        "structuredContent": {
+          "events": [
+            {
+              "seq": "5",
+              "id": "2b52f2b5-2ef2-4ae5-8fa4-a084c336eb14",
+              "actionId": "56071102-dc6d-4b53-bca4-ce80c9f2d30b",
+              "attemptId": "a9e3692a-fa9d-4bf3-b19a-13c8d49b018d",
+              "executionId": "22b34b91-54b8-4c9f-9da2-92ebcef665f6",
+              "eventType": "EXECUTION_INTENT",
+              "createdAt": "2026-10-22T14:50:41.351144Z"
+            },
+            {
+              "seq": "6",
+              "id": "20de0e05-cee3-4519-bc59-b09e4b994cab",
+              "actionId": "56071102-dc6d-4b53-bca4-ce80c9f2d30b",
+              "attemptId": "a9e3692a-fa9d-4bf3-b19a-13c8d49b018d",
+              "executionId": "22b34b91-54b8-4c9f-9da2-92ebcef665f6",
+              "eventType": "SUCCEEDED",
+              "createdAt": "2026-10-22T14:50:41.360904Z"
+            }
+          ],
+          "nextAfter": "6"
+        }
+      }
+    }
+  ],
+  "checks": {
+    "bothCallsSucceeded": true,
+    "pageSizeRespected": true,
+    "exactStringCursors": true,
+    "noRepeatedEvents": true,
+    "secondPageAfterFirstCursor": true,
+    "nextCursorMatchesLastEvent": true
+  },
+  "scriptUsedToInvokeMCP": false,
+  "cloudPluginUsed": false
+}

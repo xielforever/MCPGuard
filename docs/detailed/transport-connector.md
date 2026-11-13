@@ -200,3 +200,20 @@ resume 对未批准返回明确 APPROVAL_PENDING；对 DENIED、EXPIRED、CANCEL
 
 沙箱使用无模型 key 的 SDK/独立语言客户端、模拟身份和审批、真实测试 PG/Redis 与无害 HTTP API。
 真实 IDE 的 MRTR/Tasks、浏览器登录、停止按钮与结果消费须实测；当前没有任何客户端已通过的声明。
+
+
+## 2026-10-24 多资源自助访问补充
+
+一个 MCP 配置连接同一网关；可信本地组件私有下载密文、建立多资源 Context 并自动携带请求上下文。MCP session 和 Context 均不代替员工认证；无私有能力的客户端不伪装下载/执行已支持。
+
+完整语义见[架构](../revisions/2026-10-24-resource-access/architecture.md)、[契约](../revisions/2026-10-24-resource-access/contracts.md)、[凭据生命周期](../revisions/2026-10-24-resource-access/credential-lifecycle.md)及[验收矩阵](../revisions/2026-10-24-resource-access/acceptance.md)。本节追加当前设计目标，原文和原验收保持；新增流程尚未实现。
+
+
+## 后续 RA-09 追加（2026-10-26）
+
+当前补齐登记客户端绑定的 CredentialContext、私有安全缓存、有界待领取队列、多资源激活和续期。Context 及凭据终态不续活，新 Context 不继承激活，重领与续期不创建原生账号；旧手动流程保留。具体协议、事务、Windows/Linux 权限、失败恢复和后续阶段边界见[RA-09 说明](../credential-contexts-local.md)，实际证明见[验收](../validation/local-ra09-2026-10-26.md)。前文保留各原时点记录。
+
+
+## 后续 RA-10 追加（2026-10-26）
+
+HTTP 宿主私有头 helper、有界 worker 与可选 stdio 私有模式已接通 RA-09 生命周期。模型输出和宿主头通道分开，MCP capability 不授予权限；过期、主动关闭、文件丢失与包撤销分别恢复或拒绝，未知结果不重放业务。具体协议、命令、能力与限制见[RA-10](../private-client-adapters-local.md)，分层成绩见[验收](../validation/local-ra10-2026-10-26.md)。原时点继续保留。

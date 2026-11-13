@@ -1,0 +1,476 @@
+{
+  "format": "mcpguard-uiux-state-labels/1",
+  "version": "1.0.0",
+  "resourceContractRevision": "0.2.7",
+  "description": "按对象的 UI 文案映射，不定义迁移、不新增 API 字段、不独立推导动作权限。重复字符串必须结合对象解释。",
+  "sourceFiles": {
+    "internal/contracts/v02/source.json": "6ed119297d3691440ad6c3abe4b8dc276f3eb8e62e231da6f2a5d135c4c3d6e0",
+    "internal/gateway/controlled-action.schema.json": "bf676f2563e1a058ebce13fd50d72f0d4fe0ad86b9ef5aa4e6182cbefe045a1d"
+  },
+  "fallback": {
+    "label": "状态未确认",
+    "tone": "warning",
+    "instruction": "安全展示未知代码；重新读取当前对象与资格，停止相关变更，不默认 ACTIVE 或成功。"
+  },
+  "constraints": [
+    "APPROVED/READY 不是业务执行成功；根据授权来源显示已批准或已就绪。",
+    "ACTIVE 必须带对象类型与观察时间，执行仍需服务端当前校验。",
+    "CLAIMED 仅表示领取资格已消费，不能证明客户端完整收到文件。",
+    "VERIFIED 与最终 AccessGrant ACTIVE 分开；清理与撤权范围分开。",
+    "业务请求、派发和副作用分别展示，FAILED/CANCELLED 不推断无副作用。"
+  ],
+  "labelSets": {
+    "resourceAccess": {
+      "NOT_REQUESTED": {
+        "label": "尚未申请",
+        "tone": "neutral"
+      },
+      "PENDING": {
+        "label": "申请处理中",
+        "tone": "warning"
+      },
+      "PROVISIONING": {
+        "label": "账号权限开通中",
+        "tone": "warning"
+      },
+      "ACTIVE": {
+        "label": "资源授权有效",
+        "tone": "success"
+      },
+      "REVOKED": {
+        "label": "资源授权已撤销",
+        "tone": "danger"
+      },
+      "EXPIRED": {
+        "label": "资源授权已到期",
+        "tone": "neutral"
+      },
+      "REJECTED": {
+        "label": "申请已拒绝",
+        "tone": "danger"
+      },
+      "CANCELLED": {
+        "label": "申请已取消",
+        "tone": "neutral"
+      },
+      "STALE": {
+        "label": "申请条件已变化",
+        "tone": "warning"
+      },
+      "PROVISIONING_UNKNOWN": {
+        "label": "开通结果待核对",
+        "tone": "warning"
+      },
+      "PROVISIONING_FAILED": {
+        "label": "账号权限开通失败",
+        "tone": "danger"
+      }
+    },
+    "accessRequest": {
+      "SUBMITTED": {
+        "label": "申请已提交",
+        "tone": "info"
+      },
+      "PENDING_APPROVAL": {
+        "label": "等待合格他人审批",
+        "tone": "warning"
+      },
+      "APPROVED": {
+        "label": "决定已批准",
+        "tone": "info"
+      },
+      "REJECTED": {
+        "label": "申请已拒绝",
+        "tone": "danger"
+      },
+      "CANCELLED": {
+        "label": "申请已取消",
+        "tone": "neutral"
+      },
+      "EXPIRED": {
+        "label": "申请已到期",
+        "tone": "neutral"
+      },
+      "STALE": {
+        "label": "申请条件已变化",
+        "tone": "warning"
+      }
+    },
+    "grant": {
+      "PROVISIONING": {
+        "label": "授权开通中",
+        "tone": "warning"
+      },
+      "ACTIVE": {
+        "label": "授权已生效",
+        "tone": "success"
+      },
+      "PROVISIONING_UNKNOWN": {
+        "label": "开通结果待核对",
+        "tone": "warning"
+      },
+      "PROVISIONING_FAILED": {
+        "label": "开通失败",
+        "tone": "danger"
+      },
+      "REVOKED": {
+        "label": "授权已撤销",
+        "tone": "danger"
+      },
+      "EXPIRED": {
+        "label": "授权已到期",
+        "tone": "neutral"
+      }
+    },
+    "provisioning": {
+      "READY": {
+        "label": "待开通处理",
+        "tone": "warning"
+      },
+      "EXECUTING": {
+        "label": "开通任务处理中",
+        "tone": "warning"
+      },
+      "VERIFIED": {
+        "label": "开通核验完成",
+        "tone": "info"
+      },
+      "OUTCOME_UNKNOWN": {
+        "label": "开通结果待核对",
+        "tone": "warning"
+      },
+      "FAILED": {
+        "label": "开通任务失败",
+        "tone": "danger"
+      },
+      "CLEANUP_PENDING": {
+        "label": "原生清理待处理",
+        "tone": "warning"
+      },
+      "CLEANED": {
+        "label": "原生清理已确认",
+        "tone": "success"
+      },
+      "MANUAL_REQUIRED": {
+        "label": "需要人工处置",
+        "tone": "danger"
+      }
+    },
+    "lease": {
+      "ACTIVE": {
+        "label": "租约有效",
+        "tone": "success"
+      },
+      "REVOKED": {
+        "label": "租约已撤销",
+        "tone": "danger"
+      },
+      "EXPIRED": {
+        "label": "租约已到期",
+        "tone": "neutral"
+      }
+    },
+    "credential": {
+      "ACTIVE": {
+        "label": "文件租约有效",
+        "tone": "success"
+      },
+      "REVOKED": {
+        "label": "文件租约已撤销",
+        "tone": "danger"
+      },
+      "EXPIRED": {
+        "label": "文件租约已到期",
+        "tone": "neutral"
+      }
+    },
+    "download": {
+      "READY": {
+        "label": "等待私有领取",
+        "tone": "warning"
+      },
+      "CLAIMED": {
+        "label": "领取资格已消费",
+        "tone": "info"
+      },
+      "EXPIRED": {
+        "label": "领取窗口已到期",
+        "tone": "neutral"
+      },
+      "CANCELLED": {
+        "label": "领取已取消",
+        "tone": "neutral"
+      }
+    },
+    "context": {
+      "ACTIVE": {
+        "label": "客户端上下文有效",
+        "tone": "success"
+      },
+      "REVOKED": {
+        "label": "客户端上下文已撤销",
+        "tone": "danger"
+      },
+      "EXPIRED": {
+        "label": "客户端上下文已到期",
+        "tone": "neutral"
+      }
+    },
+    "activation": {
+      "ACTIVE": {
+        "label": "资源已激活",
+        "tone": "success"
+      },
+      "REVOKED": {
+        "label": "资源激活已撤销",
+        "tone": "danger"
+      },
+      "EXPIRED": {
+        "label": "资源激活已到期",
+        "tone": "neutral"
+      }
+    },
+    "cleanup": {
+      "NOT_REQUIRED": {
+        "label": "无需原生清理",
+        "tone": "neutral"
+      },
+      "PENDING": {
+        "label": "清理待完成",
+        "tone": "warning"
+      },
+      "SUCCEEDED": {
+        "label": "清理已确认",
+        "tone": "success"
+      },
+      "MANUAL_REQUIRED": {
+        "label": "清理需人工处置",
+        "tone": "danger"
+      }
+    },
+    "client": {
+      "ACTIVE": {
+        "label": "客户端已登记",
+        "tone": "info"
+      },
+      "REVOKED": {
+        "label": "客户端登记已撤销",
+        "tone": "danger"
+      }
+    },
+    "deliveryNotice": {
+      "ACTIVE": {
+        "label": "目标资源已激活",
+        "tone": "success"
+      },
+      "PENDING_PRIVATE_SYNC": {
+        "label": "等待私有同步",
+        "tone": "warning"
+      }
+    },
+    "action": {
+      "PENDING_APPROVAL": {
+        "label": "等待合格他人审批",
+        "tone": "warning"
+      },
+      "READY": {
+        "label": "已就绪，待原调用者继续",
+        "tone": "info"
+      },
+      "EXECUTING": {
+        "label": "请求执行处理中",
+        "tone": "info"
+      },
+      "SUCCEEDED": {
+        "label": "请求已成功",
+        "tone": "success"
+      },
+      "FAILED": {
+        "label": "请求失败",
+        "tone": "danger"
+      },
+      "DENIED": {
+        "label": "请求已拒绝",
+        "tone": "danger"
+      },
+      "CANCELLED": {
+        "label": "请求已取消",
+        "tone": "neutral"
+      },
+      "EXPIRED": {
+        "label": "请求已到期",
+        "tone": "neutral"
+      },
+      "OUTCOME_UNKNOWN": {
+        "label": "结果未知，请勿重复提交",
+        "tone": "warning"
+      }
+    },
+    "requestStatus": {
+      "RUNNING": {
+        "label": "请求处理中",
+        "tone": "info"
+      },
+      "SUCCEEDED": {
+        "label": "请求已成功",
+        "tone": "success"
+      },
+      "FAILED": {
+        "label": "请求失败",
+        "tone": "danger"
+      },
+      "CANCELLED": {
+        "label": "请求已取消",
+        "tone": "neutral"
+      },
+      "OUTCOME_UNKNOWN": {
+        "label": "请求结果待核对",
+        "tone": "warning"
+      }
+    },
+    "dispatch": {
+      "NOT_DISPATCHED": {
+        "label": "尚未派发",
+        "tone": "neutral"
+      },
+      "INTENT_RECORDED": {
+        "label": "已记录派发意图",
+        "tone": "info"
+      },
+      "DISPATCHED": {
+        "label": "已确认派发",
+        "tone": "info"
+      },
+      "DISPATCH_UNKNOWN": {
+        "label": "派发结果待确认",
+        "tone": "warning"
+      }
+    },
+    "sideEffect": {
+      "NONE": {
+        "label": "无业务变更",
+        "tone": "neutral"
+      },
+      "APPLIED": {
+        "label": "已确认生效",
+        "tone": "success"
+      },
+      "ROLLED_BACK": {
+        "label": "已确认回滚",
+        "tone": "info"
+      },
+      "PARTIAL": {
+        "label": "部分生效",
+        "tone": "warning"
+      },
+      "UNKNOWN": {
+        "label": "影响未知",
+        "tone": "warning"
+      }
+    }
+  },
+  "bindings": [
+    {
+      "entity": "ResourceView.accessState",
+      "sourceFile": "internal/contracts/v02/source.json",
+      "enumPointer": "/$defs/ResourceView/properties/accessState/enum",
+      "labelSet": "resourceAccess"
+    },
+    {
+      "entity": "AccessRequest.state",
+      "sourceFile": "internal/contracts/v02/source.json",
+      "enumPointer": "/$defs/AccessRequest/properties/state/enum",
+      "labelSet": "accessRequest"
+    },
+    {
+      "entity": "AccessGrant.state",
+      "sourceFile": "internal/contracts/v02/source.json",
+      "enumPointer": "/$defs/AccessGrant/properties/state/enum",
+      "labelSet": "grant"
+    },
+    {
+      "entity": "ProvisioningJob.state",
+      "sourceFile": "internal/contracts/v02/source.json",
+      "enumPointer": "/$defs/ProvisioningJob/properties/state/enum",
+      "labelSet": "provisioning"
+    },
+    {
+      "entity": "CredentialLease.state",
+      "sourceFile": "internal/contracts/v02/source.json",
+      "enumPointer": "/$defs/CredentialLease/properties/state/enum",
+      "labelSet": "lease"
+    },
+    {
+      "entity": "DownloadTicket.state",
+      "sourceFile": "internal/contracts/v02/source.json",
+      "enumPointer": "/$defs/DownloadTicket/properties/state/enum",
+      "labelSet": "download"
+    },
+    {
+      "entity": "CredentialContext.state",
+      "sourceFile": "internal/contracts/v02/source.json",
+      "enumPointer": "/$defs/CredentialContext/properties/state/enum",
+      "labelSet": "context"
+    },
+    {
+      "entity": "ContextActivation.state",
+      "sourceFile": "internal/contracts/v02/source.json",
+      "enumPointer": "/$defs/ContextActivation/properties/state/enum",
+      "labelSet": "activation"
+    },
+    {
+      "entity": "PrepareDownloadResult.state",
+      "sourceFile": "internal/contracts/v02/source.json",
+      "enumPointer": "/$defs/PrepareDownloadResult/properties/state/enum",
+      "labelSet": "download"
+    },
+    {
+      "entity": "CredentialStatus.state",
+      "sourceFile": "internal/contracts/v02/source.json",
+      "enumPointer": "/$defs/CredentialStatus/properties/state/enum",
+      "labelSet": "credential"
+    },
+    {
+      "entity": "ProvisioningRecovery.cleanupState",
+      "sourceFile": "internal/contracts/v02/source.json",
+      "enumPointer": "/$defs/ProvisioningRecovery/properties/cleanupState/enum",
+      "labelSet": "cleanup"
+    },
+    {
+      "entity": "ClientRegistration.state",
+      "sourceFile": "internal/contracts/v02/source.json",
+      "enumPointer": "/$defs/ClientRegistration/properties/state/enum",
+      "labelSet": "client"
+    },
+    {
+      "entity": "AdapterDeliveryNotice.state",
+      "sourceFile": "internal/contracts/v02/source.json",
+      "enumPointer": "/$defs/AdapterDeliveryNotice/properties/state/enum",
+      "labelSet": "deliveryNotice"
+    },
+    {
+      "entity": "BusinessAction.actionState",
+      "sourceFile": "internal/gateway/controlled-action.schema.json",
+      "enumPointer": "/$defs/toolResult/$defs/actionState/enum",
+      "labelSet": "action"
+    },
+    {
+      "entity": "BusinessAction.requestStatus",
+      "sourceFile": "internal/gateway/controlled-action.schema.json",
+      "enumPointer": "/$defs/toolResult/$defs/requestStatus/enum",
+      "labelSet": "requestStatus"
+    },
+    {
+      "entity": "BusinessAction.dispatchState",
+      "sourceFile": "internal/gateway/controlled-action.schema.json",
+      "enumPointer": "/$defs/toolResult/$defs/dispatchState/enum",
+      "labelSet": "dispatch"
+    },
+    {
+      "entity": "BusinessAction.sideEffectStatus",
+      "sourceFile": "internal/gateway/controlled-action.schema.json",
+      "enumPointer": "/$defs/toolResult/$defs/sideEffectStatus/enum",
+      "labelSet": "sideEffect"
+    }
+  ]
+}

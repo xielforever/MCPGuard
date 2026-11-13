@@ -1,0 +1,148 @@
+{
+  "capturedAt": "2026-10-23T04:46:27.463174+00:00",
+  "status": "LOCAL_MCP_NATIVE_READ_AND_RESTART_RECOVERY_PASS",
+  "endpoint": "http://127.0.0.1:18080/mcp",
+  "transport": "Streamable HTTP",
+  "databasePort": 18432,
+  "nativeReadCount": 5,
+  "reads": [
+    {
+      "phase": "beforeRestart",
+      "evidence": "local-service-native-before-restart-2026-10-23.json",
+      "actionId": "4e7ab51b-87f5-4b62-81f2-6a44a59457fb",
+      "attemptId": "c062b30b-dbf4-4dff-b886-5e0193e4b87c",
+      "executionId": "077fd05d-d0de-4ebf-9ab2-bbe585601f97",
+      "requestStatus": "SUCCEEDED",
+      "dispatchState": "DISPATCHED",
+      "sideEffectStatus": "NONE",
+      "auditSeq": [
+        182,
+        183
+      ],
+      "auditVerified": true
+    },
+    {
+      "phase": "afterGatewayExit",
+      "evidence": "local-service-native-after-crash-2026-10-23.json",
+      "actionId": "ab4eaae9-2dbb-495d-b30c-d878e40fb92e",
+      "attemptId": "5438ec12-247b-4459-a606-ec6affb52b0e",
+      "executionId": "8c02e1bd-c40f-4839-8a8f-54f1aac0a994",
+      "requestStatus": "SUCCEEDED",
+      "dispatchState": "DISPATCHED",
+      "sideEffectStatus": "NONE",
+      "auditSeq": [
+        184,
+        185
+      ],
+      "auditVerified": true
+    },
+    {
+      "phase": "afterServiceRestart",
+      "evidence": "local-service-native-after-restart-2026-10-23.json",
+      "actionId": "0e75cfdd-3e70-4214-855a-b5941ccae8dc",
+      "attemptId": "48781059-1e2d-41ac-959c-13c670611642",
+      "executionId": "4cd52744-93e0-4a73-8ba3-160ab170629e",
+      "requestStatus": "SUCCEEDED",
+      "dispatchState": "DISPATCHED",
+      "sideEffectStatus": "NONE",
+      "auditSeq": [
+        186,
+        187
+      ],
+      "auditVerified": true
+    },
+    {
+      "phase": "onDemandStartup",
+      "evidence": "local-service-native-on-demand-2026-10-23.json",
+      "actionId": "c7f2124c-9562-40cd-9bd3-75f9fa7f1ac0",
+      "attemptId": "ad0a92f3-8717-4975-8b82-f4b26f516691",
+      "executionId": "97ce28aa-a79e-4968-9add-a317bb690fce",
+      "requestStatus": "SUCCEEDED",
+      "dispatchState": "DISPATCHED",
+      "sideEffectStatus": "NONE",
+      "auditSeq": [
+        188,
+        189
+      ],
+      "auditVerified": true
+    },
+    {
+      "phase": "afterSupervisorRecovery",
+      "evidence": "local-service-native-after-supervisor-recovery-2026-10-23.json",
+      "actionId": "2860c205-e862-4cf9-b711-3d7a2eccfefc",
+      "attemptId": "8d093acf-2aa7-4638-b572-a65d95e18ece",
+      "executionId": "bd553928-1393-44eb-b782-17f64e3e7932",
+      "requestStatus": "SUCCEEDED",
+      "dispatchState": "DISPATCHED",
+      "sideEffectStatus": "NONE",
+      "auditSeq": [
+        190,
+        191
+      ],
+      "auditVerified": true
+    }
+  ],
+  "auditVerified": true,
+  "ledgerBefore": {
+    "actions": 78,
+    "attempts": 78,
+    "executions": 78,
+    "auditEvents": 181,
+    "maxAuditSeq": 181
+  },
+  "currentLedger": {
+    "actions": 83,
+    "attempts": 83,
+    "executions": 83,
+    "auditEvents": 191,
+    "maxAuditSeq": 191
+  },
+  "historicalDataPreserved": true,
+  "dataVolumePreserved": true,
+  "currentState": {
+    "capturedAt": "20261023T044627893619Z",
+    "endpoint": "http://127.0.0.1:18080/mcp",
+    "healthy": true,
+    "desiredRunning": true,
+    "containers": [
+      {
+        "name": "mcpguard-local-verified-postgres",
+        "state": "running",
+        "startedAt": "2026-10-23T04:41:41.620222051Z",
+        "restartPolicy": "unless-stopped"
+      },
+      {
+        "name": "mcpguard-local-gateway",
+        "state": "running",
+        "startedAt": "2026-10-23T04:41:41.87531475Z",
+        "restartPolicy": "unless-stopped"
+      }
+    ]
+  },
+  "startup": {
+    "user": "ORANGE\\xielei",
+    "name": "MCPGuard Local Service",
+    "script": "C:\\dev\\projects\\MCPGuard\\scripts\\local-service.ps1",
+    "kind": "scheduled-task"
+  },
+  "tests": {
+    "safetyGuards": 9,
+    "gatewayAbruptExit": "PASS",
+    "gatewayAndDatabaseRestart": "PASS",
+    "onDemandStartup": "PASS",
+    "ownedWslSupervisorRecovery": "PASS"
+  },
+  "actualClient": "Official Codex app-server mcpServer/tool/call in ephemeral in-memory client contexts; no model turns or durable chats created",
+  "cloudPluginUsed": false,
+  "dnsOrTunnelConfigured": false,
+  "globalWslShutdownUsed": false,
+  "windowsColdBootTested": false,
+  "inlineToolInAlreadyRunningChatRetested": false,
+  "identityExpiryChanged": false,
+  "secretsIncluded": false,
+  "previousValidationObstacle": {
+    "operation": "resume the already active chat for client verification",
+    "error": "already has an active writer",
+    "resolution": "Used isolated ephemeral client contexts without interrupting the existing chat"
+  }
+}

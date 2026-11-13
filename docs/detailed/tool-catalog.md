@@ -126,3 +126,20 @@ ChatGPT共享应用采用已发布工具快照，不能假设按员工实时隐�
 首版读取与他人批准写闭环分别验收。ChatGPT界面自身确认不构成企业另一位审批人的决定；action.status/resume/cancel的作用与权限见[传输设计](transport-connector.md)。
 
 验收关联AC-01/04/05/06/08/12/13及[验证计划](validation-plan.md)；本轮仅提供配置提案与离线契约，不声明真实平台、驱动或生产工具已经接通。
+
+
+## 2026-10-24 多资源自助访问补充
+
+工具实现与具体资源通过 ToolResourceBinding 分离。新增 resource/access/credential 工具和显式资源选择的业务新版本；原六个业务演示及其他已注册工具保留原输入。包、秘密、端点和审批状态不进入模型参数。
+
+完整语义见[架构](../revisions/2026-10-24-resource-access/architecture.md)、[契约](../revisions/2026-10-24-resource-access/contracts.md)、[凭据生命周期](../revisions/2026-10-24-resource-access/credential-lifecycle.md)及[验收矩阵](../revisions/2026-10-24-resource-access/acceptance.md)。本节追加当前设计目标，原文和原验收保持；新增流程尚未实现。
+
+
+## 后续 RA-09 追加（2026-10-26）
+
+当前补齐登记客户端绑定的 CredentialContext、私有安全缓存、有界待领取队列、多资源激活和续期。Context 及凭据终态不续活，新 Context 不继承激活，重领与续期不创建原生账号；旧手动流程保留。具体协议、事务、Windows/Linux 权限、失败恢复和后续阶段边界见[RA-09 说明](../credential-contexts-local.md)，实际证明见[验收](../validation/local-ra09-2026-10-26.md)。前文保留各原时点记录。
+
+
+## 后续 RA-10 追加（2026-10-26）
+
+HTTP 宿主私有头 helper、有界 worker 与可选 stdio 私有模式已接通 RA-09 生命周期。模型输出和宿主头通道分开，MCP capability 不授予权限；过期、主动关闭、文件丢失与包撤销分别恢复或拒绝，未知结果不重放业务。具体协议、命令、能力与限制见[RA-10](../private-client-adapters-local.md)，分层成绩见[验收](../validation/local-ra10-2026-10-26.md)。原时点继续保留。

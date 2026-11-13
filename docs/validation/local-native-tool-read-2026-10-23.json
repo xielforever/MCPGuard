@@ -1,0 +1,47 @@
+{
+  "status": "CURRENT_CHAT_NATIVE_TOOL_READ_PASS",
+  "observedAt": "2026-10-23T06:07:02.189310486Z",
+  "server": "mcpguard_local",
+  "nativeTool": "mcp__mcpguard_local__pg_get_demo_item",
+  "mcpTool": "pg.get_demo_item",
+  "arguments": {
+    "itemId": "item_demo_1"
+  },
+  "endpoint": "http://127.0.0.1:18080/mcp",
+  "currentChatNativeToolUsed": true,
+  "verifierScriptUsed": false,
+  "separateAppServerClientUsed": false,
+  "cloudPluginUsed": false,
+  "userReportedRestart": true,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"kind\":\"FINAL\",\"actionId\":\"39db1b98-2dbf-4f3a-9fc0-18654f66bf14\",\"attemptId\":\"8b88ffb1-c453-4ae1-88fd-56f0484c5811\",\"executionId\":\"3c83392e-d73a-46ec-8b35-283c9bdd45ad\",\"requestStatus\":\"SUCCEEDED\",\"dispatchState\":\"DISPATCHED\",\"sideEffectStatus\":\"NONE\",\"data\":{\"found\":true,\"item\":{\"itemId\":\"item_demo_1\",\"note\":\"Alice scope A\",\"version\":\"1\"}},\"error\":null,\"metadata\":{\"encoding\":\"json\",\"observedAt\":\"2026-10-23T06:07:02.189310486Z\",\"truncated\":false}}"
+      }
+    ],
+    "structuredContent": {
+      "kind": "FINAL",
+      "actionId": "39db1b98-2dbf-4f3a-9fc0-18654f66bf14",
+      "attemptId": "8b88ffb1-c453-4ae1-88fd-56f0484c5811",
+      "executionId": "3c83392e-d73a-46ec-8b35-283c9bdd45ad",
+      "requestStatus": "SUCCEEDED",
+      "dispatchState": "DISPATCHED",
+      "sideEffectStatus": "NONE",
+      "data": {
+        "found": true,
+        "item": {
+          "itemId": "item_demo_1",
+          "note": "Alice scope A",
+          "version": "1"
+        }
+      },
+      "error": null,
+      "metadata": {
+        "encoding": "json",
+        "observedAt": "2026-10-23T06:07:02.189310486Z",
+        "truncated": false
+      }
+    }
+  }
+}

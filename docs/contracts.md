@@ -179,3 +179,22 @@ PG 保留列类型与重复列名；大整数和 Decimal 显式编码。Redis �
 网页写请求需相应的跨站请求防护；服务间请求用服务身份。具体 IdP、会话与 token 方案留待身份设计确定。
 AuditEvent 至少覆盖计划、策略、审批、执行权领取、原生派发、结果、取消及配置变更，敏感详情使用受控引用。
 本稿待评审重点：审批主体及方式、Policy 组合规则、恢复与幂等边界、凭据映射、结果访问与审计保留。
+
+
+## 2026-10-24 领域契约增量
+
+多资源 ResourceVersion、PermissionProfile、AccessRequest/Decision/Grant、ProvisioningJob、NativeAccount、CredentialBinding、CredentialLease/Package、DownloadTicket、CredentialContext/Activation 和 Revocation 的当前设计见[增量契约](revisions/2026-10-24-resource-access/contracts.md)。
+
+加密文件仅封装主体、资源、授权和原生绑定引用；秘密版本在服务端执行计划冻结。业务计划新增 grantId/version、credentialId/leaseId 和 bindingId/version 等关联，原 Action/Attempt/Execution 和未知写不重放约束继续适用。
+
+普通原生身份按主体/资源/套餐隔离，不将共享服务账号视为个人权限的默认实现；旧演示和 v0.1 机器契约保持原范围。新契约尚未生成 Schema 或迁移。
+
+
+## 后续 RA-09 契约（2026-10-26）
+
+当前 v0.2 修订为 0.2.6：87 个定义、66 个正反样例、28 个 HTTP 契约和 11 个 MCP 契约。增加登记客户端、Context 身份/期限/版本、有界私有队列和激活/续期；没有把私有令牌或包交付注册为 MCP 工具。0.2.5 六份产物按原字节[归档](specs/v0.2/history/0.2.5/README.md)。运行边界及复现见[RA-09](credential-contexts-local.md)。
+
+
+## 后续 RA-10 契约（2026-10-26）
+
+当前单一源为 0.2.7：89 定义、70 样例，HTTP 28、MCP 11 契约保持。新增模型安全的 ClientAdapterCapabilities 与 AdapterDeliveryNotice；私有宿主头不注册为 MCP 输出。0.2.6 六份原字节产物[归档](specs/v0.2/history/0.2.6/README.md)，具体运行行为见[RA-10](private-client-adapters-local.md)。

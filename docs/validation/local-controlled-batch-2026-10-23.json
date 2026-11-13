@@ -1,0 +1,362 @@
+{
+  "status": "IMPLEMENTED_DEPLOYED_LOCAL_TESTS_PASS_NATIVE_DIRECTORY_REFRESH_PENDING",
+  "profile": "LOCAL_CONTROLLED_DEMO",
+  "date": "2026-10-23",
+  "mcpProtocol": "2025-11-25",
+  "schemaVersion": 4,
+  "deployment": {
+    "deployedAt": "2026-10-23T15:08:19.054907+00:00",
+    "endpoint": "http://127.0.0.1:18080/mcp",
+    "console": "http://127.0.0.1:18080/web/",
+    "binarySha256": "d7795af3314834e2ad189b26ab553c1f4f496a8d40a3c99f07607d6ce7d33ecb",
+    "oldReadLedgerPreserved": true,
+    "ledgerBefore": {
+      "actions": 92,
+      "attempts": 92,
+      "executions": 92,
+      "auditEvents": 209,
+      "maxAuditSeq": 209
+    },
+    "ledgerAfter": {
+      "actions": 92,
+      "attempts": 92,
+      "executions": 92,
+      "auditEvents": 209,
+      "maxAuditSeq": 209
+    },
+    "notification": "TELEGRAM_CREDENTIALS_PENDING",
+    "sso": "PROVIDER_SELECTION_PENDING",
+    "nativeVerification": "PENDING_FINAL_UNIFIED_NATIVE_CALLS",
+    "backupDirectory": "/mnt/c/dev/projects/MCPGuard/.dev/local-service/before-controlled-20261023t150813076126z"
+  },
+  "localTests": {
+    "goRacePassed": 80,
+    "httpStdioChecksPassed": 56,
+    "consoleInteractionChecksPassed": 19,
+    "serviceCredentialUnitTestsPassed": 20,
+    "explicitLiveIdentityMutationTestsSkipped": 5,
+    "goVet": "PASS",
+    "browserJavaScriptErrors": 0,
+    "nativeMCPProof": false
+  },
+  "runtimeRecovery": {
+    "kind": "RUNTIME_SUPERVISOR_CHECK_NOT_NATIVE_MCP_PROOF",
+    "capturedAt": "20261023T150954244234Z",
+    "recovered": [
+      {
+        "name": "mcpguard-local-redis",
+        "recovered": true,
+        "startedAt": "2026-10-23T15:09:47.936646192Z"
+      },
+      {
+        "name": "mcpguard-local-demo-http",
+        "recovered": true,
+        "startedAt": "2026-10-23T15:09:53.545986149Z"
+      }
+    ],
+    "redisValuePreserved": true,
+    "readLedgerPreserved": true,
+    "containers": [
+      {
+        "name": "mcpguard-local-verified-postgres",
+        "state": "running",
+        "startedAt": "2026-10-23T15:08:57.712886044Z",
+        "restartPolicy": "unless-stopped"
+      },
+      {
+        "name": "mcpguard-local-redis",
+        "state": "running",
+        "startedAt": "2026-10-23T15:09:47.936646192Z",
+        "restartPolicy": "unless-stopped"
+      },
+      {
+        "name": "mcpguard-local-demo-http",
+        "state": "running",
+        "startedAt": "2026-10-23T15:09:53.545986149Z",
+        "restartPolicy": "unless-stopped"
+      },
+      {
+        "name": "mcpguard-local-gateway",
+        "state": "running",
+        "startedAt": "2026-10-23T15:08:58.665604554Z",
+        "restartPolicy": "unless-stopped"
+      }
+    ],
+    "credentialRenewal": {
+      "status": "current",
+      "reason": null,
+      "checkedAt": "2026-10-23T15:09:00.58715+00:00",
+      "principalId": "20000000-0000-4000-8000-000000000001",
+      "previousExpiresAt": "2026-11-22T05:40:45.613159+00:00",
+      "expiresAt": "2026-11-22T05:40:45.613159+00:00",
+      "source": "connection",
+      "lifetimeHours": 720,
+      "renewBeforeHours": 168,
+      "nextCheckAt": "2026-10-23T15:10:00.592574+00:00"
+    }
+  },
+  "nativeVerification": {
+    "capturedAt": "2026-10-23T15:10:21Z",
+    "method": "DIRECT_MODEL_VISIBLE_NATIVE_MCP_TOOLS",
+    "connection": "mcpguard_local",
+    "visibleTools": [
+      "mcp__mcpguard_local__audit_list",
+      "mcp__mcpguard_local__pg_get_demo_item"
+    ],
+    "pg": {
+      "kind": "FINAL",
+      "actionId": "23500301-9361-4dc3-9cd0-093a45f8e9c2",
+      "attemptId": "052a621a-b8ef-45d6-b4db-b2f88c6dba70",
+      "executionId": "2d44d69b-9c54-43f0-ade4-b6e0aece0f1e",
+      "requestStatus": "SUCCEEDED",
+      "dispatchState": "DISPATCHED",
+      "sideEffectStatus": "NONE",
+      "data": {
+        "found": true,
+        "item": {
+          "itemId": "item_demo_1",
+          "note": "Alice scope A",
+          "version": "1"
+        }
+      },
+      "error": null,
+      "metadata": {
+        "encoding": "json",
+        "observedAt": "2026-10-23T15:10:20.755614197Z",
+        "truncated": false
+      }
+    },
+    "audit": {
+      "events": [
+        {
+          "seq": "210",
+          "id": "a202cd59-7905-4524-8551-e41d04fc4805",
+          "actionId": "23500301-9361-4dc3-9cd0-093a45f8e9c2",
+          "attemptId": "052a621a-b8ef-45d6-b4db-b2f88c6dba70",
+          "executionId": "2d44d69b-9c54-43f0-ade4-b6e0aece0f1e",
+          "eventType": "EXECUTION_INTENT",
+          "createdAt": "2026-10-23T15:10:20.743794Z"
+        },
+        {
+          "seq": "211",
+          "id": "18e897bc-5b40-41e8-93e1-913dd967d212",
+          "actionId": "23500301-9361-4dc3-9cd0-093a45f8e9c2",
+          "attemptId": "052a621a-b8ef-45d6-b4db-b2f88c6dba70",
+          "executionId": "2d44d69b-9c54-43f0-ade4-b6e0aece0f1e",
+          "eventType": "SUCCEEDED",
+          "createdAt": "2026-10-23T15:10:20.7592Z"
+        }
+      ],
+      "nextAfter": "211"
+    },
+    "additionalTools": "PENDING_NATIVE_DIRECTORY_REFRESH",
+    "noScriptSubstitution": true,
+    "codexRestartRequested": false
+  },
+  "pendingExternalConfiguration": [
+    "Enterprise SSO provider selection deferred by user",
+    "Telegram bot token and recipient not configured; no real notification sent"
+  ],
+  "controlledWrites": "OTHER_PRINCIPAL_APPROVAL_AND_EXPLICIT_OWNER_RESUME",
+  "oldCloudPluginsUsed": false,
+  "codexRestarted": false,
+  "deploymentRepair": {
+    "issue": "Redis image copy-up replaced the empty volume directory owner",
+    "fix": "explicit service UID and volume-nocopy; original failure and container preserved",
+    "persistentValueSurvivedRestart": true
+  },
+  "sourceManifest": [
+    {
+      "path": "cmd/mcpguard/main.go",
+      "sha256LF": "4b140e328770e91a7f23327cbe8d2a0eeed6cbcab1c77d32f9c51741442ef277"
+    },
+    {
+      "path": "cmd/mcpguard-demo-http/main.go",
+      "sha256LF": "f4436f0c33ec1cab9a2366133efd1a27cf57621054b2ae2dc103f126c76893b9"
+    },
+    {
+      "path": "internal/controlled/adapters.go",
+      "sha256LF": "4fb3811d0abbbbc58ca9757a8ed32994993d534548b91eb253f91c4281e6d8ec"
+    },
+    {
+      "path": "internal/controlled/catalog.go",
+      "sha256LF": "dab61a75d053243d342fb7175ac96faaaa4653a783b4bebf0ab57c252b92ffb5"
+    },
+    {
+      "path": "internal/controlled/catalog.yaml",
+      "sha256LF": "331987d0b87ad700c1a68d761d0b0b666b8979535600d9d02c60a41ec6533e13"
+    },
+    {
+      "path": "internal/controlled/catalog_test.go",
+      "sha256LF": "d82e6a2b8766e8ddd30cacbd859f438444636aff60295bf4105724ab935df4bb"
+    },
+    {
+      "path": "internal/controlled/console.go",
+      "sha256LF": "8c82687479f2b8024d51b01b5bcc3328d62ab6aa038db42bd01ac19291b54a61"
+    },
+    {
+      "path": "internal/controlled/console.html",
+      "sha256LF": "a49096306835c1a1f87015b987ccf2f9ff9c7fe1f2b0c7486865d23f44d4c52b"
+    },
+    {
+      "path": "internal/controlled/console.js",
+      "sha256LF": "171b67e1eeefbf237adf74a814fa49de7482e7314c352366e7f5abd81f818be4"
+    },
+    {
+      "path": "internal/controlled/integration_test.go",
+      "sha256LF": "ff8bdcf19a1ef4862beebc7c550365cd3a4e97cefe7ff3766563eb22b011bb03"
+    },
+    {
+      "path": "internal/controlled/mcp_integration_test.go",
+      "sha256LF": "132eb9ed82cb768e6743cbe6881439b6af0aaeef4e46cf0f871219df54d8b594"
+    },
+    {
+      "path": "internal/controlled/notifications.go",
+      "sha256LF": "2a426d1efaf1d4611c4e1c94aa7e93b001b6cb12ecf2c0174973688e03d2035b"
+    },
+    {
+      "path": "internal/controlled/recovery_integration_test.go",
+      "sha256LF": "50f7e1a9c0a7280b8c9ef79a56180b751dbd19d95fb06f954c0945b539bbad13"
+    },
+    {
+      "path": "internal/controlled/service.go",
+      "sha256LF": "be805f048a988e7e2e29a1f982f2ae210bf15f200299ddb2ff60ed3b5940aa8f"
+    },
+    {
+      "path": "internal/gateway/audit.go",
+      "sha256LF": "51ee95856ed37b37c11b05901b895a4e1384e95430e01c9b524d43cb2400ef8d"
+    },
+    {
+      "path": "internal/gateway/audit_test.go",
+      "sha256LF": "fe7cc5e2d117d4ad64c04b167b7c0ee4e0d87dd75569edd11cba8c6d135c7755"
+    },
+    {
+      "path": "internal/gateway/controlled-action.schema.json",
+      "sha256LF": "67af363e3079ea9d1f79916d00b8499a15e4c588272ffb7a249ebb5daa5e8e23"
+    },
+    {
+      "path": "internal/gateway/controlled-result.schema.json",
+      "sha256LF": "0f500381695eb618ad03d8bbc8bec29bc683f9cc2bf7a7310691d473e366b575"
+    },
+    {
+      "path": "internal/gateway/controlled.go",
+      "sha256LF": "e308faf0873359029c3a7ac7e493739ce9780fa88416eb3c4856ecb0c158af08"
+    },
+    {
+      "path": "internal/gateway/controlled_test.go",
+      "sha256LF": "a2e4a5a8e1a20c9bd592167dc6255d0f97acb36fc4a214a9bdbd7070637502ee"
+    },
+    {
+      "path": "internal/gateway/gateway.go",
+      "sha256LF": "57efaab69c22b15c23a566154a84184ef694bc84e9af251c5b4403f1cd6e4f69"
+    },
+    {
+      "path": "internal/gateway/gateway_test.go",
+      "sha256LF": "7bce014f7d7a9842921781aa1152e4651977bb8f4122385cb2eabbec688919dd"
+    },
+    {
+      "path": "internal/gateway/health.go",
+      "sha256LF": "cec95538c88e2e252d95a3d0b10c49b5c84af40f80dd967844d2939ee4fe8a07"
+    },
+    {
+      "path": "internal/gateway/health_integration_test.go",
+      "sha256LF": "a553588c057d9330fd818e276429b8628eda6de3969298b599cf23a7805c0031"
+    },
+    {
+      "path": "internal/gateway/health_test.go",
+      "sha256LF": "da986c3cbb669158a3d1721fd230cc80542ef586babf95576cb3a10bc34fa027"
+    },
+    {
+      "path": "internal/gateway/integration_test.go",
+      "sha256LF": "2b6b7ff812392e46f4167aa70159b4ba84fe0827a6a8b901f1a6a888d2a7515c"
+    },
+    {
+      "path": "internal/gateway/result.go",
+      "sha256LF": "1513fcd28eaba2045798c2762f3132740fbbb1dc4b8e6677cbcf16f2fdc6c20b"
+    },
+    {
+      "path": "internal/gateway/tool-result.schema.json",
+      "sha256LF": "8576aaad07a6a42f896c8f73763399d05522b915c7ffffb563bb7b1db2adc573"
+    },
+    {
+      "path": "internal/metadata/crypto.go",
+      "sha256LF": "78529091f6f0a085319bc8bada42e12609e92975b3f07faafb8f2f3cad116e47"
+    },
+    {
+      "path": "internal/metadata/crypto_test.go",
+      "sha256LF": "8a1f83f274add8e04704e4444c9c3dbf8cf915d28d3caddf685d0a988141df29"
+    },
+    {
+      "path": "internal/metadata/health.go",
+      "sha256LF": "a4b0ecdbd5110b6c5e171b1e6a8cafae2933ab2147f21467e45c32c2e633cf1b"
+    },
+    {
+      "path": "internal/metadata/migrate.go",
+      "sha256LF": "76d22e73bb602d9018f6ec7c3819d362ec3195e94a9385663d3177870923433e"
+    },
+    {
+      "path": "internal/metadata/migrations/001_read_slice.sql",
+      "sha256LF": "8b6ec02efcf4abbeba9073377f26a4a51c92b4e46ccbc8f66f1582c9a50338be"
+    },
+    {
+      "path": "internal/metadata/migrations/002_authorization_lock.sql",
+      "sha256LF": "871d96a8800c9e4ade5a5989d570a534ff7d8a27643049a56d709c5df8ce1fe7"
+    },
+    {
+      "path": "internal/metadata/migrations/003_controlled_tools.sql",
+      "sha256LF": "a433ab05f5c4eb19fc53e5f2cb6f25d8b1f8789a424ca56f33f88ddcfa4f026d"
+    },
+    {
+      "path": "internal/metadata/migrations/004_group_authorization.sql",
+      "sha256LF": "28cb16aeb89191ab4a28d574df94f75a1301a9b1c3ca6d18008b1d9d3880631a"
+    },
+    {
+      "path": "internal/metadata/store.go",
+      "sha256LF": "c390a410ad563d583d0a9f85667b2397d12706ec73c5805192d58cf9c4602a4f"
+    },
+    {
+      "path": "internal/metadata/transaction.go",
+      "sha256LF": "4faebada3b7beada4a63c6039f9eb6116dfb1b5634f2001b648468a902fe7624"
+    },
+    {
+      "path": "internal/runtimeconfig/config.go",
+      "sha256LF": "3bf50dd46765daf6a40b71acf557a8bdd86f919dff4d742d441c78cb5b11ad95"
+    },
+    {
+      "path": "internal/runtimeconfig/config_test.go",
+      "sha256LF": "0dd2e020d40f68cc1021809c8dc200e0d3c3d89c717d9b1c2f5264e65caf3f14"
+    },
+    {
+      "path": "scripts/controlled_fixture.py",
+      "sha256LF": "9848d5a77d43583e2b9f24682c3bde334791495922083770a37f99e93fe06c22"
+    },
+    {
+      "path": "scripts/dev.py",
+      "sha256LF": "26ac390a6c6f1b191c94da39ec65e043766e7a100a46c42c3e01f45faaef0513"
+    },
+    {
+      "path": "scripts/fixtures/grants.sql",
+      "sha256LF": "d54d87a891718de05582cf6ce3721e5533265c41d734df7b175fcd464a09d4d2"
+    },
+    {
+      "path": "scripts/local_controlled.py",
+      "sha256LF": "f0cee027dd72dda6e5062c6343f15aa997d151b5d390f1d5092af1f48d49e5b7"
+    },
+    {
+      "path": "scripts/local_service.py",
+      "sha256LF": "ebf099ae5287394c9f83aa3b36766c9f0f821483c1f74b29ec77029574822148"
+    },
+    {
+      "path": "tests/controlled_console_ui.cjs",
+      "sha256LF": "e4d1d1b2632a5e68195c37ce66c2982e2af442c65ecb5c86231dd97393f811ba"
+    },
+    {
+      "path": "tests/e2e.py",
+      "sha256LF": "a347147b57850d7ba57fec0adc7a7b92da8b317008b394620ca1b3627e303b9c"
+    },
+    {
+      "path": "tests/oauth_e2e.py",
+      "sha256LF": "c35844f4fa26028869d0f44606222f2df9c2eed459defd04d8d4d20eddc123de"
+    }
+  ]
+}

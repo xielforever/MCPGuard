@@ -1,5 +1,7 @@
 # 控制台页面与操作流程设计
 
+2026-10-29 实施补充：当前网关内嵌控制台的六页已按 D 主题接入统一 token 和共用组件，保留原登录、权限、审批和配置 API。实现、隔离验证与后续能力边界见[六页迁移记录](../../design-system/mcpguard/implementation-console-d.md)。下文继续保留原始设计时点，不把页面迁移等同于 RA-16 全流程或生产验收。
+
 版本：v0.1 设计补充。日期：2026-10-22。本文定义页面、交互和文案，尚未实现页面或取得产品验收结果。受权状态形状见[ActionView Schema](../specs/action-view.schema.json)，控制工具结果见[ActionControlResult](../specs/action-control-result.schema.json)。
 
 控制台帮助员工看清请求、帮助合格他人决定、帮助运维核对真实结果。首版保持已确认规则：授权普通读取自动执行，受控写由他人审批，高危默认禁止，全部操作来自受控工具目录。
@@ -163,3 +165,19 @@ ChatGPT共享目录不能被展示成逐用户实时工具隐藏。工具元信�
 验收使用Alice操作者、Bob合格他人及无权限用户，覆盖ChatGPT待批/继续、禁止自批、决定不派发、412/409、取消202、未知不重放、旧快照和敏感详情保护，关联[验证计划](validation-plan.md)的AC-01至AC-13与V02/V03/V05/V08/V10–V14/V19/V21。
 
 本文件未宣称ChatGPT账号能力、真实IdP、通知平台或页面已接通。后续页面验收须同时核对用户所见文案、真实持久状态与后端效果。
+
+
+## 2026-10-24 多资源自助访问补充
+
+新增资源套餐、我的账号权限申请、合格他人决定、原生开通、我的加密文件、激活客户端和吊销影响页。决定、ACTIVE、文件交付、业务结果、在途停止及原生清理分别展示，禁止自批和明文密码查看。
+
+完整语义见[架构](../revisions/2026-10-24-resource-access/architecture.md)、[契约](../revisions/2026-10-24-resource-access/contracts.md)、[凭据生命周期](../revisions/2026-10-24-resource-access/credential-lifecycle.md)及[验收矩阵](../revisions/2026-10-24-resource-access/acceptance.md)。本节追加当前设计目标，原文和原验收保持；新增流程尚未实现。
+
+
+## 2026-10-29 选定 D 视觉方向与 UI/UX v1.0
+
+用户选定 D「星舰 · 审批舰桥」。统一的[全局规范](../../design-system/mcpguard/MASTER.md)、[审批页面](../../design-system/mcpguard/pages/approvals.md)、[资源与凭据页面](../../design-system/mcpguard/pages/resources-and-credentials.md)和[跨页面交互](../../design-system/mcpguard/workflows.md)补齐视觉、组件与响应式要求；本文件原审批、安全和未知结果语义继续保留。
+
+当前规范分别呈现决定、授权、开通、交付、激活、执行、在途停止及原生清理。新旧决定命令的理由能力差异、私有桥接和后续能力缺口列入[UI/UX 验收与迁移](../../design-system/mcpguard/acceptance.md)，不能由界面伪造已保存理由、已下载或全部撤销。
+
+本次不改实际控制台或业务接口；完整页面迁移仍须真实数据、权限和后端效果验收。历史原文、候选图及旧检查记录不回写。

@@ -89,3 +89,18 @@ metadata-model.sql会在明确执行时创建独立mcpguard_model schema，不�
 候选工具版本只改变管理head revision，发布才切换活动版本及授权epoch。数据Schema通过、元数据写入成功、ChatGPT平台确认和企业他人审批是不同事实，任何一个都不能替代其余检查。
 
 本目录使用工具依赖只服务设计验证，具体业务工具仍是六个假数据候选；生产资源、数据权限、企业身份和通知平台不从样例自动生成或开放。
+
+
+## 2026-10-24 新增 v0.2 设计的机器契约边界
+
+[多资源自助访问增量](../revisions/2026-10-24-resource-access/README.md)增加账号权限申请、加密凭据下载、Context 激活、服务端执行和在线吊销。新领域字段与接口当前只定义于[增量契约](../revisions/2026-10-24-resource-access/contracts.md)；本目录现有 Schema、OpenAPI、demo-tools 和 SQL 文件未修改，仅继续约束原版本。
+
+本文原先“机器契约为准”的规则仍适用于其原版本，不可用它抹除新增对象或把缺少包校验解释成 v0.2 的允许行为。开发 RA-01 必须建立独立版本的单一契约源、正反样例与生成/校验流程，再实施新接口；不手写重复 DTO 或直接修改历史 DDL 充当运行迁移。
+
+现有 validate.py 通过只证明原契约。本轮新设计的业务和真实客户端验收全部未执行，见[开发计划](../revisions/2026-10-24-resource-access/development-plan.md)。
+
+## 2026-10-24：RA-01 契约实现记录
+
+后续实现已新增独立 [v0.2 契约](v0.2/README.md)，以 `internal/contracts/v02/source.json` 生成 Go DTO、Schema、OpenAPI、MCP 清单和样例，新旧校验分别通过。上节保留此前设计阶段状态；本目录旧 Schema/OpenAPI/SQL 原文不变。后续生命周期迁移草案只做离线解析，实际目录迁移另置于 `internal/resources/migrations` 并显式应用。
+
+实现、测试边界及来源见[本地验收记录](../validation/local-ra01-03-2026-10-24.md)。包含未来接口的契约清单不会自动注册所有工具，也不能将 SDK 本地测试升级为原生客户端的完整凭据生命周期验收。

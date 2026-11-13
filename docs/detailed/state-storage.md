@@ -149,3 +149,20 @@ worker 用短事务 SELECT ... FOR UPDATE SKIP LOCKED + UPDATE 租约，COMMIT �
 备份同样加密、限制访问并有保留周期；删除在线数据不等于备份立即消失，留存与密钥销毁契约需一并记录。
 迁移角色独立于运行角色，禁止业务账号修改不可变记录或删除执行资格；运行池设置有界事务/锁等待并监测死锁与队列积压。
 验收重点：并发批准/拒绝/取消/领取、本地撤权竞争、提交结果不明、派发前后kill、lease过期旧worker恢复、通知重复及秘密过期。
+
+
+## 2026-10-24 多资源自助访问补充
+
+新增申请/决定、开通任务、原生账号、授权、包/租约、下载 ticket、context/activation 和撤销墓碑。统一授权 head 排序，决定、激活、吊销与资格审计同事务；逻辑约束尚未生成新 DDL。
+
+完整语义见[架构](../revisions/2026-10-24-resource-access/architecture.md)、[契约](../revisions/2026-10-24-resource-access/contracts.md)、[凭据生命周期](../revisions/2026-10-24-resource-access/credential-lifecycle.md)及[验收矩阵](../revisions/2026-10-24-resource-access/acceptance.md)。本节追加当前设计目标，原文和原验收保持；新增流程尚未实现。
+
+
+## 后续 RA-09 追加（2026-10-26）
+
+当前补齐登记客户端绑定的 CredentialContext、私有安全缓存、有界待领取队列、多资源激活和续期。Context 及凭据终态不续活，新 Context 不继承激活，重领与续期不创建原生账号；旧手动流程保留。具体协议、事务、Windows/Linux 权限、失败恢复和后续阶段边界见[RA-09 说明](../credential-contexts-local.md)，实际证明见[验收](../validation/local-ra09-2026-10-26.md)。前文保留各原时点记录。
+
+
+## 后续 RA-10 追加（2026-10-26）
+
+HTTP 宿主私有头 helper、有界 worker 与可选 stdio 私有模式已接通 RA-09 生命周期。模型输出和宿主头通道分开，MCP capability 不授予权限；过期、主动关闭、文件丢失与包撤销分别恢复或拒绝，未知结果不重放业务。具体协议、命令、能力与限制见[RA-10](../private-client-adapters-local.md)，分层成绩见[验收](../validation/local-ra10-2026-10-26.md)。原时点继续保留。

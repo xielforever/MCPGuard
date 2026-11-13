@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>MCPGuard · 星舰控制台</title>
+  <link rel="stylesheet" href="/web/ui/tokens.css">
+  <link rel="stylesheet" href="/web/ui/components.css">
+  <link rel="stylesheet" href="/web/console.css">
+  <script src="/web/ui/state-labels.js" defer></script>
+  <script src="/web/ui/components.js" defer></script>
+  <script src="/web/console.js" defer></script>
+</head>
+<body data-auth="pending" data-nav="compact" data-motion="on">
+  <a class="skip-link" href="#mainContent">跳到主要内容</a>
+  <header class="app-header">
+    <div class="brand"><span id="brandIcon" class="brand-icon"></span><div><strong>MCPGuard</strong><span>星舰控制台</span></div></div>
+    <div class="header-actions"><span id="identity" class="identity">独立浏览器登录</span><button id="logout" type="button" class="mg-btn" hidden>退出登录</button><button id="mobileNav" type="button" class="mg-btn" aria-label="展开主导航" aria-controls="sidebar" aria-expanded="false" hidden>导航</button></div>
+  </header>
+  <div class="console-shell">
+    <aside id="sidebar" class="sidebar" hidden><button id="navToggle" class="nav-toggle" type="button" aria-label="展开主导航文字" aria-expanded="false"></button><nav id="nav" aria-label="主导航"></nav><span class="rail-footer">D / 01</span></aside>
+    <main id="mainContent" class="main-content" tabindex="-1">
+      <div class="page-heading"><div><p id="pageEyebrow" class="mg-eyebrow">身份校验 / IDENTITY</p><h1 id="page-title" tabindex="-1">登录控制台</h1><p id="pageDescription" class="mg-secondary">使用独立浏览器身份，进入受控资源与审批工作区。</p></div><div id="pageTools" class="page-tools" hidden><span id="version" class="mg-code mg-muted"></span><button id="refresh" type="button" class="mg-btn">刷新数据</button></div></div>
+      <div id="bootState" class="mg-notice mg-notice--info" role="status">正在确认浏览器会话…</div>
+      <div id="message" class="mg-notice" role="status" hidden></div>
+      <div id="recoveryControls" class="recovery-controls" hidden></div>
+      <section id="login" class="login-panel mg-panel" hidden><p class="mg-eyebrow">安全入口 / ACCESS GATE</p><div id="loginGate" class="login-gate" aria-hidden="true"></div><h2>登录</h2><p class="mg-secondary">使用本机控制台独立登录凭据。</p><form id="loginForm" class="mg-form-fields"><label class="mg-field"><span class="mg-field-label">用户名</span><input id="username" required autocomplete="username" maxlength="64"></label><label class="mg-field"><span class="mg-field-label">登录密钥</span><input id="password" required type="password" autocomplete="current-password"></label><button id="loginSubmit" class="mg-btn mg-btn--primary" type="submit">进入控制台</button></form></section>
+      <div id="workspace" hidden><div id="summary" class="summary-strip" aria-label="当前可见列表概况"></div><section id="content" class="page-content" aria-label="当前页面内容"></section></div>
+      <footer class="app-footer"><span id="footerIcon"></span><span>服务端校验身份与权限 · 审批只记录决定</span><button id="motionToggle" type="button" class="mg-btn mg-btn--text mg-btn--small" aria-pressed="true">暂停背景动效</button></footer>
+    </main>
+  </div>
+  <dialog id="confirmDialog" class="mg-dialog"></dialog>
+  <div id="toast" class="mg-toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

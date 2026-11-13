@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>MCPGuard · 三种视觉方向</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="preview.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#design-content">跳到方案内容</a>
+  <header class="proposal-bar">
+    <div class="proposal-heading"><span class="proposal-wordmark">MCPGuard</span><span class="proposal-divider"></span><span>视觉方向评选</span><span class="draft-label">设计草案 · 2026.10.29</span></div>
+    <div class="proposal-options" role="group" aria-label="切换视觉方案">
+      <button data-concept="a" aria-pressed="true"><span class="option-number">A</span><span><strong>青墨 · 资源工作台</strong><small>清晰导航 / 表格与侧栏 / 日常管理</small></span><i class="swatch swatch-a" aria-hidden="true"></i></button>
+      <button data-concept="b" aria-pressed="false"><span class="option-number">B</span><span><strong>纸白 · 审批案卷</strong><small>横向目录 / 文档式审阅 / 审批优先</small></span><i class="swatch swatch-b" aria-hidden="true"></i></button>
+      <button data-concept="c" aria-pressed="false"><span class="option-number">C</span><span><strong>石墨 · 运行控制台</strong><small>深色工作面 / 紧凑分栏 / 运维核对</small></span><i class="swatch swatch-c" aria-hidden="true"></i></button>
+    </div>
+  </header>
+  <div class="preview-caption"><span><i aria-hidden="true"></i>独立设计预览 · 全部为样例数据 · 不连接 MCPGuard 服务</span><button id="show-components">查看组件与状态</button></div>
+  <div id="concept-root" data-theme="a"></div>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="decision-dialog" aria-labelledby="decision-title">
+    <form method="dialog">
+      <div class="dialog-kicker">设计预览 / 审批决定</div>
+      <h2 id="decision-title">确认批准这份申请？</h2>
+      <p>请核对资源、申请人、冻结参数和授权范围。</p>
+      <div class="dialog-summary"><strong>批准只记录决定</strong><span>仍需原申请者显式恢复执行。本预览中的决定不会保存，也不会发送任何业务请求。</span></div>
+      <label for="decision-reason">决定理由 <span>（选填）</span></label>
+      <textarea id="decision-reason" rows="3" placeholder="补充本次决定的依据"></textarea>
+      <div class="dialog-actions"><button value="cancel" class="btn">返回核对</button><button value="confirm" class="btn primary">确认批准 · 仅预览</button></div>
+    </form>
+  </dialog>
+</body>
+</html>

@@ -183,3 +183,20 @@ P1–P5按[交付计划](../delivery-plan.md)逐项收集证据；P0桌面推演
 | V/T业务与真实ChatGPT | 保持NOT_RUN，不将离线契约检查计为端到端通过 |
 
 写前UNKNOWN窗口、非成功data禁止透传、RUNNING控制结果和幂等重放顺序须在实现后增加真实进程/数据库证据；契约样例只能验证表达，不能证明人类身份、撤权传播或原生效果次数。
+
+
+## 2026-10-24 多资源自助访问补充
+
+新增 RA-AC-01 至 RA-AC-24，覆盖两套 PG/两用户、账号开通、密文私有交付、服务端执行、跨主体与跨资源拒绝、吊销和备份恢复。业务场景全部 NOT_RUN；旧离线及本机测试不计新流程通过。
+
+完整语义见[架构](../revisions/2026-10-24-resource-access/architecture.md)、[契约](../revisions/2026-10-24-resource-access/contracts.md)、[凭据生命周期](../revisions/2026-10-24-resource-access/credential-lifecycle.md)及[验收矩阵](../revisions/2026-10-24-resource-access/acceptance.md)。本节追加当前设计目标，原文和原验收保持；新增流程尚未实现。
+
+
+## 后续 RA-09 追加（2026-10-26）
+
+当前补齐登记客户端绑定的 CredentialContext、私有安全缓存、有界待领取队列、多资源激活和续期。Context 及凭据终态不续活，新 Context 不继承激活，重领与续期不创建原生账号；旧手动流程保留。具体协议、事务、Windows/Linux 权限、失败恢复和后续阶段边界见[RA-09 说明](../credential-contexts-local.md)，实际证明见[验收](../validation/local-ra09-2026-10-26.md)。前文保留各原时点记录。
+
+
+## 后续 RA-10 追加（2026-10-26）
+
+HTTP 宿主私有头 helper、有界 worker 与可选 stdio 私有模式已接通 RA-09 生命周期。模型输出和宿主头通道分开，MCP capability 不授予权限；过期、主动关闭、文件丢失与包撤销分别恢复或拒绝，未知结果不重放业务。具体协议、命令、能力与限制见[RA-10](../private-client-adapters-local.md)，分层成绩见[验收](../validation/local-ra10-2026-10-26.md)。原时点继续保留。

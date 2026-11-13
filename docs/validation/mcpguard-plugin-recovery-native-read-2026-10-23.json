@@ -1,0 +1,37 @@
+{
+  "capturedAt": "2026-10-23T02:36:33.148048476Z",
+  "client": "Registered cloud plugin tool invoked from the current Codex conversation",
+  "pluginId": "plugin_asdk_app_6adac7752f08819191228eb7dbbf9c88",
+  "pluginName": "MCPGuard Local Read Restored",
+  "tool": "mcp__codex_apps__mcpguard_local_read_restored_pg_get_demo_item",
+  "arguments": {
+    "itemId": "item_demo_1"
+  },
+  "result": {
+    "kind": "FINAL",
+    "actionId": "1e87e0c4-6d0c-40f3-83e5-78173e5486ed",
+    "attemptId": "a843c9cb-390c-4a4e-8df6-c54fa49e171e",
+    "executionId": "e059e213-e3d3-4519-9965-590bc00d9e9f",
+    "requestStatus": "SUCCEEDED",
+    "dispatchState": "DISPATCHED",
+    "sideEffectStatus": "NONE",
+    "data": {
+      "found": true,
+      "item": {
+        "itemId": "item_demo_1",
+        "note": "Alice scope A",
+        "version": "1"
+      }
+    },
+    "error": null,
+    "metadata": {
+      "encoding": "json",
+      "observedAt": "2026-10-23T02:36:33.148048476Z",
+      "truncated": false
+    }
+  },
+  "nativePluginInvocation": true,
+  "syntheticHttpDiagnostic": false,
+  "webChatUiRetested": false,
+  "auditEvidence": "mcpguard-plugin-recovery-audit-2026-10-23.json"
+}

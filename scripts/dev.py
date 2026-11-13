@@ -84,7 +84,7 @@ def runtime_env(cfg):
     for k in list(env):
         if k.startswith("MCPGUARD_"):
             env.pop(k)
-    env.update({k: str(v) for k, v in cfg.items() if k in {"MCPGUARD_LISTEN", "MCPGUARD_METADATA_DSN", "MCPGUARD_BUSINESS_DSN", "MCPGUARD_ENCRYPTION_KEY", "MCPGUARD_PLAN_KEY", "MCPGUARD_AUTH_MODE"}})
+    env.update({k: str(v) for k, v in cfg.items() if k in {"MCPGUARD_LISTEN", "MCPGUARD_METADATA_DSN", "MCPGUARD_BUSINESS_DSN", "MCPGUARD_ENCRYPTION_KEY", "MCPGUARD_PLAN_KEY", "MCPGUARD_AUTH_MODE","MCPGUARD_NATIVE_CONFIG","MCPGUARD_CONSOLE_CONFIG","MCPGUARD_NOTIFICATION_CONFIG"}})
     return env
 
 
@@ -154,7 +154,7 @@ def up():
         sql += f"INSERT INTO mcpguard.principals(org_id,id,display_name,token_hash,expires_at,can_read,scope_id) VALUES('{ORG}','{ident}','{name}',decode('{digest}','hex'),clock_timestamp()+interval '24 hours',{allowed},'{scope}') ON CONFLICT(org_id,id) DO UPDATE SET token_hash=EXCLUDED.token_hash,expires_at=EXCLUDED.expires_at,enabled=true,can_read=EXCLUDED.can_read,scope_id=EXCLUDED.scope_id;\n"
     sql += "COMMIT;\n" + (ROOT / "scripts/fixtures/grants.sql").read_text()
     psql(cfg, "mcpguard_meta", sql)
-    print("PostgreSQL 16.14 ready; migrations 1-2 verified; Alice/scope_a, Bob/scope_b, Visitor/no tools. Secrets: .dev/env.json (0600).")
+    print("PostgreSQL 16.14 ready; migrations 1-4 verified; dev identities prepared. Secrets remain in the selected private fixture state.")
 
 
 def free_port():

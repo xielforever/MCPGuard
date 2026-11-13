@@ -1,0 +1,16 @@
+{
+  "capturedAt": "2026-10-23T04:46:29.6227272Z",
+  "taskName": "MCPGuard Local Service",
+  "state": "Running",
+  "runLevel": "Limited",
+  "userId": "xielei",
+  "actionExecutable": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+  "actionArguments": "-NoProfile -NonInteractive -WindowStyle Hidden -File \"C:\\dev\\projects\\MCPGuard\\scripts\\local-service.ps1\" -Action Supervise -Distro \"Ubuntu-24.04\"",
+  "logonTriggerConfigured": true,
+  "lastTaskResult": 267009,
+  "supervisor": {
+    "distro": "Ubuntu-24.04",
+    "pid": 4876,
+    "startedAt": "2026-10-23T04:41:40.9358351Z"
+  }
+}

@@ -16,9 +16,12 @@ ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("dev", ROOT / "scripts/dev.py")
 dev = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(dev)
+if os.environ.get("MCPGUARD_TEST_STATE"):
+    dev.STATE = Path(os.environ["MCPGUARD_TEST_STATE"])
 CFG = dev.load()
 PROFILE = "2025-11-25"
 CHECKS = []
+CONTROL_TOOLS = {"action.status", "action.resume", "action.cancel", "history.list", "history.get_result"}
 
 
 def check(condition, name):
@@ -91,7 +94,7 @@ class StdioMCP:
             if k.startswith("MCPGUARD_"):
                 env.pop(k)
         env["MCPGUARD_TOKEN"] = CFG[employee + "_token"]
-        self.p = subprocess.Popen([str(ROOT / "bin/mcpguard-connect"), "-gateway", f"http://127.0.0.1:{port}/mcp", "-allow-loopback-http"], cwd=ROOT, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
+        self.p = subprocess.Popen([os.environ.get("MCPGUARD_TEST_CONNECT_BINARY", str(ROOT / "bin/mcpguard-connect")), "-gateway", f"http://127.0.0.1:{port}/mcp", "-allow-loopback-http"], cwd=ROOT, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
         self.q, self.pending, self.lines = queue.Queue(), {}, []
         self.thread = threading.Thread(target=self._reader, daemon=True)
         self.thread.start()
@@ -151,10 +154,12 @@ class StdioMCP:
 
 class GatewayProcess:
     def __init__(self, port):
-        self.log = open(ROOT / ".dev/gateway-e2e.log", "a")
+        self.log = open(dev.STATE / "gateway-e2e.log", "a")
         env = dev.runtime_env(CFG)
+        for key in ("MCPGUARD_NATIVE_CONFIG","MCPGUARD_CONSOLE_CONFIG","MCPGUARD_NOTIFICATION_CONFIG"):
+            env.pop(key,None)
         env["MCPGUARD_LISTEN"] = f"127.0.0.1:{port}"
-        self.p = subprocess.Popen([str(ROOT / "bin/mcpguard")], cwd=ROOT, env=env, stdout=self.log, stderr=self.log)
+        self.p = subprocess.Popen([os.environ.get("MCPGUARD_TEST_BINARY", str(ROOT / "bin/mcpguard"))], cwd=ROOT, env=env, stdout=self.log, stderr=self.log)
         def ready():
             if self.p.poll() is not None:
                 raise AssertionError("Gateway startup failed; see .dev/gateway-e2e.log")
@@ -212,7 +217,7 @@ def stdio_cancel_isolation(port, alice):
         until(lambda: scalar("mcpguard_business", query) == "2", 1.5)
         start = time.monotonic()
         bridge.send("notifications/cancelled", {"requestId": "cancel-me", "reason": "independent wire test"})
-        check(len(bridge.call("tools/list", ident="while-blocked", timeout=1)["tools"]) == 1, "stdio processes independent request while native calls are blocked")
+        check({t["name"] for t in bridge.call("tools/list", ident="while-blocked", timeout=1)["tools"]} == {"pg.get_demo_item", "audit.list", "gateway.health"} | CONTROL_TOOLS, "stdio processes independent request while native calls are blocked")
         until(lambda: scalar("mcpguard_business", query) == "1", 1)
         check(time.monotonic() - start < 1.5, "stdio cancellation reaches one real PG query before deadline")
         lock.stdin.write("ROLLBACK;\n\\q\n")
@@ -240,10 +245,19 @@ def main():
     bridges = []
     try:
         alice, bob, visitor = (HTTPMCP(port, n) for n in ("alice", "bob", "visitor"))
-        check(len(alice.call("tools/list")["tools"]) == 1 and len(visitor.call("tools/list")["tools"]) == 0, "directory is filtered per employee")
+        check({t["name"] for t in alice.call("tools/list")["tools"]} == {"pg.get_demo_item", "audit.list", "gateway.health"} | CONTROL_TOOLS and {t["name"] for t in visitor.call("tools/list")["tools"]} == {"audit.list", "gateway.health"} | CONTROL_TOOLS, "directory preserves PG permissions and exposes own control tools per employee")
+        for client in (alice, visitor):
+            health = client.call("tools/call", {"name": "gateway.health", "arguments": {}})
+            data = health["structuredContent"]
+            check(not health.get("isError", False) and data["live"] and data["ready"] and set(data["dependencies"]) == {"metadata", "businessPostgres"}, "HTTP health separates process and dependency status")
         with ThreadPoolExecutor(2) as pool:
             a, b = list(pool.map(lambda c: c.read(ident=9007199254740993), (alice, bob)))
         ar, br = validate_read(a, "Alice scope A"), validate_read(b, "Bob scope B")
+        first = alice.call("tools/call", {"name": "audit.list", "arguments": {"after": "0", "limit": 1}})["structuredContent"]
+        second = alice.call("tools/call", {"name": "audit.list", "arguments": {"after": first["nextAfter"], "limit": 1}})["structuredContent"]
+        check(len(first["events"]) == 1 and len(second["events"]) == 1 and isinstance(first["nextAfter"], str) and int(second["events"][0]["seq"]) > int(first["nextAfter"]), "HTTP audit tool advances exact string cursor")
+        invalid = alice.call("tools/call", {"name": "audit.list", "arguments": {"limit": 101}})
+        check(invalid["isError"] and "structuredContent" not in invalid, "HTTP audit tool rejects oversized page without records")
         check(ar["actionId"] != br["actionId"] and b["structuredContent"]["data"]["item"]["version"] == "9007199254740993", "same large integer RPC ID across employees preserves identity and native bigint precision")
         with ThreadPoolExecutor(2) as pool:
             list(pool.map(lambda ident: alice.call("tools/list", ident=ident), (7, "7")))
@@ -272,8 +286,12 @@ def main():
         for employee, note in (("alice", "Alice scope A"), ("bob", "Bob scope B")):
             bridge = StdioMCP(port, employee)
             bridges.append(bridge)
-            check(len(bridge.call("tools/list")["tools"]) == 1, "stdio forwards authorized directory: " + employee)
+            check({t["name"] for t in bridge.call("tools/list")["tools"]} == {"pg.get_demo_item", "audit.list", "gateway.health"} | CONTROL_TOOLS, "stdio forwards authorized directory: " + employee)
+            health = bridge.call("tools/call", {"name": "gateway.health", "arguments": {}})
+            check(not health.get("isError", False) and health["structuredContent"]["live"] and health["structuredContent"]["ready"], "stdio forwards gateway health: " + employee)
             result = bridge.call("tools/call", {"name": "pg.get_demo_item", "arguments": {"itemId": "item_demo_1"}}, ident=9007199254740993)
+            audit = bridge.call("tools/call", {"name": "audit.list", "arguments": {"after": "0", "limit": 1}})
+            check(not audit.get("isError", False) and len(audit["structuredContent"]["events"]) == 1 and isinstance(audit["structuredContent"]["nextAfter"], str), "stdio forwards own audit tool: " + employee)
             validate_read(result, note)
             check(True, "stdio reaches actual native PG result: " + employee)
             bridge.call("tools/list", ident=1234567890123456789012345678901234567890)
@@ -294,7 +312,7 @@ def main():
             bridge.close()
         gateway.close()
     report = {"date": time.strftime("%Y-%m-%d", time.gmtime()), "profile": PROFILE, "postgres": "16.14", "checks": CHECKS, "passed": len(CHECKS), "modelKeyRequired": False, "realChatGPTValidated": False}
-    (ROOT / ".dev/e2e-results.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+    (dev.STATE / "e2e-results.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
     print(f"Independent Python E2E passed: {len(CHECKS)} checks; HTTP + stdio + real PG + cancellation isolation + persistent audit/restart. No model key.")
 
 

@@ -1,0 +1,2879 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MCPGuard resource access",
+    "version": "0.2.0"
+  },
+  "servers": [
+    {
+      "url": "/api/v2"
+    }
+  ],
+  "paths": {
+    "/resources": {
+      "get": {
+        "operationId": "listResources",
+        "x-implementation-stage": "RA-02",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResourcesResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Kind"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "createResource",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceCreateInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resources/{id}": {
+      "get": {
+        "operationId": "getResource",
+        "x-implementation-stage": "RA-02",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetResourceResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ]
+      }
+    },
+    "/access-requests": {
+      "post": {
+        "operationId": "requestAccess",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessRequest"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessRequestInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/access-requests/{id}": {
+      "get": {
+        "operationId": "accessStatus",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessRequest"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ]
+      }
+    },
+    "/access-requests/{id}/cancel": {
+      "post": {
+        "operationId": "cancelAccess",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessRequest"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/access-grants/{id}": {
+      "get": {
+        "operationId": "grantStatus",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessGrant"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ]
+      }
+    },
+    "/access-grants/{id}/revocations": {
+      "post": {
+        "operationId": "revokeGrant",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Revocation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/credential-packages": {
+      "post": {
+        "operationId": "prepareCredentialDownload",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrepareDownloadResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrepareDownloadInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/credentials/{id}": {
+      "get": {
+        "operationId": "credentialStatus",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ]
+      }
+    },
+    "/credentials/{id}/revocations": {
+      "post": {
+        "operationId": "revokeCredential",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Revocation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/credential-downloads/{id}/claim": {
+      "post": {
+        "operationId": "claimDownload",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ]
+      }
+    },
+    "/resources/{id}/versions": {
+      "post": {
+        "operationId": "createResourceVersion",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceVersion"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceVersionInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resources/{id}/publish": {
+      "post": {
+        "operationId": "publishResource",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceHead"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/access-requests/{id}/decisions": {
+      "post": {
+        "operationId": "decideAccess",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessDecision"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/access-grants": {
+      "get": {
+        "operationId": "listGrants",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListGrantsResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ]
+      }
+    },
+    "/credential-downloads": {
+      "get": {
+        "operationId": "listDownloads",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadQueue"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        }
+      }
+    },
+    "/credential-contexts": {
+      "post": {
+        "operationId": "createContext",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextPrivateResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContextCreateInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/credential-contexts/{id}/renewals": {
+      "post": {
+        "operationId": "renewContext",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialContext"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ]
+      }
+    },
+    "/credential-contexts/{id}/activations": {
+      "post": {
+        "operationId": "activateCredential",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextActivation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivationInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/credential-contexts/{id}": {
+      "delete": {
+        "operationId": "closeContext",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialContext"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ]
+      }
+    },
+    "/revocations/{id}": {
+      "get": {
+        "operationId": "revocationStatus",
+        "x-implementation-stage": "PLANNED",
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Revocation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "503": {
+            "description": "Required authority unavailable"
+          },
+          "401": {
+            "description": "Current employee authentication required"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "employee": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "UUID": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 36,
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+      },
+      "Version": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 18,
+        "pattern": "^[1-9][0-9]{0,17}$"
+      },
+      "Timestamp": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 35,
+        "format": "date-time",
+        "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$"
+      },
+      "Cursor": {
+        "type": "string",
+        "maxLength": 512
+      },
+      "Kind": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 8,
+        "enum": [
+          "POSTGRES",
+          "REDIS",
+          "HTTP"
+        ]
+      },
+      "ResourceVersion": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "orgId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "version": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/Kind"
+          },
+          "alias": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "endpointConfigRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "pattern": "^[a-z][a-z0-9._-]*$"
+          },
+          "targetFingerprint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "resourceId",
+          "orgId",
+          "version",
+          "kind",
+          "alias",
+          "displayName",
+          "endpointConfigRef",
+          "targetFingerprint"
+        ],
+        "additionalProperties": false
+      },
+      "ResourceHead": {
+        "type": "object",
+        "properties": {
+          "orgId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "version": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "revision": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "orgId",
+          "resourceId",
+          "version",
+          "revision",
+          "enabled"
+        ],
+        "additionalProperties": false
+      },
+      "PermissionProfile": {
+        "type": "object",
+        "properties": {
+          "orgId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "profileId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "version": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "allowedOperations": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 32,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[a-z][a-z0-9._-]*$"
+            }
+          },
+          "nativeEnforcement": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32,
+            "enum": [
+              "PG_OWNER_RLS_V1",
+              "REDIS_ACL",
+              "HTTP_OPERATION"
+            ]
+          },
+          "approvalPolicyRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 30000
+          },
+          "maxRows": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "maxResultBytes": {
+            "type": "integer",
+            "minimum": 256,
+            "maximum": 1048576
+          }
+        },
+        "required": [
+          "orgId",
+          "resourceId",
+          "profileId",
+          "version",
+          "name",
+          "allowedOperations",
+          "nativeEnforcement",
+          "approvalPolicyRef",
+          "timeoutMs",
+          "maxRows",
+          "maxResultBytes"
+        ],
+        "additionalProperties": false
+      },
+      "ToolResourceBinding": {
+        "type": "object",
+        "properties": {
+          "orgId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "profileId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "profileVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "toolName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-z][a-z0-9._-]*$"
+          },
+          "toolVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "operationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-z][a-z0-9._-]*$"
+          }
+        },
+        "required": [
+          "orgId",
+          "resourceId",
+          "resourceVersion",
+          "profileId",
+          "profileVersion",
+          "toolName",
+          "toolVersion",
+          "operationId"
+        ],
+        "additionalProperties": false
+      },
+      "ResourceAccess": {
+        "type": "object",
+        "properties": {
+          "orgId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "principalId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "canDiscover": {
+            "type": "boolean"
+          },
+          "canRequest": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "orgId",
+          "principalId",
+          "resourceId",
+          "canDiscover",
+          "canRequest"
+        ],
+        "additionalProperties": false
+      },
+      "ResourceView": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "version": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "revision": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/Kind"
+          },
+          "alias": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "canRequest": {
+            "type": "boolean"
+          },
+          "accessState": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32,
+            "enum": [
+              "NOT_REQUESTED",
+              "PENDING",
+              "PROVISIONING",
+              "ACTIVE",
+              "REVOKED",
+              "EXPIRED"
+            ]
+          }
+        },
+        "required": [
+          "resourceId",
+          "version",
+          "revision",
+          "kind",
+          "alias",
+          "displayName",
+          "enabled",
+          "canRequest",
+          "accessState"
+        ],
+        "additionalProperties": false
+      },
+      "ListResourcesInput": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/Kind"
+          },
+          "after": {
+            "$ref": "#/components/schemas/Cursor"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "ListResourcesResult": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "type": "string",
+            "const": "0.2"
+          },
+          "resources": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ResourceView"
+            }
+          },
+          "nextAfter": {
+            "$ref": "#/components/schemas/Cursor"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "resources",
+          "nextAfter"
+        ],
+        "additionalProperties": false
+      },
+      "GetResourceInput": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        },
+        "required": [
+          "resourceId"
+        ],
+        "additionalProperties": false
+      },
+      "GetResourceResult": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "type": "string",
+            "const": "0.2"
+          },
+          "resource": {
+            "$ref": "#/components/schemas/ResourceView"
+          },
+          "profiles": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "$ref": "#/components/schemas/ProfileView"
+            }
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "resource",
+          "profiles"
+        ],
+        "additionalProperties": false
+      },
+      "RequestKey": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "pattern": "^[A-Za-z0-9_-]{16,100}$"
+      },
+      "AccessRequestInput": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "profileId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "requestedExpiry": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "requestKey": {
+            "$ref": "#/components/schemas/RequestKey"
+          }
+        },
+        "required": [
+          "resourceId",
+          "profileId",
+          "requestedExpiry",
+          "reason",
+          "requestKey"
+        ],
+        "additionalProperties": false
+      },
+      "AccessRequest": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "orgId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "ownerId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "profileId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "profileVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "requestedExpiry": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "requestHash": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32,
+            "enum": [
+              "SUBMITTED",
+              "PENDING_APPROVAL",
+              "APPROVED",
+              "REJECTED",
+              "CANCELLED",
+              "EXPIRED",
+              "STALE"
+            ]
+          },
+          "revision": {
+            "$ref": "#/components/schemas/Version"
+          }
+        },
+        "required": [
+          "requestId",
+          "orgId",
+          "ownerId",
+          "resourceId",
+          "resourceVersion",
+          "profileId",
+          "profileVersion",
+          "requestedExpiry",
+          "reason",
+          "requestHash",
+          "state",
+          "revision"
+        ],
+        "additionalProperties": false
+      },
+      "AccessDecision": {
+        "type": "object",
+        "properties": {
+          "decisionId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "requestId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "requestHash": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "requestRevision": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "deciderId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "enum": [
+              "HUMAN",
+              "POLICY"
+            ]
+          },
+          "decision": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "enum": [
+              "APPROVE",
+              "REJECT"
+            ]
+          },
+          "approvedExpiry": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          }
+        },
+        "required": [
+          "decisionId",
+          "requestId",
+          "requestHash",
+          "requestRevision",
+          "deciderId",
+          "source",
+          "decision",
+          "approvedExpiry",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "AccessGrant": {
+        "type": "object",
+        "properties": {
+          "grantId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "orgId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "subjectId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "profileId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "profileVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "accountId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "bindingId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32,
+            "enum": [
+              "PROVISIONING",
+              "ACTIVE",
+              "PROVISIONING_UNKNOWN",
+              "PROVISIONING_FAILED",
+              "REVOKED",
+              "EXPIRED"
+            ]
+          },
+          "grantVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "authEpoch": {
+            "$ref": "#/components/schemas/Version"
+          }
+        },
+        "required": [
+          "grantId",
+          "orgId",
+          "subjectId",
+          "resourceId",
+          "resourceVersion",
+          "profileId",
+          "profileVersion",
+          "accountId",
+          "bindingId",
+          "state",
+          "grantVersion",
+          "expiresAt",
+          "authEpoch"
+        ],
+        "additionalProperties": false
+      },
+      "ProvisioningJob": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "grantId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "accountPlanHash": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32,
+            "enum": [
+              "READY",
+              "EXECUTING",
+              "VERIFIED",
+              "OUTCOME_UNKNOWN",
+              "FAILED",
+              "CLEANUP_PENDING"
+            ]
+          },
+          "providerReceiptRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "jobId",
+          "grantId",
+          "accountPlanHash",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "NativeAccount": {
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "orgId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "subjectId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "profileId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "profileVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "nativeIdentity": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "managementMode": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "enum": [
+              "PROVISIONED",
+              "PREEXISTING"
+            ]
+          }
+        },
+        "required": [
+          "accountId",
+          "orgId",
+          "resourceId",
+          "subjectId",
+          "profileId",
+          "profileVersion",
+          "nativeIdentity",
+          "managementMode"
+        ],
+        "additionalProperties": false
+      },
+      "CredentialBinding": {
+        "type": "object",
+        "properties": {
+          "bindingId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "orgId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "principalId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "profileId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "profileVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "bindingVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "nativeIdentity": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "secretRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "pattern": "^[a-z][a-z0-9._-]*$"
+          },
+          "secretVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "bindingId",
+          "orgId",
+          "principalId",
+          "resourceId",
+          "resourceVersion",
+          "profileId",
+          "profileVersion",
+          "bindingVersion",
+          "nativeIdentity",
+          "secretRef",
+          "secretVersion",
+          "enabled"
+        ],
+        "additionalProperties": false
+      },
+      "CredentialLease": {
+        "type": "object",
+        "properties": {
+          "leaseId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "grantId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "grantVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "credentialId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "enum": [
+              "ACTIVE",
+              "REVOKED",
+              "EXPIRED"
+            ]
+          },
+          "revision": {
+            "$ref": "#/components/schemas/Version"
+          }
+        },
+        "required": [
+          "leaseId",
+          "grantId",
+          "grantVersion",
+          "credentialId",
+          "expiresAt",
+          "state",
+          "revision"
+        ],
+        "additionalProperties": false
+      },
+      "CredentialReference": {
+        "type": "object",
+        "properties": {
+          "formatVersion": {
+            "type": "string",
+            "const": "1"
+          },
+          "credentialId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "leaseId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "orgId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "subjectId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "grantId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "grantVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "bindingId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "bindingVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "profileId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "profileVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "issuer": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "issuerEpoch": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "audience": {
+            "type": "string",
+            "const": "mcpguard-execution"
+          },
+          "issuedAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          }
+        },
+        "required": [
+          "formatVersion",
+          "credentialId",
+          "leaseId",
+          "orgId",
+          "subjectId",
+          "resourceId",
+          "resourceVersion",
+          "grantId",
+          "grantVersion",
+          "bindingId",
+          "bindingVersion",
+          "profileId",
+          "profileVersion",
+          "issuer",
+          "issuerEpoch",
+          "audience",
+          "issuedAt",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "CredentialEnvelope": {
+        "type": "object",
+        "properties": {
+          "formatVersion": {
+            "type": "string",
+            "const": "1"
+          },
+          "issuer": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "keyId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "nonce": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "pattern": "^[A-Za-z0-9_-]{16}$"
+          },
+          "ciphertext": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16384,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "authenticationTag": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 22,
+            "pattern": "^[A-Za-z0-9_-]{22}$"
+          }
+        },
+        "required": [
+          "formatVersion",
+          "issuer",
+          "keyId",
+          "nonce",
+          "ciphertext",
+          "authenticationTag"
+        ],
+        "additionalProperties": false
+      },
+      "DownloadTicket": {
+        "type": "object",
+        "properties": {
+          "downloadId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "credentialId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "ownerId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "clientInstanceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "enum": [
+              "READY",
+              "CLAIMED",
+              "EXPIRED",
+              "CANCELLED"
+            ]
+          }
+        },
+        "required": [
+          "downloadId",
+          "credentialId",
+          "ownerId",
+          "expiresAt",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "CredentialContext": {
+        "type": "object",
+        "properties": {
+          "contextId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "ownerId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "clientInstanceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "enum": [
+              "ACTIVE",
+              "REVOKED",
+              "EXPIRED"
+            ]
+          }
+        },
+        "required": [
+          "contextId",
+          "ownerId",
+          "clientInstanceId",
+          "expiresAt",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "ContextActivation": {
+        "type": "object",
+        "properties": {
+          "contextId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "credentialId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "activatedAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "enum": [
+              "ACTIVE",
+              "REVOKED",
+              "EXPIRED"
+            ]
+          }
+        },
+        "required": [
+          "contextId",
+          "credentialId",
+          "resourceId",
+          "activatedAt",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "Revocation": {
+        "type": "object",
+        "properties": {
+          "revocationId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "targetId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "targetType": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "enum": [
+              "CREDENTIAL",
+              "GRANT",
+              "PRINCIPAL",
+              "RESOURCE"
+            ]
+          },
+          "actorId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "authEpoch": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "committedAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "gatewayAccess": {
+            "type": "string",
+            "const": "REVOKED"
+          },
+          "inFlightStop": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "enum": [
+              "NONE",
+              "PENDING",
+              "CONFIRMED",
+              "FAILED",
+              "UNKNOWN"
+            ]
+          },
+          "nativeCleanup": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "enum": [
+              "NOT_REQUIRED",
+              "PENDING",
+              "CONFIRMED",
+              "FAILED"
+            ]
+          }
+        },
+        "required": [
+          "revocationId",
+          "targetId",
+          "targetType",
+          "actorId",
+          "reason",
+          "authEpoch",
+          "committedAt",
+          "gatewayAccess",
+          "inFlightStop",
+          "nativeCleanup"
+        ],
+        "additionalProperties": false
+      },
+      "ObjectInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "CancelInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "expectedRevision": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "requestKey": {
+            "$ref": "#/components/schemas/RequestKey"
+          }
+        },
+        "required": [
+          "id",
+          "expectedRevision",
+          "requestKey"
+        ],
+        "additionalProperties": false
+      },
+      "PrepareDownloadInput": {
+        "type": "object",
+        "properties": {
+          "grantId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "requestKey": {
+            "$ref": "#/components/schemas/RequestKey"
+          }
+        },
+        "required": [
+          "grantId",
+          "requestKey"
+        ],
+        "additionalProperties": false
+      },
+      "PrepareDownloadResult": {
+        "type": "object",
+        "properties": {
+          "credentialId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "leaseId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "downloadId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "enum": [
+              "READY"
+            ]
+          }
+        },
+        "required": [
+          "credentialId",
+          "leaseId",
+          "downloadId",
+          "expiresAt",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "RevokeInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "expectedRevision": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "requestKey": {
+            "$ref": "#/components/schemas/RequestKey"
+          }
+        },
+        "required": [
+          "id",
+          "expectedRevision",
+          "reason",
+          "requestKey"
+        ],
+        "additionalProperties": false
+      },
+      "CredentialStatus": {
+        "type": "object",
+        "properties": {
+          "credentialId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "leaseId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "enum": [
+              "ACTIVE",
+              "REVOKED",
+              "EXPIRED"
+            ]
+          }
+        },
+        "required": [
+          "credentialId",
+          "leaseId",
+          "expiresAt",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "enum": [
+              "ACCESS_DENIED",
+              "INVALID_ARGUMENTS",
+              "RESOURCE_UNAVAILABLE",
+              "ACCESS_PENDING",
+              "PROVISIONING_PENDING",
+              "PROVISIONING_UNKNOWN",
+              "CREDENTIAL_REQUIRED",
+              "CREDENTIAL_INVALID",
+              "CREDENTIAL_EXPIRED",
+              "CREDENTIAL_REVOKED",
+              "CREDENTIAL_CONTEXT_EXPIRED",
+              "GRANT_INACTIVE",
+              "BINDING_CHANGED",
+              "PLAN_STALE",
+              "IDEMPOTENCY_CONFLICT",
+              "REVISION_CONFLICT",
+              "DEPENDENCY_UNAVAILABLE",
+              "OUTCOME_UNKNOWN"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "ReadItemInput": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "credentialId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "itemId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 42,
+            "pattern": "^item_demo_[a-z0-9_]{1,32}$"
+          }
+        },
+        "required": [
+          "resourceId",
+          "credentialId",
+          "itemId"
+        ],
+        "additionalProperties": false
+      },
+      "FixtureReadInput": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "itemId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 42,
+            "pattern": "^item_demo_[a-z0-9_]{1,32}$"
+          }
+        },
+        "required": [
+          "resourceId",
+          "itemId"
+        ],
+        "additionalProperties": false
+      },
+      "ReadItem": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 42
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "version": {
+            "$ref": "#/components/schemas/Version"
+          }
+        },
+        "required": [
+          "itemId",
+          "note",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "FixtureReadResult": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "type": "string",
+            "const": "0.2"
+          },
+          "executionId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resourceVersion": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "bindingId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "nativeIdentity": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63
+          },
+          "found": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/ReadItem"
+            }
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "executionId",
+          "resourceId",
+          "resourceVersion",
+          "bindingId",
+          "nativeIdentity",
+          "found",
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "CatalogBundle": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "type": "string",
+            "const": "0.2"
+          },
+          "resources": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/ResourceVersion"
+            }
+          },
+          "heads": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/ResourceHead"
+            }
+          },
+          "profiles": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/PermissionProfile"
+            }
+          },
+          "tools": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/ToolResourceBinding"
+            }
+          },
+          "access": {
+            "type": "array",
+            "maxItems": 10000,
+            "items": {
+              "$ref": "#/components/schemas/ResourceAccess"
+            }
+          },
+          "bindings": {
+            "type": "array",
+            "maxItems": 10000,
+            "items": {
+              "$ref": "#/components/schemas/CredentialBinding"
+            }
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "resources",
+          "heads",
+          "profiles",
+          "tools",
+          "access",
+          "bindings"
+        ],
+        "additionalProperties": false
+      },
+      "ProfileView": {
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "version": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        },
+        "required": [
+          "profileId",
+          "version",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "RequestIDInput": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      },
+      "CredentialIDInput": {
+        "type": "object",
+        "properties": {
+          "credentialId": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        },
+        "required": [
+          "credentialId"
+        ],
+        "additionalProperties": false
+      },
+      "CancelAccessInput": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "expectedRevision": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "requestKey": {
+            "$ref": "#/components/schemas/RequestKey"
+          }
+        },
+        "required": [
+          "requestId",
+          "expectedRevision",
+          "requestKey"
+        ],
+        "additionalProperties": false
+      },
+      "RevokeCredentialInput": {
+        "type": "object",
+        "properties": {
+          "credentialId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "expectedRevision": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "requestKey": {
+            "$ref": "#/components/schemas/RequestKey"
+          }
+        },
+        "required": [
+          "credentialId",
+          "expectedRevision",
+          "reason",
+          "requestKey"
+        ],
+        "additionalProperties": false
+      },
+      "ListGrantsInput": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "after": {
+            "$ref": "#/components/schemas/Cursor"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "ListGrantsResult": {
+        "type": "object",
+        "properties": {
+          "grants": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/AccessGrant"
+            }
+          },
+          "nextAfter": {
+            "$ref": "#/components/schemas/Cursor"
+          }
+        },
+        "required": [
+          "grants",
+          "nextAfter"
+        ],
+        "additionalProperties": false
+      },
+      "DecisionInput": {
+        "type": "object",
+        "properties": {
+          "requestHash": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "expectedRevision": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "APPROVE",
+              "REJECT"
+            ]
+          },
+          "approvedExpiry": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "requestKey": {
+            "$ref": "#/components/schemas/RequestKey"
+          }
+        },
+        "required": [
+          "requestHash",
+          "expectedRevision",
+          "decision",
+          "approvedExpiry",
+          "reason",
+          "requestKey"
+        ],
+        "additionalProperties": false
+      },
+      "ContextCreateInput": {
+        "type": "object",
+        "properties": {
+          "clientLabel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "requestKey": {
+            "$ref": "#/components/schemas/RequestKey"
+          }
+        },
+        "required": [
+          "clientLabel",
+          "requestKey"
+        ],
+        "additionalProperties": false
+      },
+      "ContextPrivateResult": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/CredentialContext"
+          },
+          "contextToken": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 256,
+            "x-sensitive": true
+          }
+        },
+        "required": [
+          "context",
+          "contextToken"
+        ],
+        "additionalProperties": false
+      },
+      "ActivationInput": {
+        "type": "object",
+        "properties": {
+          "credentialPackage": {
+            "$ref": "#/components/schemas/CredentialEnvelope"
+          }
+        },
+        "required": [
+          "credentialPackage"
+        ],
+        "additionalProperties": false
+      },
+      "DownloadQueue": {
+        "type": "object",
+        "properties": {
+          "tickets": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/DownloadTicket"
+            }
+          },
+          "nextAfter": {
+            "$ref": "#/components/schemas/Cursor"
+          }
+        },
+        "required": [
+          "tickets",
+          "nextAfter"
+        ],
+        "additionalProperties": false
+      },
+      "ResourceCreateInput": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/Kind"
+          },
+          "alias": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "endpointConfigRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "targetFingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "requestKey": {
+            "$ref": "#/components/schemas/RequestKey"
+          }
+        },
+        "required": [
+          "kind",
+          "alias",
+          "displayName",
+          "endpointConfigRef",
+          "targetFingerprint",
+          "requestKey"
+        ],
+        "additionalProperties": false
+      },
+      "ResourceVersionInput": {
+        "type": "object",
+        "properties": {
+          "alias": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "endpointConfigRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "targetFingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "expectedRevision": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "requestKey": {
+            "$ref": "#/components/schemas/RequestKey"
+          }
+        },
+        "required": [
+          "alias",
+          "displayName",
+          "endpointConfigRef",
+          "targetFingerprint",
+          "expectedRevision",
+          "requestKey"
+        ],
+        "additionalProperties": false
+      },
+      "PublishInput": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "expectedRevision": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "requestKey": {
+            "$ref": "#/components/schemas/RequestKey"
+          }
+        },
+        "required": [
+          "version",
+          "enabled",
+          "expectedRevision",
+          "requestKey"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateNoteInput": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "credentialId": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "itemId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 42,
+            "pattern": "^item_demo_[a-z0-9_]{1,32}$"
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "expectedVersion": {
+            "$ref": "#/components/schemas/Version"
+          }
+        },
+        "required": [
+          "resourceId",
+          "credentialId",
+          "itemId",
+          "note",
+          "expectedVersion"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "security": [
+    {
+      "employee": []
+    }
+  ]
+}

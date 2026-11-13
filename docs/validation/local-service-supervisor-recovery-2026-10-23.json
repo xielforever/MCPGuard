@@ -1,0 +1,10 @@
+{
+  "capturedAt": "2026-10-23T04:43:18.449408+00:00",
+  "test": "owned-WSL-supervisor-terminated-and-recovered",
+  "passed": true,
+  "pidBefore": 5392,
+  "pidAfter": 6439,
+  "recoverySeconds": 3.6224413209999966,
+  "globalWslShutdownUsed": false,
+  "otherWorkloadsTerminated": false
+}

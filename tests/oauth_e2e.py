@@ -131,7 +131,8 @@ def main():
             users[name] = (issued, session)
             status, _, message = client.rpc(token, "tools/list", session=session)
             tools = message["result"]["tools"]
-            check(status == 200 and len(tools) == (0 if name == "visitor" else 1), "OAuth directory permission: " + name)
+            expected_tools = ({"audit.list", "gateway.health"} if name == "visitor" else {"pg.get_demo_item", "audit.list", "gateway.health"}) | {"action.status", "action.resume", "action.cancel", "history.list", "history.get_result"}
+            check(status == 200 and {t["name"] for t in tools} == expected_tools, "OAuth directory permission: " + name)
             status, _, message = client.rpc(token, "tools/call", {"name": "pg.get_demo_item", "arguments": {"itemId": "item_demo_1"}}, session)
             r = message["result"]["structuredContent"]
             if name == "visitor":

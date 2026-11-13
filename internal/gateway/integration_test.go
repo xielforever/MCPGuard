@@ -3,12 +3,14 @@ package gateway
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -121,7 +123,7 @@ func TestReadSliceIntegration(t *testing.T) {
 	t.Run("two_employee_scopes_and_exact_versions", func(t *testing.T) {
 		for name, want := range map[string]string{"ALICE": "Alice scope A", "BOB": "Bob scope B"} {
 			list, e := clients[name].ListTools(ctx, nil)
-			if e != nil || len(list.Tools) != 1 {
+			if e != nil || len(list.Tools) != 3 {
 				t.Fatal(list, e)
 			}
 			rr := read(t, name, "item_demo_1")
@@ -157,7 +159,7 @@ func TestReadSliceIntegration(t *testing.T) {
 	})
 	t.Run("hidden_tools_direct_denial_and_tampering", func(t *testing.T) {
 		list, e := clients["VISITOR"].ListTools(ctx, nil)
-		if e != nil || len(list.Tools) != 0 {
+		if e != nil || len(list.Tools) != 2 || list.Tools[0].Name != "audit.list" || list.Tools[1].Name != "gateway.health" {
 			t.Fatal("unauthorized directory", list, e)
 		}
 		rr := read(t, "VISITOR", "item_demo_1")
@@ -178,7 +180,7 @@ func TestReadSliceIntegration(t *testing.T) {
 			t.Fatal(e)
 		}
 		list, e := clients["BOB"].ListTools(ctx, nil)
-		if e != nil || len(list.Tools) != 0 {
+		if e != nil || len(list.Tools) != 2 || list.Tools[0].Name != "audit.list" || list.Tools[1].Name != "gateway.health" {
 			t.Fatal(list, e)
 		}
 		if rr := read(t, "BOB", "item_demo_1"); rr.Error.Code != "ACCESS_DENIED" {
@@ -191,6 +193,9 @@ func TestReadSliceIntegration(t *testing.T) {
 		if rr.Data.(map[string]any)["item"].(map[string]any)["note"] != "Alice scope A" {
 			t.Fatal("stale scope reused")
 		}
+	})
+	t.Run("health_separates_liveness_readiness_and_checks_runtime_dependencies", func(t *testing.T) {
+		testHealthIntegration(t, ctx, g, admin, badmin, clients, httpServer.URL, principals["VISITOR"].ID, tokens["VISITOR"])
 	})
 	t.Run("native_role_is_select_only_even_without_readonly_setting", func(t *testing.T) {
 		c, e := pgx.Connect(ctx, cfg.BusinessDSN)
@@ -412,6 +417,124 @@ func TestReadSliceIntegration(t *testing.T) {
 			if sets["BOB"][id] {
 				t.Fatal("cross-employee audit leak")
 			}
+		}
+	})
+	t.Run("mcp_audit_identity_isolation_pagination_and_revocation", func(t *testing.T) {
+		// Guarantee that the upper page bound is exercised, without recording
+		// any business payload or creating executions for audit inspection.
+		alice := principals["ALICE"]
+		if _, e := admin.Exec(ctx, `INSERT INTO mcpguard.audit_events(id,org_id,principal_id,event_type) SELECT gen_random_uuid(),$1,$2,'INPUT_REJECTED' FROM generate_series(1,101)`, alice.OrgID, alice.ID); e != nil {
+			t.Fatal(e)
+		}
+		callAudit := func(cs *mcp.ClientSession, args any) auditMCPPage {
+			t.Helper()
+			result, e := cs.CallTool(ctx, &mcp.CallToolParams{Name: "audit.list", Arguments: args})
+			if e != nil || result.IsError {
+				t.Fatal("audit call failed", result, e)
+			}
+			b, _ := json.Marshal(result.StructuredContent)
+			var page auditMCPPage
+			if e := json.Unmarshal(b, &page); e != nil {
+				t.Fatal(e)
+			}
+			if len(result.Content) != 1 {
+				t.Fatal("missing audit text fallback")
+			}
+			text, ok := result.Content[0].(*mcp.TextContent)
+			var plain any
+			if !ok || json.Unmarshal([]byte(text.Text), &plain) != nil {
+				t.Fatal("invalid audit text fallback")
+			}
+			fallback, _ := json.Marshal(plain)
+			if !bytes.Equal(b, fallback) {
+				t.Fatal("structured and text audit results differ")
+			}
+			return page
+		}
+		// A second organization deliberately reuses Alice's principal ID.
+		// Checking only principal_id would disclose this event to Alice.
+		otherOrg, otherEvent := uuid.NewString(), uuid.NewString()
+		otherToken := uuid.NewString() + uuid.NewString()
+		otherHash := sha256.Sum256([]byte(otherToken))
+		if _, e := admin.Exec(ctx, `INSERT INTO mcpguard.authorization_heads(org_id) VALUES($1)`, otherOrg); e != nil {
+			t.Fatal(e)
+		}
+		if _, e := admin.Exec(ctx, `INSERT INTO mcpguard.principals(org_id,id,display_name,token_hash,expires_at,can_read,scope_id) VALUES($1,$2,'other-org',$3,clock_timestamp()+interval '1 hour',false,'scope_a')`, otherOrg, alice.ID, otherHash[:]); e != nil {
+			t.Fatal(e)
+		}
+		if _, e := admin.Exec(ctx, `INSERT INTO mcpguard.audit_events(id,org_id,principal_id,event_type) VALUES($1,$2,$3,'INPUT_REJECTED')`, otherEvent, otherOrg, alice.ID); e != nil {
+			t.Fatal(e)
+		}
+		for _, name := range []string{"ALICE", "BOB", "VISITOR"} {
+			p := principals[name]
+			page := callAudit(clients[name], map[string]any{})
+			if len(page.Events) == 0 || len(page.Events) > 100 || (name == "ALICE" && len(page.Events) != 100) {
+				t.Fatal("default page is empty or outside its bound", name, len(page.Events))
+			}
+			var previous int64
+			for _, event := range page.Events {
+				seq, e := strconv.ParseInt(event.Seq, 10, 64)
+				if e != nil {
+					t.Fatal("invalid exact audit sequence", e)
+				}
+				var owned bool
+				if e := admin.QueryRow(ctx, `SELECT org_id=$2 AND principal_id=$3 FROM mcpguard.audit_events WHERE id=$1`, event.ID, p.OrgID, p.ID).Scan(&owned); e != nil || !owned || event.ID == otherEvent || seq <= previous {
+					t.Fatal("audit ownership or ordering violated", name, e)
+				}
+				previous = seq
+			}
+			if page.NextAfter != strconv.FormatInt(previous, 10) {
+				t.Fatal("cursor does not match last event")
+			}
+		}
+		first := callAudit(clients["ALICE"], map[string]any{"limit": 1})
+		second := callAudit(clients["ALICE"], map[string]any{"limit": 1, "after": first.NextAfter})
+		firstSeq, _ := strconv.ParseInt(first.NextAfter, 10, 64)
+		secondSeq, _ := strconv.ParseInt(second.NextAfter, 10, 64)
+		if len(first.Events) != 1 || len(second.Events) != 1 || secondSeq <= firstSeq || first.Events[0].ID == second.Events[0].ID {
+			t.Fatal("page progression repeated or skipped its cursor boundary")
+		}
+		empty := callAudit(clients["ALICE"], map[string]any{"after": "9223372036854775807", "limit": 100})
+		if empty.Events == nil || len(empty.Events) != 0 || empty.NextAfter != "9223372036854775807" {
+			t.Fatal("empty page did not preserve cursor")
+		}
+		var bigSeq int64
+		if e := admin.QueryRow(ctx, `SELECT greatest(coalesce(max(seq),0)+1,9007199254740993) FROM mcpguard.audit_events`).Scan(&bigSeq); e != nil {
+			t.Fatal(e)
+		}
+		if _, e := admin.Exec(ctx, `INSERT INTO mcpguard.audit_events(seq,id,org_id,principal_id,event_type) OVERRIDING SYSTEM VALUE VALUES($1,$2,$3,$4,'INPUT_REJECTED')`, bigSeq, uuid.NewString(), alice.OrgID, alice.ID); e != nil {
+			t.Fatal(e)
+		}
+		exact := callAudit(clients["ALICE"], map[string]any{"after": strconv.FormatInt(bigSeq-1, 10), "limit": 1})
+		if len(exact.Events) != 1 || exact.Events[0].Seq != strconv.FormatInt(bigSeq, 10) || exact.NextAfter != exact.Events[0].Seq {
+			t.Fatal("MCP rounded a bigint event sequence or cursor")
+		}
+		for _, raw := range []json.RawMessage{
+			[]byte(`{"principalId":"other"}`), []byte(`{"orgId":"other"}`), []byte(`{"limit":101}`),
+			[]byte(`{"limit":0}`), []byte(`{"after":-1}`), []byte(`{"after":null}`),
+			[]byte(`{"limit":1,"limit":100}`),
+		} {
+			result, e := clients["ALICE"].CallTool(ctx, &mcp.CallToolParams{Name: "audit.list", Arguments: raw})
+			if e == nil && (!result.IsError || result.StructuredContent != nil) {
+				t.Fatal("invalid audit request disclosed records", string(raw), result)
+			}
+		}
+		client := mcp.NewClient(&mcp.Implementation{Name: "audit-other-org", Version: "1"}, nil)
+		other, e := client.Connect(ctx, &mcp.StreamableClientTransport{Endpoint: httpServer.URL + "/mcp", HTTPClient: &http.Client{Transport: tokenTransport{otherToken}}, DisableStandaloneSSE: true, MaxRetries: -1}, &mcp.ClientSessionOptions{ProtocolVersion: Profile})
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer other.Close()
+		page := callAudit(other, map[string]any{})
+		if len(page.Events) != 1 || page.Events[0].ID != otherEvent {
+			t.Fatal("second organization did not receive only its own audit event")
+		}
+		if _, e := admin.Exec(ctx, `UPDATE mcpguard.principals SET enabled=false WHERE org_id=$1 AND id=$2`, otherOrg, alice.ID); e != nil {
+			t.Fatal(e)
+		}
+		result, e := other.CallTool(ctx, &mcp.CallToolParams{Name: "audit.list", Arguments: map[string]any{}})
+		if e == nil && (!result.IsError || result.StructuredContent != nil) {
+			t.Fatal("disabled identity retained audit access in an existing session")
 		}
 	})
 	t.Run("crash_left_claim_becomes_unknown_without_native_replay", func(t *testing.T) {

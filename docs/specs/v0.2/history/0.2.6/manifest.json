@@ -1,0 +1,36 @@
+{
+  "revision": "0.2.6",
+  "status": "HISTORICAL_RA09_CONTRACT",
+  "files": [
+    {
+      "source": "internal/contracts/v02/source.json",
+      "file": "source.json",
+      "sha256": "68a1e2c3f003120dda22e1553252e5bdf05e3d4e3ea2f8311134207cb8b8948e"
+    },
+    {
+      "source": "internal/contracts/v02/types_generated.go",
+      "file": "types_generated.go.txt",
+      "sha256": "2e7eb072d54b9fe204512ea9db86ba152c7f0603fc0674c7399b74f51f7fef5e"
+    },
+    {
+      "source": "docs/specs/v0.2/contract.schema.json",
+      "file": "contract.schema.json",
+      "sha256": "71f13fafd700ad233b3ff3631553fba338e4ff60119c54b178e3006477ce742e"
+    },
+    {
+      "source": "docs/specs/v0.2/openapi.json",
+      "file": "openapi.json",
+      "sha256": "dec29010fe169e950893ae84c9cdbfb5c38186844703fe5ab7a996f126c8f828"
+    },
+    {
+      "source": "docs/specs/v0.2/examples.json",
+      "file": "examples.json",
+      "sha256": "1e88d20ecf234704e2b1fcda9c4cc0504f89b278e6729b72739312391f74ac81"
+    },
+    {
+      "source": "docs/specs/v0.2/mcp-tools.json",
+      "file": "mcp-tools.json",
+      "sha256": "0cba99f45ac7cddbd833a1a2901a742079262ef8251743cb5ab954286b91cde4"
+    }
+  ]
+}

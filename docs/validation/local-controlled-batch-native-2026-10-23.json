@@ -1,0 +1,58 @@
+{
+  "capturedAt": "2026-10-23T15:10:21Z",
+  "method": "DIRECT_MODEL_VISIBLE_NATIVE_MCP_TOOLS",
+  "connection": "mcpguard_local",
+  "visibleTools": [
+    "mcp__mcpguard_local__audit_list",
+    "mcp__mcpguard_local__pg_get_demo_item"
+  ],
+  "pg": {
+    "kind": "FINAL",
+    "actionId": "23500301-9361-4dc3-9cd0-093a45f8e9c2",
+    "attemptId": "052a621a-b8ef-45d6-b4db-b2f88c6dba70",
+    "executionId": "2d44d69b-9c54-43f0-ade4-b6e0aece0f1e",
+    "requestStatus": "SUCCEEDED",
+    "dispatchState": "DISPATCHED",
+    "sideEffectStatus": "NONE",
+    "data": {
+      "found": true,
+      "item": {
+        "itemId": "item_demo_1",
+        "note": "Alice scope A",
+        "version": "1"
+      }
+    },
+    "error": null,
+    "metadata": {
+      "encoding": "json",
+      "observedAt": "2026-10-23T15:10:20.755614197Z",
+      "truncated": false
+    }
+  },
+  "audit": {
+    "events": [
+      {
+        "seq": "210",
+        "id": "a202cd59-7905-4524-8551-e41d04fc4805",
+        "actionId": "23500301-9361-4dc3-9cd0-093a45f8e9c2",
+        "attemptId": "052a621a-b8ef-45d6-b4db-b2f88c6dba70",
+        "executionId": "2d44d69b-9c54-43f0-ade4-b6e0aece0f1e",
+        "eventType": "EXECUTION_INTENT",
+        "createdAt": "2026-10-23T15:10:20.743794Z"
+      },
+      {
+        "seq": "211",
+        "id": "18e897bc-5b40-41e8-93e1-913dd967d212",
+        "actionId": "23500301-9361-4dc3-9cd0-093a45f8e9c2",
+        "attemptId": "052a621a-b8ef-45d6-b4db-b2f88c6dba70",
+        "executionId": "2d44d69b-9c54-43f0-ade4-b6e0aece0f1e",
+        "eventType": "SUCCEEDED",
+        "createdAt": "2026-10-23T15:10:20.7592Z"
+      }
+    ],
+    "nextAfter": "211"
+  },
+  "additionalTools": "PENDING_NATIVE_DIRECTORY_REFRESH",
+  "noScriptSubstitution": true,
+  "codexRestartRequested": false
+}

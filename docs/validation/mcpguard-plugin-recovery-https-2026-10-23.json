@@ -1,0 +1,105 @@
+{
+  "status": "PASS",
+  "checks": [
+    "unauthenticated MCP discovers OAuth",
+    "HTTPS canonical discovery: resource",
+    "HTTPS canonical discovery: issuer",
+    "secure login form: alice",
+    "explicit test login and consent: alice",
+    "OAuth callback issuer/state: alice",
+    "PKCE code exchange: alice",
+    "OAuth MCP initialization",
+    "OAuth MCP initialized notification",
+    "OAuth directory permission: alice",
+    "OAuth real PG read: alice",
+    "OAuth native scope isolation: alice",
+    "OAuth text/structured result agreement: alice",
+    "OAuth read correlates durable audit: alice",
+    "secure login form: bob",
+    "explicit test login and consent: bob",
+    "OAuth callback issuer/state: bob",
+    "PKCE code exchange: bob",
+    "OAuth MCP initialization",
+    "OAuth MCP initialized notification",
+    "OAuth directory permission: bob",
+    "OAuth real PG read: bob",
+    "OAuth native scope isolation: bob",
+    "OAuth text/structured result agreement: bob",
+    "OAuth read correlates durable audit: bob",
+    "secure login form: visitor",
+    "explicit test login and consent: visitor",
+    "OAuth callback issuer/state: visitor",
+    "PKCE code exchange: visitor",
+    "OAuth MCP initialization",
+    "OAuth MCP initialized notification",
+    "OAuth directory permission: visitor",
+    "OAuth visitor direct call denied",
+    "OAuth identity cannot hijack another session",
+    "OAuth cannot read another scope's exclusive row",
+    "temporary public profile excludes audit management API",
+    "optional standalone SSE explicitly disabled",
+    "OAuth refresh token rotates",
+    "renewed identity retains its MCP session",
+    "OAuth revocation accepted",
+    "revocation invalidates access on next request"
+  ],
+  "checkCount": 41,
+  "baseURL": "https://devoted-coins-widescreen-substitute.trycloudflare.com",
+  "transport": "MCP Streamable HTTP, JSON POST responses; standalone SSE disabled",
+  "profile": "2025-11-25",
+  "identityProvider": "isolated OAuth test fixture; not enterprise SSO",
+  "reads": [
+    {
+      "employee": "alice",
+      "result": {
+        "kind": "FINAL",
+        "actionId": "a92eb9a6-84d1-4582-b889-f0f8377e09de",
+        "attemptId": "7c9377c4-8353-43c0-b66c-90e29ac176ab",
+        "executionId": "8b1f4e24-b33e-44eb-a077-cc5d2dd7bcef",
+        "requestStatus": "SUCCEEDED",
+        "dispatchState": "DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "data": {
+          "found": true,
+          "item": {
+            "itemId": "item_demo_1",
+            "note": "Alice scope A",
+            "version": "1"
+          }
+        },
+        "error": null,
+        "metadata": {
+          "encoding": "json",
+          "observedAt": "2026-10-23T02:25:24.941172076Z",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "employee": "bob",
+      "result": {
+        "kind": "FINAL",
+        "actionId": "401ec5cd-be7b-49d9-91f4-58b80fffec3f",
+        "attemptId": "beb184a8-fed9-463b-881d-5c30109fd740",
+        "executionId": "97181020-7a69-433b-8a68-b63a12fd0e24",
+        "requestStatus": "SUCCEEDED",
+        "dispatchState": "DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "data": {
+          "found": true,
+          "item": {
+            "itemId": "item_demo_1",
+            "note": "Bob scope B",
+            "version": "9007199254740993"
+          }
+        },
+        "error": null,
+        "metadata": {
+          "encoding": "json",
+          "observedAt": "2026-10-23T02:25:32.702135043Z",
+          "truncated": false
+        }
+      }
+    }
+  ]
+}

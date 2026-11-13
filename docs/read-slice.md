@@ -41,11 +41,15 @@ python3 scripts/dev.py connect --employee alice
 
 | 测试员工 | 当前读取范围 | 工具目录 |
 |---|---|---|
-| Alice | scope_a | pg.get_demo_item |
-| Bob | scope_b | pg.get_demo_item |
-| Visitor | 无工具调用权 | 空 |
+| Alice | scope_a | pg.get_demo_item、audit.list、gateway.health |
+| Bob | scope_b | pg.get_demo_item、audit.list、gateway.health |
+| Visitor | 无 PG 业务读取权 | audit.list（仅本人审计）、gateway.health |
 
-工具只接受 `{"itemId":"item_demo_1"}`。同一个 ID 在 A、B 范围返回不同假数据；Alice 读取 B 独有 ID 得到未找到。额外 scope、SQL、资源地址、身份字段及重复 JSON 键全部拒绝。版本值按十进制字符串返回，包含超过 JavaScript 安全整数范围的测试值。
+2026-10-23 新增 `audit.list`，复用原 HTTP 审计的身份隔离和分页限制。参数为可选 `after`（非负 int64 的十进制字符串，默认 `"0"`）、`limit`（整数 1–100，默认 100）。`nextAfter` 和事件序号也使用字符串；现有 HTTP 接口格式保持不变。详见 [本机审计工具](local-service.md#本人审计原生工具)。
+
+同日新增 `gateway.health`，空参数 `{}`，分别返回进程存活 `live`、依赖就绪 `ready` 和元数据/业务 PG 的检查结果；每次使用当前运行角色做有界只读探测。原 `/healthz` 继续只表示进程存活。详见 [本机健康检查](local-service.md#健康检查原生工具)。
+
+PG 工具只接受 `{"itemId":"item_demo_1"}`。同一个 ID 在 A、B 范围返回不同假数据；Alice 读取 B 独有 ID 得到未找到。额外 scope、SQL、资源地址、身份字段及重复 JSON 键全部拒绝。版本值按十进制字符串返回，包含超过 JavaScript 安全整数范围的测试值。
 
 固定 SQL 为 `SELECT item_id,note,version::text FROM demo.items WHERE scope_id=$1 AND item_id=$2 LIMIT 1`。scope 来自领取事务重新查询的可信员工记录，两个参数使用原生绑定。业务账号只有目标表 SELECT，连接默认只读，执行再使用 READ ONLY 事务；最多一行、note 最多 500 字符、结果最多 16 KiB、原生路径预算 3 秒、池最大 4 连接。元数据池最大 8 连接、业务处理最多并发 16。所有值均为测试基线，不能当作已核准的企业容量配置。
 

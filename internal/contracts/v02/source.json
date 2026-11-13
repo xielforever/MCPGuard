@@ -1,0 +1,4304 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcpguard.example/contracts/v0.2/contract.schema.json",
+  "title": "MCPGuard v0.2 versioned contracts",
+  "description": "Canonical source. RA-10 adds model-safe adapter capability declarations and private delivery notices. HTTP host headers are a separate private channel; formal new-resource execution remains RA-11.",
+  "$defs": {
+    "UUID": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 36,
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "Version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 18,
+      "pattern": "^[1-9][0-9]{0,17}$"
+    },
+    "Timestamp": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$"
+    },
+    "Cursor": {
+      "type": "string",
+      "maxLength": 512
+    },
+    "Kind": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8,
+      "enum": [
+        "POSTGRES",
+        "REDIS",
+        "HTTP"
+      ]
+    },
+    "ResourceVersion": {
+      "type": "object",
+      "properties": {
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "kind": {
+          "$ref": "#/$defs/Kind"
+        },
+        "alias": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "endpointConfigRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "targetFingerprint": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "resourceId",
+        "orgId",
+        "version",
+        "kind",
+        "alias",
+        "displayName",
+        "endpointConfigRef",
+        "targetFingerprint"
+      ],
+      "additionalProperties": false
+    },
+    "ResourceHead": {
+      "type": "object",
+      "properties": {
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "revision": {
+          "$ref": "#/$defs/Version"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "orgId",
+        "resourceId",
+        "version",
+        "revision",
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "PermissionProfile": {
+      "type": "object",
+      "properties": {
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "allowedOperations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-z][a-z0-9._-]*$"
+          }
+        },
+        "nativeEnforcement": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "enum": [
+            "PG_OWNER_RLS_V1",
+            "REDIS_ACL",
+            "HTTP_OPERATION"
+          ]
+        },
+        "approvalPolicyRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 30000
+        },
+        "maxRows": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "maxResultBytes": {
+          "type": "integer",
+          "minimum": 256,
+          "maximum": 1048576
+        }
+      },
+      "required": [
+        "orgId",
+        "resourceId",
+        "profileId",
+        "version",
+        "name",
+        "allowedOperations",
+        "nativeEnforcement",
+        "approvalPolicyRef",
+        "timeoutMs",
+        "maxRows",
+        "maxResultBytes"
+      ],
+      "additionalProperties": false
+    },
+    "ToolResourceBinding": {
+      "type": "object",
+      "properties": {
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "toolName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "toolVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "operationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        }
+      },
+      "required": [
+        "orgId",
+        "resourceId",
+        "resourceVersion",
+        "profileId",
+        "profileVersion",
+        "toolName",
+        "toolVersion",
+        "operationId"
+      ],
+      "additionalProperties": false
+    },
+    "ResourceAccess": {
+      "type": "object",
+      "properties": {
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "principalId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "canDiscover": {
+          "type": "boolean"
+        },
+        "canRequest": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "orgId",
+        "principalId",
+        "resourceId",
+        "canDiscover",
+        "canRequest"
+      ],
+      "additionalProperties": false
+    },
+    "ResourceView": {
+      "type": "object",
+      "properties": {
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "revision": {
+          "$ref": "#/$defs/Version"
+        },
+        "kind": {
+          "$ref": "#/$defs/Kind"
+        },
+        "alias": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "canRequest": {
+          "type": "boolean"
+        },
+        "accessState": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "enum": [
+            "NOT_REQUESTED",
+            "PENDING",
+            "PROVISIONING",
+            "ACTIVE",
+            "REVOKED",
+            "EXPIRED",
+            "REJECTED",
+            "CANCELLED",
+            "STALE",
+            "PROVISIONING_UNKNOWN",
+            "PROVISIONING_FAILED"
+          ]
+        }
+      },
+      "required": [
+        "resourceId",
+        "version",
+        "revision",
+        "kind",
+        "alias",
+        "displayName",
+        "enabled",
+        "canRequest",
+        "accessState"
+      ],
+      "additionalProperties": false
+    },
+    "ListResourcesInput": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/Kind"
+        },
+        "after": {
+          "$ref": "#/$defs/Cursor"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ListResourcesResult": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "0.2"
+        },
+        "resources": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/ResourceView"
+          }
+        },
+        "nextAfter": {
+          "$ref": "#/$defs/Cursor"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "resources",
+        "nextAfter"
+      ],
+      "additionalProperties": false
+    },
+    "GetResourceInput": {
+      "type": "object",
+      "properties": {
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "resourceId"
+      ],
+      "additionalProperties": false
+    },
+    "GetResourceResult": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "0.2"
+        },
+        "resource": {
+          "$ref": "#/$defs/ResourceView"
+        },
+        "profiles": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/ProfileView"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "resource",
+        "profiles"
+      ],
+      "additionalProperties": false
+    },
+    "RequestKey": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "pattern": "^[A-Za-z0-9_-]{16,100}$"
+    },
+    "AccessRequestInput": {
+      "type": "object",
+      "properties": {
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "requestedExpiry": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "resourceId",
+        "profileId",
+        "requestedExpiry",
+        "reason",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "AccessRequest": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "ownerId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "requestedExpiry": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "requestHash": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "enum": [
+            "SUBMITTED",
+            "PENDING_APPROVAL",
+            "APPROVED",
+            "REJECTED",
+            "CANCELLED",
+            "EXPIRED",
+            "STALE"
+          ]
+        },
+        "revision": {
+          "$ref": "#/$defs/Version"
+        }
+      },
+      "required": [
+        "requestId",
+        "orgId",
+        "ownerId",
+        "resourceId",
+        "resourceVersion",
+        "profileId",
+        "profileVersion",
+        "requestedExpiry",
+        "reason",
+        "requestHash",
+        "state",
+        "revision"
+      ],
+      "additionalProperties": false
+    },
+    "AccessDecision": {
+      "type": "object",
+      "properties": {
+        "decisionId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "requestId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "requestHash": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "requestRevision": {
+          "$ref": "#/$defs/Version"
+        },
+        "deciderId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "enum": [
+            "HUMAN",
+            "POLICY"
+          ]
+        },
+        "decision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "enum": [
+            "APPROVE",
+            "REJECT"
+          ]
+        },
+        "approvedExpiry": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "decisionId",
+        "requestId",
+        "requestHash",
+        "requestRevision",
+        "deciderId",
+        "source",
+        "decision",
+        "createdAt",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "APPROVE"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "approvedExpiry"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "approvedExpiry"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "AccessGrant": {
+      "type": "object",
+      "properties": {
+        "grantId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "subjectId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "accountId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "bindingId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "enum": [
+            "PROVISIONING",
+            "ACTIVE",
+            "PROVISIONING_UNKNOWN",
+            "PROVISIONING_FAILED",
+            "REVOKED",
+            "EXPIRED"
+          ]
+        },
+        "grantVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "authEpoch": {
+          "$ref": "#/$defs/Version"
+        },
+        "requestId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "decisionId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "#/$defs/Version"
+        }
+      },
+      "required": [
+        "grantId",
+        "orgId",
+        "subjectId",
+        "resourceId",
+        "resourceVersion",
+        "profileId",
+        "profileVersion",
+        "state",
+        "grantVersion",
+        "expiresAt",
+        "authEpoch",
+        "requestId",
+        "decisionId",
+        "revision"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "ACTIVE"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "accountId",
+              "bindingId"
+            ]
+          }
+        }
+      ]
+    },
+    "ProvisioningJob": {
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "grantId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "accountPlanHash": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "enum": [
+            "READY",
+            "EXECUTING",
+            "VERIFIED",
+            "OUTCOME_UNKNOWN",
+            "FAILED",
+            "CLEANUP_PENDING",
+            "CLEANED",
+            "MANUAL_REQUIRED"
+          ]
+        },
+        "providerReceiptRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "recovery": {
+          "$ref": "#/$defs/ProvisioningRecovery"
+        }
+      },
+      "required": [
+        "jobId",
+        "grantId",
+        "accountPlanHash",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "NativeAccount": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "subjectId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "nativeIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "managementMode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "enum": [
+            "PROVISIONED",
+            "PREEXISTING"
+          ]
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "observedPermissionRef": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "accountId",
+        "orgId",
+        "resourceId",
+        "subjectId",
+        "profileId",
+        "profileVersion",
+        "nativeIdentity",
+        "managementMode",
+        "resourceVersion",
+        "observedPermissionRef"
+      ],
+      "additionalProperties": false
+    },
+    "CredentialBinding": {
+      "type": "object",
+      "properties": {
+        "bindingId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "principalId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "bindingVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "nativeIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "secretRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "secretVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "accountId": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "bindingId",
+        "orgId",
+        "principalId",
+        "resourceId",
+        "resourceVersion",
+        "profileId",
+        "profileVersion",
+        "bindingVersion",
+        "nativeIdentity",
+        "secretRef",
+        "secretVersion",
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "CredentialLease": {
+      "type": "object",
+      "properties": {
+        "leaseId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "grantId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "grantVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "credentialId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "enum": [
+            "ACTIVE",
+            "REVOKED",
+            "EXPIRED"
+          ]
+        },
+        "revision": {
+          "$ref": "#/$defs/Version"
+        }
+      },
+      "required": [
+        "leaseId",
+        "grantId",
+        "grantVersion",
+        "credentialId",
+        "expiresAt",
+        "state",
+        "revision"
+      ],
+      "additionalProperties": false
+    },
+    "CredentialReference": {
+      "type": "object",
+      "properties": {
+        "formatVersion": {
+          "type": "string",
+          "const": "1"
+        },
+        "credentialId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "leaseId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "subjectId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "grantId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "grantVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "bindingId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "bindingVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "issuer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9:/._-]*$"
+        },
+        "issuerEpoch": {
+          "$ref": "#/$defs/UUID"
+        },
+        "audience": {
+          "type": "string",
+          "const": "mcpguard-execution"
+        },
+        "issuedAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      },
+      "required": [
+        "formatVersion",
+        "credentialId",
+        "leaseId",
+        "orgId",
+        "subjectId",
+        "resourceId",
+        "resourceVersion",
+        "grantId",
+        "grantVersion",
+        "bindingId",
+        "bindingVersion",
+        "profileId",
+        "profileVersion",
+        "issuer",
+        "issuerEpoch",
+        "audience",
+        "issuedAt",
+        "expiresAt"
+      ],
+      "additionalProperties": false
+    },
+    "CredentialEnvelope": {
+      "type": "object",
+      "properties": {
+        "formatVersion": {
+          "type": "string",
+          "const": "1"
+        },
+        "issuer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9:/._-]*$"
+        },
+        "keyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "nonce": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "pattern": "^[A-Za-z0-9_-]{16}$"
+        },
+        "ciphertext": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16384,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "authenticationTag": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 22,
+          "pattern": "^[A-Za-z0-9_-]{22}$"
+        }
+      },
+      "required": [
+        "formatVersion",
+        "issuer",
+        "keyId",
+        "nonce",
+        "ciphertext",
+        "authenticationTag"
+      ],
+      "additionalProperties": false
+    },
+    "DownloadTicket": {
+      "type": "object",
+      "properties": {
+        "downloadId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "credentialId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "ownerId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "clientInstanceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/Timestamp",
+          "description": "Ticket expiry, bounded by credential lease expiry."
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "enum": [
+            "READY",
+            "CLAIMED",
+            "EXPIRED",
+            "CANCELLED"
+          ]
+        },
+        "leaseId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "credentialExpiresAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "revision": {
+          "$ref": "#/$defs/Version"
+        },
+        "deliveryMode": {
+          "type": "string",
+          "enum": [
+            "MANUAL_OWNER",
+            "ENROLLED_CLIENT"
+          ]
+        },
+        "deliveryOutcome": {
+          "type": "string",
+          "enum": [
+            "NOT_STARTED",
+            "UNKNOWN",
+            "WRITE_COMPLETED",
+            "WRITE_INTERRUPTED"
+          ]
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "grantId": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "downloadId",
+        "credentialId",
+        "ownerId",
+        "expiresAt",
+        "state",
+        "leaseId",
+        "credentialExpiresAt",
+        "revision",
+        "deliveryMode",
+        "deliveryOutcome"
+      ],
+      "additionalProperties": false
+    },
+    "CredentialContext": {
+      "type": "object",
+      "properties": {
+        "contextId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "ownerId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "clientInstanceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "enum": [
+            "ACTIVE",
+            "REVOKED",
+            "EXPIRED"
+          ]
+        },
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "absoluteExpiresAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "revision": {
+          "$ref": "#/$defs/Version"
+        }
+      },
+      "required": [
+        "contextId",
+        "ownerId",
+        "clientInstanceId",
+        "expiresAt",
+        "state",
+        "orgId",
+        "absoluteExpiresAt",
+        "revision"
+      ],
+      "additionalProperties": false
+    },
+    "ContextActivation": {
+      "type": "object",
+      "properties": {
+        "contextId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "credentialId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "activatedAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "enum": [
+            "ACTIVE",
+            "REVOKED",
+            "EXPIRED"
+          ]
+        },
+        "leaseId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "revision": {
+          "$ref": "#/$defs/Version"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "grantVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "bindingVersion": {
+          "$ref": "#/$defs/Version"
+        }
+      },
+      "required": [
+        "contextId",
+        "credentialId",
+        "resourceId",
+        "activatedAt",
+        "state",
+        "leaseId",
+        "expiresAt",
+        "revision",
+        "resourceVersion",
+        "grantVersion",
+        "bindingVersion"
+      ],
+      "additionalProperties": false
+    },
+    "Revocation": {
+      "type": "object",
+      "properties": {
+        "revocationId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "targetId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "targetType": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "enum": [
+            "CREDENTIAL",
+            "GRANT",
+            "PRINCIPAL",
+            "RESOURCE"
+          ]
+        },
+        "actorId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "authEpoch": {
+          "$ref": "#/$defs/Version"
+        },
+        "committedAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "gatewayAccess": {
+          "type": "string",
+          "const": "REVOKED"
+        },
+        "inFlightStop": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "enum": [
+            "NONE",
+            "PENDING",
+            "CONFIRMED",
+            "FAILED",
+            "UNKNOWN"
+          ]
+        },
+        "nativeCleanup": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "enum": [
+            "NOT_REQUIRED",
+            "PENDING",
+            "CONFIRMED",
+            "FAILED"
+          ]
+        }
+      },
+      "required": [
+        "revocationId",
+        "targetId",
+        "targetType",
+        "actorId",
+        "reason",
+        "authEpoch",
+        "committedAt",
+        "gatewayAccess",
+        "inFlightStop",
+        "nativeCleanup"
+      ],
+      "additionalProperties": false
+    },
+    "ObjectInput": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "CancelInput": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "$ref": "#/$defs/Version"
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "id",
+        "expectedRevision",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "PrepareDownloadInput": {
+      "type": "object",
+      "properties": {
+        "grantId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "grantId",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "PrepareDownloadResult": {
+      "type": "object",
+      "properties": {
+        "credentialId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "leaseId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "downloadId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "enum": [
+            "READY",
+            "CLAIMED",
+            "EXPIRED",
+            "CANCELLED"
+          ]
+        },
+        "credentialExpiresAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "revision": {
+          "$ref": "#/$defs/Version"
+        },
+        "deliveryMode": {
+          "type": "string",
+          "enum": [
+            "MANUAL_OWNER",
+            "ENROLLED_CLIENT"
+          ]
+        },
+        "deliveryOutcome": {
+          "type": "string",
+          "enum": [
+            "NOT_STARTED",
+            "UNKNOWN",
+            "WRITE_COMPLETED",
+            "WRITE_INTERRUPTED"
+          ]
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "grantId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "clientInstanceId": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "credentialId",
+        "leaseId",
+        "downloadId",
+        "expiresAt",
+        "state",
+        "credentialExpiresAt",
+        "revision",
+        "deliveryMode",
+        "deliveryOutcome"
+      ],
+      "additionalProperties": false
+    },
+    "RevokeInput": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "$ref": "#/$defs/Version"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "id",
+        "expectedRevision",
+        "reason",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "CredentialStatus": {
+      "type": "object",
+      "properties": {
+        "credentialId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "leaseId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "enum": [
+            "ACTIVE",
+            "REVOKED",
+            "EXPIRED"
+          ]
+        },
+        "revision": {
+          "$ref": "#/$defs/Version"
+        }
+      },
+      "required": [
+        "credentialId",
+        "leaseId",
+        "expiresAt",
+        "state",
+        "revision"
+      ],
+      "additionalProperties": false
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "enum": [
+            "ACCESS_DENIED",
+            "INVALID_ARGUMENTS",
+            "RESOURCE_UNAVAILABLE",
+            "ACCESS_PENDING",
+            "PROVISIONING_PENDING",
+            "PROVISIONING_UNKNOWN",
+            "CREDENTIAL_REQUIRED",
+            "CREDENTIAL_INVALID",
+            "CREDENTIAL_EXPIRED",
+            "CREDENTIAL_REVOKED",
+            "CREDENTIAL_CONTEXT_EXPIRED",
+            "GRANT_INACTIVE",
+            "BINDING_CHANGED",
+            "PLAN_STALE",
+            "IDEMPOTENCY_CONFLICT",
+            "REVISION_CONFLICT",
+            "DEPENDENCY_UNAVAILABLE",
+            "OUTCOME_UNKNOWN"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "ReadItemInput": {
+      "type": "object",
+      "properties": {
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "credentialId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "itemId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 42,
+          "pattern": "^item_demo_[a-z0-9_]{1,32}$"
+        }
+      },
+      "required": [
+        "resourceId",
+        "credentialId",
+        "itemId"
+      ],
+      "additionalProperties": false
+    },
+    "FixtureReadInput": {
+      "type": "object",
+      "properties": {
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "itemId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 42,
+          "pattern": "^item_demo_[a-z0-9_]{1,32}$"
+        }
+      },
+      "required": [
+        "resourceId",
+        "itemId"
+      ],
+      "additionalProperties": false
+    },
+    "ReadItem": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 42
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        }
+      },
+      "required": [
+        "itemId",
+        "note",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "FixtureReadResult": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "0.2"
+        },
+        "executionId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "bindingId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "nativeIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63
+        },
+        "found": {
+          "type": "boolean"
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 1,
+          "items": {
+            "$ref": "#/$defs/ReadItem"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "executionId",
+        "resourceId",
+        "resourceVersion",
+        "bindingId",
+        "nativeIdentity",
+        "found",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "CatalogBundle": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "0.2"
+        },
+        "resources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "#/$defs/ResourceVersion"
+          }
+        },
+        "heads": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "#/$defs/ResourceHead"
+          }
+        },
+        "profiles": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "#/$defs/PermissionProfile"
+          }
+        },
+        "tools": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "#/$defs/ToolResourceBinding"
+          }
+        },
+        "access": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": {
+            "$ref": "#/$defs/ResourceAccess"
+          }
+        },
+        "bindings": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": {
+            "$ref": "#/$defs/CredentialBinding"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "resources",
+        "heads",
+        "profiles",
+        "tools",
+        "access",
+        "bindings"
+      ],
+      "additionalProperties": false
+    },
+    "ProfileView": {
+      "type": "object",
+      "properties": {
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "maxGrantTtlSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 31536000
+        },
+        "reviewTtlSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        }
+      },
+      "required": [
+        "profileId",
+        "version",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "RequestIDInput": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "requestId"
+      ],
+      "additionalProperties": false
+    },
+    "CredentialIDInput": {
+      "type": "object",
+      "properties": {
+        "credentialId": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "credentialId"
+      ],
+      "additionalProperties": false
+    },
+    "CancelAccessInput": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "$ref": "#/$defs/Version"
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "requestId",
+        "expectedRevision",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "RevokeCredentialInput": {
+      "type": "object",
+      "properties": {
+        "credentialId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "$ref": "#/$defs/Version"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "credentialId",
+        "expectedRevision",
+        "reason",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "ListGrantsInput": {
+      "type": "object",
+      "properties": {
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "after": {
+          "$ref": "#/$defs/Cursor"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ListGrantsResult": {
+      "type": "object",
+      "properties": {
+        "grants": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/AccessGrant"
+          }
+        },
+        "nextAfter": {
+          "$ref": "#/$defs/Cursor"
+        }
+      },
+      "required": [
+        "grants",
+        "nextAfter"
+      ],
+      "additionalProperties": false
+    },
+    "DecisionInput": {
+      "type": "object",
+      "properties": {
+        "requestHash": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "expectedRevision": {
+          "$ref": "#/$defs/Version"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "APPROVE",
+            "REJECT"
+          ]
+        },
+        "approvedExpiry": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "requestHash",
+        "expectedRevision",
+        "decision",
+        "reason",
+        "requestKey"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "APPROVE"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "approvedExpiry"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "approvedExpiry"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "ContextCreateInput": {
+      "type": "object",
+      "properties": {
+        "clientLabel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "clientLabel",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "ContextPrivateResult": {
+      "type": "object",
+      "properties": {
+        "context": {
+          "$ref": "#/$defs/CredentialContext"
+        },
+        "contextToken": {
+          "type": "string",
+          "minLength": 32,
+          "maxLength": 256,
+          "x-sensitive": true
+        }
+      },
+      "required": [
+        "context",
+        "contextToken"
+      ],
+      "additionalProperties": false
+    },
+    "ActivationInput": {
+      "type": "object",
+      "properties": {
+        "credentialPackage": {
+          "$ref": "#/$defs/CredentialEnvelope"
+        },
+        "credentialId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        },
+        "downloadId": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "credentialPackage",
+        "credentialId",
+        "resourceId",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "DownloadQueue": {
+      "type": "object",
+      "properties": {
+        "tickets": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/DownloadTicket"
+          }
+        },
+        "nextAfter": {
+          "$ref": "#/$defs/Cursor"
+        }
+      },
+      "required": [
+        "tickets",
+        "nextAfter"
+      ],
+      "additionalProperties": false
+    },
+    "ResourceCreateInput": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/Kind"
+        },
+        "alias": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "endpointConfigRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "targetFingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "kind",
+        "alias",
+        "displayName",
+        "endpointConfigRef",
+        "targetFingerprint",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "ResourceVersionInput": {
+      "type": "object",
+      "properties": {
+        "alias": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "endpointConfigRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "targetFingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "expectedRevision": {
+          "$ref": "#/$defs/Version"
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "alias",
+        "displayName",
+        "endpointConfigRef",
+        "targetFingerprint",
+        "expectedRevision",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "PublishInput": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "expectedRevision": {
+          "$ref": "#/$defs/Version"
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "version",
+        "enabled",
+        "expectedRevision",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "UpdateNoteInput": {
+      "type": "object",
+      "properties": {
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "credentialId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "itemId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 42,
+          "pattern": "^item_demo_[a-z0-9_]{1,32}$"
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "expectedVersion": {
+          "$ref": "#/$defs/Version"
+        }
+      },
+      "required": [
+        "resourceId",
+        "credentialId",
+        "itemId",
+        "note",
+        "expectedVersion"
+      ],
+      "additionalProperties": false
+    },
+    "AccessPolicy": {
+      "type": "object",
+      "properties": {
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "profileVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "approvalPolicyRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "maxGrantTtlSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 31536000
+        },
+        "reviewTtlSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        }
+      },
+      "required": [
+        "orgId",
+        "resourceId",
+        "profileId",
+        "resourceVersion",
+        "profileVersion",
+        "version",
+        "approvalPolicyRef",
+        "maxGrantTtlSeconds",
+        "reviewTtlSeconds"
+      ],
+      "additionalProperties": false
+    },
+    "AccessPolicyHead": {
+      "type": "object",
+      "properties": {
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "profileVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "revision": {
+          "$ref": "#/$defs/Version"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "orgId",
+        "resourceId",
+        "profileId",
+        "resourceVersion",
+        "profileVersion",
+        "version",
+        "revision",
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "AccessReviewer": {
+      "type": "object",
+      "properties": {
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "principalId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "canApprove": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "orgId",
+        "resourceId",
+        "principalId",
+        "canApprove"
+      ],
+      "additionalProperties": false
+    },
+    "AccessConfiguration": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "0.2"
+        },
+        "policies": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/AccessPolicy"
+          }
+        },
+        "heads": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/AccessPolicyHead"
+          }
+        },
+        "reviewers": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/AccessReviewer"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "policies",
+        "heads",
+        "reviewers"
+      ],
+      "additionalProperties": false
+    },
+    "AccessStatusResult": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/$defs/AccessRequest"
+        },
+        "decision": {
+          "$ref": "#/$defs/AccessDecision"
+        },
+        "grant": {
+          "$ref": "#/$defs/AccessGrant"
+        },
+        "provisioning": {
+          "$ref": "#/$defs/ProvisioningJob"
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "additionalProperties": false
+    },
+    "ListAccessRequestsInput": {
+      "type": "object",
+      "properties": {
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "after": {
+          "$ref": "#/$defs/Cursor"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ListAccessRequestsResult": {
+      "type": "object",
+      "properties": {
+        "requests": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/AccessRequest"
+          }
+        },
+        "nextAfter": {
+          "$ref": "#/$defs/Cursor"
+        }
+      },
+      "required": [
+        "requests",
+        "nextAfter"
+      ],
+      "additionalProperties": false
+    },
+    "GrantIDInput": {
+      "type": "object",
+      "properties": {
+        "grantId": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "grantId"
+      ],
+      "additionalProperties": false
+    },
+    "ProvisioningTarget": {
+      "type": "object",
+      "properties": {
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "profileVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "targetId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "endpointConfigRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "targetFingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "template": {
+          "type": "string",
+          "const": "PG_OWNER_SELECT_V1"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "orgId",
+        "resourceId",
+        "profileId",
+        "resourceVersion",
+        "profileVersion",
+        "targetId",
+        "endpointConfigRef",
+        "targetFingerprint",
+        "template",
+        "version",
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "ExistingAccountRegistration": {
+      "type": "object",
+      "properties": {
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "profileVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "accountId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "subjectId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "nativeIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "secretRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "secretVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "orgId",
+        "resourceId",
+        "profileId",
+        "resourceVersion",
+        "profileVersion",
+        "accountId",
+        "subjectId",
+        "nativeIdentity",
+        "secretRef",
+        "secretVersion",
+        "version",
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "ProvisioningConfiguration": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "0.2"
+        },
+        "targets": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/ProvisioningTarget"
+          }
+        },
+        "existingAccounts": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/ExistingAccountRegistration"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "targets",
+        "existingAccounts"
+      ],
+      "additionalProperties": false
+    },
+    "ProvisioningPlan": {
+      "type": "object",
+      "properties": {
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "profileVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "jobId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "grantId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "grantVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "subjectId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "accountId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "bindingId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "bindingVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "targetId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "targetVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "endpointConfigRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "targetFingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "managementMode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "enum": [
+            "PROVISIONED",
+            "PREEXISTING"
+          ]
+        },
+        "nativeIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "secretRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "secretVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "registrationVersion": {
+          "$ref": "#/$defs/Version"
+        }
+      },
+      "required": [
+        "orgId",
+        "resourceId",
+        "profileId",
+        "resourceVersion",
+        "profileVersion",
+        "jobId",
+        "grantId",
+        "grantVersion",
+        "subjectId",
+        "accountId",
+        "bindingId",
+        "bindingVersion",
+        "targetId",
+        "targetVersion",
+        "endpointConfigRef",
+        "targetFingerprint",
+        "managementMode",
+        "nativeIdentity",
+        "secretRef",
+        "secretVersion",
+        "expiresAt"
+      ],
+      "additionalProperties": false
+    },
+    "NativeObservation": {
+      "type": "object",
+      "properties": {
+        "observationId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "accountId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "nativeIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "roleOid": {
+          "$ref": "#/$defs/Version"
+        },
+        "database": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63
+        },
+        "permissionHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "observedAt": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      },
+      "required": [
+        "observationId",
+        "accountId",
+        "nativeIdentity",
+        "roleOid",
+        "database",
+        "permissionHash",
+        "observedAt"
+      ],
+      "additionalProperties": false
+    },
+    "ProvisioningRecovery": {
+      "type": "object",
+      "properties": {
+        "generation": {
+          "$ref": "#/$defs/Version"
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
+        },
+        "cleanupAttempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "DISPATCH",
+            "RECONCILE",
+            "CLEANUP",
+            "FINALIZE"
+          ]
+        },
+        "cleanupState": {
+          "type": "string",
+          "enum": [
+            "NOT_REQUIRED",
+            "PENDING",
+            "SUCCEEDED",
+            "MANUAL_REQUIRED"
+          ]
+        },
+        "lastOutcome": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+        },
+        "nextAttemptAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "leaseExpiresAt": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      },
+      "required": [
+        "generation",
+        "attempts",
+        "cleanupAttempts",
+        "operation",
+        "cleanupState"
+      ],
+      "additionalProperties": false
+    },
+    "CredentialIssuer": {
+      "type": "object",
+      "properties": {
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "issuer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9:/._-]*$"
+        },
+        "issuerEpoch": {
+          "$ref": "#/$defs/UUID"
+        },
+        "keyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "keyFingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "orgId",
+        "issuer",
+        "issuerEpoch",
+        "keyId",
+        "keyFingerprint",
+        "version",
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "CredentialLeasePolicy": {
+      "type": "object",
+      "properties": {
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "profileId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "profileVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "maxTtlSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "orgId",
+        "resourceId",
+        "resourceVersion",
+        "profileId",
+        "profileVersion",
+        "version",
+        "maxTtlSeconds",
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "CredentialConfiguration": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "0.2"
+        },
+        "issuer": {
+          "$ref": "#/$defs/CredentialIssuer"
+        },
+        "policies": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/CredentialLeasePolicy"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "issuer",
+        "policies"
+      ],
+      "additionalProperties": false
+    },
+    "IssueCredentialInput": {
+      "type": "object",
+      "properties": {
+        "grantId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "grantId",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "DownloadIDInput": {
+      "type": "object",
+      "properties": {
+        "downloadId": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "downloadId"
+      ],
+      "additionalProperties": false
+    },
+    "ClaimDownloadInput": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "DeliveryAuthorizationInfo": {
+      "type": "object",
+      "properties": {
+        "authorizationId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "ownerId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "audience": {
+          "type": "string",
+          "enum": [
+            "mcpguard-delivery"
+          ]
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "credential:claim"
+          ]
+        }
+      },
+      "required": [
+        "authorizationId",
+        "ownerId",
+        "expiresAt",
+        "audience",
+        "scope"
+      ],
+      "additionalProperties": false
+    },
+    "ClientRegistration": {
+      "type": "object",
+      "properties": {
+        "clientInstanceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "orgId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "ownerId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "authorizationId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "REVOKED"
+          ]
+        }
+      },
+      "required": [
+        "clientInstanceId",
+        "orgId",
+        "ownerId",
+        "authorizationId",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "ContextRenewInput": {
+      "type": "object",
+      "properties": {
+        "expectedRevision": {
+          "$ref": "#/$defs/Version"
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "expectedRevision",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "ContextIDInput": {
+      "type": "object",
+      "properties": {
+        "contextId": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "contextId"
+      ],
+      "additionalProperties": false
+    },
+    "ContextStatusResult": {
+      "type": "object",
+      "properties": {
+        "context": {
+          "$ref": "#/$defs/CredentialContext"
+        },
+        "activations": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/ContextActivation"
+          }
+        }
+      },
+      "required": [
+        "context",
+        "activations"
+      ],
+      "additionalProperties": false
+    },
+    "ListDownloadsInput": {
+      "type": "object",
+      "properties": {
+        "after": {
+          "$ref": "#/$defs/Cursor"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ReplaceDownloadInput": {
+      "type": "object",
+      "properties": {
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "RenewCredentialInput": {
+      "type": "object",
+      "properties": {
+        "credentialId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "credentialId",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "DeactivateInput": {
+      "type": "object",
+      "properties": {
+        "resourceId": {
+          "$ref": "#/$defs/UUID"
+        },
+        "requestKey": {
+          "$ref": "#/$defs/RequestKey"
+        }
+      },
+      "required": [
+        "resourceId",
+        "requestKey"
+      ],
+      "additionalProperties": false
+    },
+    "ClientAdapterCapabilities": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "enum": [
+            "0.2"
+          ]
+        },
+        "adapterVersion": {
+          "type": "string",
+          "enum": [
+            "0.2.7"
+          ]
+        },
+        "protocolVersion": {
+          "type": "string",
+          "enum": [
+            "2025-11-25"
+          ]
+        },
+        "entry": {
+          "type": "string",
+          "enum": [
+            "NATIVE_HTTP_HELPER",
+            "STDIO_PRIVATE",
+            "URL_ONLY"
+          ]
+        },
+        "privateDelivery": {
+          "type": "boolean"
+        },
+        "multiResourceActivation": {
+          "type": "boolean"
+        },
+        "syncDriver": {
+          "type": "string",
+          "enum": [
+            "BOUNDED_WORKER",
+            "BEFORE_AND_AFTER_PREPARE",
+            "UNAVAILABLE"
+          ]
+        },
+        "headerRefresh": {
+          "type": "string",
+          "enum": [
+            "HOST_RECONNECT",
+            "PER_REMOTE_REQUEST",
+            "UNAVAILABLE"
+          ]
+        },
+        "expiredContextRecovery": {
+          "type": "string",
+          "enum": [
+            "EXPLICIT_RECONNECT",
+            "BEFORE_NEXT_CALL",
+            "UNAVAILABLE"
+          ]
+        },
+        "revokedContextRecovery": {
+          "type": "string",
+          "enum": [
+            "EXPLICIT_PRIVATE_REPAIR",
+            "UNAVAILABLE"
+          ]
+        },
+        "modelVisibleSecrets": {
+          "type": "string",
+          "enum": [
+            "FORBIDDEN"
+          ]
+        },
+        "nativeDatabaseConnection": {
+          "type": "boolean"
+        },
+        "requiresPrivateHostHook": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "adapterVersion",
+        "protocolVersion",
+        "entry",
+        "privateDelivery",
+        "multiResourceActivation",
+        "syncDriver",
+        "headerRefresh",
+        "expiredContextRecovery",
+        "revokedContextRecovery",
+        "modelVisibleSecrets",
+        "nativeDatabaseConnection",
+        "requiresPrivateHostHook"
+      ],
+      "additionalProperties": false
+    },
+    "AdapterDeliveryNotice": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "PENDING_PRIVATE_SYNC"
+          ]
+        },
+        "recovery": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "PRIVATE_SYNC_ONLY"
+          ]
+        },
+        "businessRequestReplayed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "state",
+        "recovery",
+        "businessRequestReplayed"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "x-limits": {
+    "maxInputBytes": 65536,
+    "maxDepth": 16,
+    "maxCatalogPage": 100,
+    "maxPackageBytes": 32768,
+    "maxCiphertextEncodedBytes": 16384,
+    "defaultFixtureTimeoutMs": 3000,
+    "maxFixturePools": 16,
+    "fixturePoolMaxConns": 2,
+    "maxAccessOpenRequests": 32,
+    "maxProvisioningBatch": 10,
+    "provisioningLeaseSeconds": 30,
+    "maxRecoveryAttempts": 6,
+    "maxCleanupAttempts": 6,
+    "maxRecoveryBatch": 10,
+    "recoveryBackoffSeconds": 5,
+    "maxRecoveryBackoffSeconds": 60,
+    "maxCredentialReferenceBytes": 8192,
+    "credentialNonceBytes": 12,
+    "credentialTagBytes": 16,
+    "maxPackageKeyUses": 4294967296,
+    "maxDownloadTtlSeconds": 300,
+    "maxDeliveryAuthTtlSeconds": 3600,
+    "maxReadyDownloadTickets": 50,
+    "maxClaimInputBytes": 512,
+    "maxContextTtlSeconds": 900,
+    "maxContextLifetimeSeconds": 3600,
+    "maxContextActivations": 100,
+    "maxSyncPageSize": 20,
+    "maxSyncPages": 5,
+    "maxCacheFiles": 128,
+    "maxCacheBytes": 16777216
+  },
+  "x-http-operations": [
+    {
+      "path": "/resources",
+      "method": "get",
+      "operationId": "listResources",
+      "input": "ListResourcesInput",
+      "output": "ListResourcesResult",
+      "stage": "RA-02"
+    },
+    {
+      "path": "/resources/{id}",
+      "method": "get",
+      "operationId": "getResource",
+      "output": "GetResourceResult",
+      "stage": "RA-02"
+    },
+    {
+      "path": "/access-requests",
+      "method": "post",
+      "operationId": "requestAccess",
+      "input": "AccessRequestInput",
+      "output": "AccessRequest",
+      "stage": "RA-04"
+    },
+    {
+      "path": "/access-requests/{id}",
+      "method": "get",
+      "operationId": "accessStatus",
+      "output": "AccessStatusResult",
+      "stage": "RA-04"
+    },
+    {
+      "path": "/access-requests/{id}/cancel",
+      "method": "post",
+      "operationId": "cancelAccess",
+      "input": "CancelInput",
+      "output": "AccessRequest",
+      "stage": "RA-04"
+    },
+    {
+      "path": "/access-grants/{id}",
+      "method": "get",
+      "operationId": "grantStatus",
+      "output": "AccessGrant",
+      "stage": "RA-04"
+    },
+    {
+      "path": "/access-grants/{id}/revocations",
+      "method": "post",
+      "operationId": "revokeGrant",
+      "input": "RevokeInput",
+      "output": "Revocation",
+      "stage": "PLANNED"
+    },
+    {
+      "path": "/credential-packages",
+      "method": "post",
+      "operationId": "prepareCredentialDownload",
+      "input": "PrepareDownloadInput",
+      "output": "PrepareDownloadResult",
+      "stage": "RA-08"
+    },
+    {
+      "path": "/credentials/{id}",
+      "method": "get",
+      "operationId": "credentialStatus",
+      "output": "CredentialStatus",
+      "stage": "RA-07"
+    },
+    {
+      "path": "/credentials/{id}/revocations",
+      "method": "post",
+      "operationId": "revokeCredential",
+      "input": "RevokeInput",
+      "output": "Revocation",
+      "stage": "PLANNED"
+    },
+    {
+      "path": "/credential-downloads/{id}/claim",
+      "method": "post",
+      "operationId": "claimDownload",
+      "binary": true,
+      "stage": "RA-08",
+      "input": "ClaimDownloadInput",
+      "privateDelivery": true
+    },
+    {
+      "path": "/resources",
+      "method": "post",
+      "operationId": "createResource",
+      "input": "ResourceCreateInput",
+      "output": "ResourceView",
+      "stage": "PLANNED"
+    },
+    {
+      "path": "/resources/{id}/versions",
+      "method": "post",
+      "operationId": "createResourceVersion",
+      "input": "ResourceVersionInput",
+      "output": "ResourceVersion",
+      "stage": "PLANNED"
+    },
+    {
+      "path": "/resources/{id}/publish",
+      "method": "post",
+      "operationId": "publishResource",
+      "input": "PublishInput",
+      "output": "ResourceHead",
+      "stage": "PLANNED"
+    },
+    {
+      "path": "/access-requests/{id}/decisions",
+      "method": "post",
+      "operationId": "decideAccess",
+      "input": "DecisionInput",
+      "output": "AccessStatusResult",
+      "stage": "RA-04",
+      "browser": true
+    },
+    {
+      "path": "/access-grants",
+      "method": "get",
+      "operationId": "listGrants",
+      "input": "ListGrantsInput",
+      "output": "ListGrantsResult",
+      "stage": "RA-04"
+    },
+    {
+      "path": "/credential-downloads",
+      "method": "get",
+      "operationId": "listDownloads",
+      "output": "DownloadQueue",
+      "stage": "RA-09",
+      "privateContext": true,
+      "input": "ListDownloadsInput"
+    },
+    {
+      "path": "/credential-contexts",
+      "method": "post",
+      "operationId": "createContext",
+      "input": "ContextCreateInput",
+      "output": "ContextPrivateResult",
+      "stage": "RA-09",
+      "privateContext": false,
+      "privateDelivery": true
+    },
+    {
+      "path": "/credential-contexts/{id}/renewals",
+      "method": "post",
+      "operationId": "renewContext",
+      "output": "CredentialContext",
+      "stage": "RA-09",
+      "privateContext": true,
+      "input": "ContextRenewInput"
+    },
+    {
+      "path": "/credential-contexts/{id}/activations",
+      "method": "post",
+      "operationId": "activateCredential",
+      "input": "ActivationInput",
+      "output": "ContextActivation",
+      "stage": "RA-09",
+      "privateContext": true
+    },
+    {
+      "path": "/credential-contexts/{id}",
+      "method": "delete",
+      "operationId": "closeContext",
+      "output": "CredentialContext",
+      "stage": "RA-09",
+      "privateContext": true,
+      "input": "ContextRenewInput"
+    },
+    {
+      "path": "/revocations/{id}",
+      "method": "get",
+      "operationId": "revocationStatus",
+      "output": "Revocation",
+      "stage": "PLANNED"
+    },
+    {
+      "path": "/access-requests",
+      "method": "get",
+      "operationId": "reviewAccessRequests",
+      "input": "ListAccessRequestsInput",
+      "output": "ListAccessRequestsResult",
+      "stage": "RA-04",
+      "browser": true
+    },
+    {
+      "path": "/credential-downloads/{id}",
+      "method": "get",
+      "operationId": "downloadStatus",
+      "output": "DownloadTicket",
+      "privateDelivery": true,
+      "stage": "RA-08"
+    },
+    {
+      "path": "/credential-contexts/{id}",
+      "method": "get",
+      "operationId": "contextStatus",
+      "output": "ContextStatusResult",
+      "privateContext": true,
+      "stage": "RA-09"
+    },
+    {
+      "path": "/credential-contexts/{id}/deactivations",
+      "method": "post",
+      "operationId": "deactivateCredential",
+      "input": "DeactivateInput",
+      "output": "ContextActivation",
+      "privateContext": true,
+      "stage": "RA-09"
+    },
+    {
+      "path": "/credential-downloads/{id}/replacements",
+      "method": "post",
+      "operationId": "replaceDownload",
+      "input": "ReplaceDownloadInput",
+      "output": "PrepareDownloadResult",
+      "privateContext": true,
+      "stage": "RA-09"
+    },
+    {
+      "path": "/credentials/{id}/renewals",
+      "method": "post",
+      "operationId": "renewCredential",
+      "input": "RenewCredentialInput",
+      "output": "PrepareDownloadResult",
+      "privateContext": true,
+      "stage": "RA-09"
+    }
+  ],
+  "x-mcp-tools": [
+    {
+      "name": "resource.list",
+      "input": "ListResourcesInput",
+      "output": "ListResourcesResult",
+      "stage": "RA-02"
+    },
+    {
+      "name": "resource.get",
+      "input": "GetResourceInput",
+      "output": "GetResourceResult",
+      "stage": "RA-02"
+    },
+    {
+      "name": "access.request",
+      "input": "AccessRequestInput",
+      "output": "AccessRequest",
+      "stage": "RA-04"
+    },
+    {
+      "name": "access.status",
+      "input": "RequestIDInput",
+      "output": "AccessStatusResult",
+      "stage": "RA-04"
+    },
+    {
+      "name": "access.cancel",
+      "input": "CancelAccessInput",
+      "output": "AccessRequest",
+      "stage": "RA-04"
+    },
+    {
+      "name": "credential.prepare_download",
+      "input": "PrepareDownloadInput",
+      "output": "PrepareDownloadResult",
+      "stage": "RA-08"
+    },
+    {
+      "name": "credential.status",
+      "input": "CredentialIDInput",
+      "output": "CredentialStatus",
+      "stage": "RA-07"
+    },
+    {
+      "name": "credential.revoke",
+      "input": "RevokeCredentialInput",
+      "output": "Revocation",
+      "stage": "PLANNED"
+    },
+    {
+      "name": "pg.get_item",
+      "input": "ReadItemInput",
+      "stage": "RA-11",
+      "x-result-contract": "../tool-result.schema.json"
+    },
+    {
+      "name": "access.grants",
+      "input": "ListGrantsInput",
+      "output": "ListGrantsResult",
+      "stage": "RA-04"
+    },
+    {
+      "name": "pg.update_note",
+      "input": "UpdateNoteInput",
+      "stage": "RA-12",
+      "x-result-contract": "../tool-result.schema.json"
+    }
+  ],
+  "x-examples": [
+    {
+      "schema": "ListResourcesInput",
+      "valid": true,
+      "value": {}
+    },
+    {
+      "schema": "ListResourcesInput",
+      "valid": true,
+      "value": {
+        "kind": "POSTGRES",
+        "limit": 100,
+        "after": ""
+      }
+    },
+    {
+      "schema": "ListResourcesInput",
+      "valid": false,
+      "value": {
+        "limit": 101
+      }
+    },
+    {
+      "schema": "ListResourcesInput",
+      "valid": false,
+      "value": {
+        "principalId": "30000000-0000-4000-8000-000000000001"
+      }
+    },
+    {
+      "schema": "GetResourceInput",
+      "valid": false,
+      "value": {
+        "resourceId": "orders"
+      }
+    },
+    {
+      "schema": "FixtureReadInput",
+      "valid": true,
+      "value": {
+        "resourceId": "30000000-0000-4000-8000-000000000001",
+        "itemId": "item_demo_1"
+      }
+    },
+    {
+      "schema": "FixtureReadInput",
+      "valid": false,
+      "value": {
+        "resourceId": "30000000-0000-4000-8000-000000000001",
+        "itemId": "item_demo_1",
+        "bindingId": "30000000-0000-4000-8000-000000000002"
+      }
+    },
+    {
+      "schema": "FixtureReadInput",
+      "valid": false,
+      "value": {
+        "resourceId": "30000000-0000-4000-8000-000000000001",
+        "itemId": "item_demo_1",
+        "scopeId": "scope_b"
+      }
+    },
+    {
+      "schema": "FixtureReadInput",
+      "valid": false,
+      "value": {
+        "resourceId": "30000000-0000-4000-8000-000000000001",
+        "itemId": "item_demo_1",
+        "sql": "SELECT * FROM demo.items"
+      }
+    },
+    {
+      "schema": "ReadItemInput",
+      "valid": false,
+      "value": {
+        "resourceId": "30000000-0000-4000-8000-000000000001",
+        "itemId": "item_demo_1"
+      }
+    },
+    {
+      "schema": "ReadItemInput",
+      "valid": true,
+      "value": {
+        "resourceId": "30000000-0000-4000-8000-000000000001",
+        "credentialId": "30000000-0000-4000-8000-000000000002",
+        "itemId": "item_demo_1"
+      }
+    },
+    {
+      "schema": "Version",
+      "valid": true,
+      "value": "9007199254740993"
+    },
+    {
+      "schema": "Version",
+      "valid": false,
+      "value": 9007199254740992
+    },
+    {
+      "schema": "Version",
+      "valid": false,
+      "value": "01"
+    },
+    {
+      "schema": "AccessRequestInput",
+      "valid": true,
+      "value": {
+        "resourceId": "30000000-0000-4000-8000-000000000001",
+        "profileId": "30000000-0000-4000-8000-000000000002",
+        "requestedExpiry": "2027-01-01T00:00:00Z",
+        "reason": "isolated development",
+        "requestKey": "request-0000000001"
+      }
+    },
+    {
+      "schema": "AccessRequestInput",
+      "valid": false,
+      "value": {
+        "resourceId": "30000000-0000-4000-8000-000000000001",
+        "profileId": "30000000-0000-4000-8000-000000000002",
+        "requestedExpiry": "2027-01-01T00:00:00Z",
+        "reason": "test",
+        "requestKey": "request-0000000001",
+        "ownerId": "30000000-0000-4000-8000-000000000003"
+      }
+    },
+    {
+      "schema": "AccessRequestInput",
+      "valid": false,
+      "value": {
+        "resourceId": "30000000-0000-4000-8000-000000000001",
+        "profileId": "30000000-0000-4000-8000-000000000002",
+        "requestedExpiry": "2027-01-01T00:00:00Z",
+        "reason": "test",
+        "requestKey": "request-0000000001",
+        "approved": true
+      }
+    },
+    {
+      "schema": "CredentialEnvelope",
+      "valid": true,
+      "value": {
+        "formatVersion": "1",
+        "issuer": "fixture",
+        "keyId": "key-1",
+        "nonce": "aaaaaaaaaaaaaaaa",
+        "ciphertext": "encoded",
+        "authenticationTag": "aaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "schema": "CredentialEnvelope",
+      "valid": false,
+      "value": {
+        "formatVersion": "1",
+        "issuer": "fixture",
+        "keyId": "key-1",
+        "nonce": "aaaaaaaaaaaaaaaa",
+        "ciphertext": "encoded",
+        "authenticationTag": "aaaaaaaaaaaaaaaaaaaaaa",
+        "password": "forbidden"
+      }
+    },
+    {
+      "schema": "CredentialStatus",
+      "valid": true,
+      "value": {
+        "credentialId": "30000000-0000-4000-8000-000000000001",
+        "leaseId": "30000000-0000-4000-8000-000000000002",
+        "expiresAt": "2027-01-01T00:00:00Z",
+        "state": "REVOKED",
+        "revision": "1"
+      }
+    },
+    {
+      "schema": "CredentialStatus",
+      "valid": false,
+      "value": {
+        "credentialId": "30000000-0000-4000-8000-000000000001",
+        "leaseId": "30000000-0000-4000-8000-000000000002",
+        "expiresAt": "2027-01-01T00:00:00Z",
+        "state": "DECRYPTED",
+        "revision": "1"
+      }
+    },
+    {
+      "schema": "Revocation",
+      "valid": true,
+      "value": {
+        "revocationId": "30000000-0000-4000-8000-000000000001",
+        "targetId": "30000000-0000-4000-8000-000000000002",
+        "targetType": "GRANT",
+        "actorId": "30000000-0000-4000-8000-000000000003",
+        "reason": "revoked",
+        "authEpoch": "2",
+        "committedAt": "2027-01-01T00:00:00Z",
+        "gatewayAccess": "REVOKED",
+        "inFlightStop": "PENDING",
+        "nativeCleanup": "FAILED"
+      }
+    },
+    {
+      "schema": "Revocation",
+      "valid": false,
+      "value": {
+        "revocationId": "30000000-0000-4000-8000-000000000001",
+        "targetId": "30000000-0000-4000-8000-000000000002",
+        "targetType": "GRANT",
+        "actorId": "30000000-0000-4000-8000-000000000003",
+        "reason": "revoked",
+        "authEpoch": "2",
+        "committedAt": "2027-01-01T00:00:00Z",
+        "gatewayAccess": "ACTIVE",
+        "inFlightStop": "CONFIRMED",
+        "nativeCleanup": "CONFIRMED"
+      }
+    },
+    {
+      "schema": "CredentialReference",
+      "valid": false,
+      "value": {
+        "password": "must-not-export"
+      }
+    },
+    {
+      "schema": "RequestIDInput",
+      "valid": true,
+      "value": {
+        "requestId": "30000000-0000-4000-8000-000000000001"
+      }
+    },
+    {
+      "schema": "RequestIDInput",
+      "valid": false,
+      "value": {
+        "id": "30000000-0000-4000-8000-000000000001"
+      }
+    },
+    {
+      "schema": "ContextPrivateResult",
+      "valid": false,
+      "value": {
+        "contextToken": "too-short"
+      }
+    },
+    {
+      "schema": "Timestamp",
+      "valid": false,
+      "value": "2027-02-30T00:00:00Z"
+    },
+    {
+      "schema": "Timestamp",
+      "valid": true,
+      "value": "2027-01-01T00:00:00.123456789Z"
+    },
+    {
+      "schema": "AccessGrant",
+      "valid": true,
+      "value": {
+        "grantId": "70000000-0000-4000-8000-000000000001",
+        "orgId": "70000000-0000-4000-8000-000000000002",
+        "subjectId": "70000000-0000-4000-8000-000000000003",
+        "resourceId": "70000000-0000-4000-8000-000000000004",
+        "resourceVersion": "1",
+        "profileId": "70000000-0000-4000-8000-000000000005",
+        "profileVersion": "1",
+        "state": "PROVISIONING",
+        "grantVersion": "1",
+        "expiresAt": "2027-01-01T00:00:00Z",
+        "authEpoch": "2",
+        "requestId": "70000000-0000-4000-8000-000000000006",
+        "decisionId": "70000000-0000-4000-8000-000000000007",
+        "revision": "1"
+      }
+    },
+    {
+      "schema": "AccessGrant",
+      "valid": false,
+      "value": {
+        "grantId": "70000000-0000-4000-8000-000000000001",
+        "orgId": "70000000-0000-4000-8000-000000000002",
+        "subjectId": "70000000-0000-4000-8000-000000000003",
+        "resourceId": "70000000-0000-4000-8000-000000000004",
+        "resourceVersion": "1",
+        "profileId": "70000000-0000-4000-8000-000000000005",
+        "profileVersion": "1",
+        "state": "ACTIVE",
+        "grantVersion": "1",
+        "expiresAt": "2027-01-01T00:00:00Z",
+        "authEpoch": "2",
+        "requestId": "70000000-0000-4000-8000-000000000006",
+        "decisionId": "70000000-0000-4000-8000-000000000007",
+        "revision": "1"
+      }
+    },
+    {
+      "schema": "AccessGrant",
+      "valid": true,
+      "value": {
+        "grantId": "70000000-0000-4000-8000-000000000001",
+        "orgId": "70000000-0000-4000-8000-000000000002",
+        "subjectId": "70000000-0000-4000-8000-000000000003",
+        "resourceId": "70000000-0000-4000-8000-000000000004",
+        "resourceVersion": "1",
+        "profileId": "70000000-0000-4000-8000-000000000005",
+        "profileVersion": "1",
+        "state": "ACTIVE",
+        "grantVersion": "1",
+        "expiresAt": "2027-01-01T00:00:00Z",
+        "authEpoch": "2",
+        "requestId": "70000000-0000-4000-8000-000000000006",
+        "decisionId": "70000000-0000-4000-8000-000000000007",
+        "revision": "1",
+        "accountId": "70000000-0000-4000-8000-000000000008",
+        "bindingId": "70000000-0000-4000-8000-000000000009"
+      }
+    },
+    {
+      "schema": "DecisionInput",
+      "valid": true,
+      "value": {
+        "requestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expectedRevision": "1",
+        "decision": "REJECT",
+        "reason": "Outside approved scope",
+        "requestKey": "test-contract-key-0001"
+      }
+    },
+    {
+      "schema": "DecisionInput",
+      "valid": false,
+      "value": {
+        "requestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expectedRevision": "1",
+        "decision": "APPROVE",
+        "reason": "Outside approved scope",
+        "requestKey": "test-contract-key-0001"
+      }
+    },
+    {
+      "schema": "DecisionInput",
+      "valid": false,
+      "value": {
+        "requestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expectedRevision": "1",
+        "decision": "REJECT",
+        "reason": "Outside approved scope",
+        "requestKey": "test-contract-key-0001",
+        "approvedExpiry": "2027-01-01T00:00:00Z"
+      }
+    },
+    {
+      "schema": "DecisionInput",
+      "valid": false,
+      "value": {
+        "requestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expectedRevision": "1",
+        "decision": "REJECT",
+        "reason": "Outside approved scope",
+        "requestKey": "test-contract-key-0001",
+        "deciderId": "70000000-0000-4000-8000-000000000003"
+      }
+    },
+    {
+      "schema": "AccessRequestInput",
+      "valid": false,
+      "value": {
+        "resourceId": "70000000-0000-4000-8000-000000000004",
+        "profileId": "70000000-0000-4000-8000-000000000005",
+        "requestedExpiry": "2027-01-01T00:00:00Z",
+        "reason": "test",
+        "requestKey": "test-contract-key-0001",
+        "ownerId": "70000000-0000-4000-8000-000000000003"
+      }
+    },
+    {
+      "schema": "AccessPolicy",
+      "valid": false,
+      "value": {
+        "orgId": "70000000-0000-4000-8000-000000000001",
+        "resourceId": "70000000-0000-4000-8000-000000000002",
+        "profileId": "70000000-0000-4000-8000-000000000003",
+        "resourceVersion": "1",
+        "profileVersion": "1",
+        "version": "1",
+        "approvalPolicyRef": "read",
+        "maxGrantTtlSeconds": 0,
+        "reviewTtlSeconds": 60
+      }
+    },
+    {
+      "schema": "ProvisioningTarget",
+      "valid": true,
+      "value": {
+        "orgId": "80000000-0000-4000-8000-000000000001",
+        "resourceId": "80000000-0000-4000-8000-000000000002",
+        "profileId": "80000000-0000-4000-8000-000000000003",
+        "resourceVersion": "1",
+        "profileVersion": "1",
+        "targetId": "80000000-0000-4000-8000-000000000004",
+        "endpointConfigRef": "pg.orders.v1",
+        "targetFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "template": "PG_OWNER_SELECT_V1",
+        "version": "1",
+        "enabled": true
+      }
+    },
+    {
+      "schema": "ProvisioningTarget",
+      "valid": false,
+      "value": {
+        "orgId": "80000000-0000-4000-8000-000000000001",
+        "resourceId": "80000000-0000-4000-8000-000000000002",
+        "profileId": "80000000-0000-4000-8000-000000000003",
+        "resourceVersion": "1",
+        "profileVersion": "1",
+        "targetId": "80000000-0000-4000-8000-000000000004",
+        "endpointConfigRef": "pg.orders.v1",
+        "targetFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "template": "PG_OWNER_SELECT_V1",
+        "version": "1",
+        "enabled": true,
+        "sql": "GRANT ALL"
+      }
+    },
+    {
+      "schema": "ProvisioningTarget",
+      "valid": false,
+      "value": {
+        "orgId": "80000000-0000-4000-8000-000000000001",
+        "resourceId": "80000000-0000-4000-8000-000000000002",
+        "profileId": "80000000-0000-4000-8000-000000000003",
+        "resourceVersion": "1",
+        "profileVersion": "1",
+        "targetId": "80000000-0000-4000-8000-000000000004",
+        "endpointConfigRef": "pg.orders.v1",
+        "targetFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "template": "PG_OWNER_SELECT_V1",
+        "version": "1",
+        "enabled": true,
+        "password": "must stay private"
+      }
+    },
+    {
+      "schema": "ProvisioningTarget",
+      "valid": false,
+      "value": {
+        "orgId": "80000000-0000-4000-8000-000000000001",
+        "resourceId": "80000000-0000-4000-8000-000000000002",
+        "profileId": "80000000-0000-4000-8000-000000000003",
+        "resourceVersion": "1",
+        "profileVersion": "1",
+        "targetId": "80000000-0000-4000-8000-000000000004",
+        "endpointConfigRef": "pg.orders.v1",
+        "targetFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "template": "ANY_SQL",
+        "version": "1",
+        "enabled": true
+      }
+    },
+    {
+      "schema": "ProvisioningJob",
+      "valid": true,
+      "value": {
+        "jobId": "70000000-0000-4000-8000-000000000001",
+        "grantId": "71000000-0000-4000-8000-000000000001",
+        "accountPlanHash": "frozen-plan",
+        "state": "CLEANED",
+        "recovery": {
+          "generation": "2",
+          "attempts": 1,
+          "cleanupAttempts": 1,
+          "operation": "CLEANUP",
+          "cleanupState": "SUCCEEDED",
+          "lastOutcome": "OWNED_TEMPLATE_PRIVILEGES_REMOVED"
+        }
+      }
+    },
+    {
+      "schema": "ProvisioningJob",
+      "valid": false,
+      "value": {
+        "jobId": "70000000-0000-4000-8000-000000000001",
+        "grantId": "71000000-0000-4000-8000-000000000001",
+        "accountPlanHash": "frozen-plan",
+        "state": "CLEANED",
+        "recovery": {
+          "generation": "2",
+          "attempts": 1,
+          "cleanupAttempts": 1,
+          "operation": "CLEANUP",
+          "cleanupState": "SUCCEEDED",
+          "lastOutcome": "OWNED_TEMPLATE_PRIVILEGES_REMOVED",
+          "ownerId": "71000000-0000-4000-8000-000000000001"
+        }
+      }
+    },
+    {
+      "schema": "ProvisioningJob",
+      "valid": false,
+      "value": {
+        "jobId": "70000000-0000-4000-8000-000000000001",
+        "grantId": "71000000-0000-4000-8000-000000000001",
+        "accountPlanHash": "frozen-plan",
+        "state": "CLEANED",
+        "recovery": {
+          "generation": "2",
+          "attempts": 7,
+          "cleanupAttempts": 1,
+          "operation": "CLEANUP",
+          "cleanupState": "SUCCEEDED",
+          "lastOutcome": "OWNED_TEMPLATE_PRIVILEGES_REMOVED"
+        }
+      }
+    },
+    {
+      "schema": "ProvisioningJob",
+      "valid": false,
+      "value": {
+        "jobId": "70000000-0000-4000-8000-000000000001",
+        "grantId": "71000000-0000-4000-8000-000000000001",
+        "accountPlanHash": "frozen-plan",
+        "state": "CLEANED",
+        "recovery": {
+          "generation": "2",
+          "attempts": 1,
+          "cleanupAttempts": 1,
+          "operation": "CLEANUP",
+          "cleanupState": "DROPPED_EVERYTHING",
+          "lastOutcome": "OWNED_TEMPLATE_PRIVILEGES_REMOVED"
+        }
+      }
+    },
+    {
+      "schema": "CredentialLeasePolicy",
+      "valid": true,
+      "value": {
+        "orgId": "10000000-0000-4000-8000-000000000001",
+        "resourceId": "40000000-0000-4000-8000-000000000001",
+        "resourceVersion": "1",
+        "profileId": "50000000-0000-4000-8000-000000000001",
+        "profileVersion": "1",
+        "version": "1",
+        "maxTtlSeconds": 600,
+        "enabled": true
+      }
+    },
+    {
+      "schema": "CredentialLeasePolicy",
+      "valid": false,
+      "value": {
+        "orgId": "10000000-0000-4000-8000-000000000001",
+        "resourceId": "40000000-0000-4000-8000-000000000001",
+        "resourceVersion": "1",
+        "profileId": "50000000-0000-4000-8000-000000000001",
+        "profileVersion": "1",
+        "version": "1",
+        "maxTtlSeconds": 0,
+        "enabled": true
+      }
+    },
+    {
+      "schema": "CredentialLeasePolicy",
+      "valid": false,
+      "value": {
+        "orgId": "10000000-0000-4000-8000-000000000001",
+        "resourceId": "40000000-0000-4000-8000-000000000001",
+        "resourceVersion": "1",
+        "profileId": "50000000-0000-4000-8000-000000000001",
+        "profileVersion": "1",
+        "version": "1",
+        "maxTtlSeconds": 86401,
+        "enabled": true
+      }
+    },
+    {
+      "schema": "CredentialLeasePolicy",
+      "valid": false,
+      "value": {
+        "orgId": "10000000-0000-4000-8000-000000000001",
+        "resourceId": "40000000-0000-4000-8000-000000000001",
+        "resourceVersion": "1",
+        "profileId": "50000000-0000-4000-8000-000000000001",
+        "profileVersion": "1",
+        "version": "1",
+        "maxTtlSeconds": 600,
+        "enabled": true,
+        "sql": "GRANT ALL"
+      }
+    },
+    {
+      "schema": "CredentialEnvelope",
+      "valid": false,
+      "value": {
+        "formatVersion": "1",
+        "issuer": "fixture",
+        "keyId": "key-1",
+        "nonce": "aaaaaaaaaaaaaaaa",
+        "ciphertext": "encoded",
+        "authenticationTag": "aaaaaaaaaaaaaaaaaaaaaa",
+        "algorithm": "AES-CBC"
+      }
+    },
+    {
+      "schema": "CredentialEnvelope",
+      "valid": false,
+      "value": {
+        "formatVersion": "1",
+        "issuer": "fixture",
+        "keyId": "key-1",
+        "nonce": "aaaaaaaaaaaaaaaa",
+        "ciphertext": "encoded",
+        "authenticationTag": "aaaaaaaaaaaaaaaaaaaaaa",
+        "keyUrl": "https://keys.invalid/key"
+      }
+    },
+    {
+      "schema": "DownloadTicket",
+      "valid": true,
+      "value": {
+        "downloadId": "83000000-0000-4000-8000-000000000001",
+        "credentialId": "80000000-0000-4000-8000-000000000001",
+        "leaseId": "81000000-0000-4000-8000-000000000001",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "expiresAt": "2026-10-26T00:01:00Z",
+        "credentialExpiresAt": "2026-10-26T00:10:00Z",
+        "state": "CLAIMED",
+        "revision": "2",
+        "deliveryMode": "MANUAL_OWNER",
+        "deliveryOutcome": "UNKNOWN"
+      }
+    },
+    {
+      "schema": "ClaimDownloadInput",
+      "valid": true,
+      "value": {}
+    },
+    {
+      "schema": "ClaimDownloadInput",
+      "valid": false,
+      "value": {
+        "ownerId": "20000000-0000-4000-8000-000000000001"
+      }
+    },
+    {
+      "schema": "DownloadTicket",
+      "valid": false,
+      "value": {
+        "downloadId": "83000000-0000-4000-8000-000000000001",
+        "credentialId": "80000000-0000-4000-8000-000000000001",
+        "leaseId": "81000000-0000-4000-8000-000000000001",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "expiresAt": "2026-10-26T00:01:00Z",
+        "credentialExpiresAt": "2026-10-26T00:10:00Z",
+        "state": "CLAIMED",
+        "revision": "2",
+        "deliveryMode": "MANUAL_OWNER",
+        "deliveryOutcome": "CLIENT_SAVED"
+      }
+    },
+    {
+      "schema": "PrepareDownloadInput",
+      "valid": false,
+      "value": {
+        "grantId": "71000000-0000-4000-8000-000000000001",
+        "requestKey": "bounded-request",
+        "downloadUrl": "https://other.invalid"
+      }
+    },
+    {
+      "schema": "DeliveryAuthorizationInfo",
+      "valid": true,
+      "value": {
+        "authorizationId": "84000000-0000-4000-8000-000000000001",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "expiresAt": "2026-10-26T00:01:00Z",
+        "audience": "mcpguard-delivery",
+        "scope": "credential:claim"
+      }
+    },
+    {
+      "schema": "CredentialContext",
+      "valid": true,
+      "value": {
+        "contextId": "85000000-0000-4000-8000-000000000001",
+        "orgId": "10000000-0000-4000-8000-000000000001",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "clientInstanceId": "86000000-0000-4000-8000-000000000001",
+        "expiresAt": "2026-10-26T00:10:00Z",
+        "absoluteExpiresAt": "2026-10-26T01:00:00Z",
+        "revision": "1",
+        "state": "ACTIVE"
+      }
+    },
+    {
+      "schema": "CredentialContext",
+      "valid": false,
+      "value": {
+        "contextId": "85000000-0000-4000-8000-000000000001",
+        "orgId": "10000000-0000-4000-8000-000000000001",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "clientInstanceId": "86000000-0000-4000-8000-000000000001",
+        "expiresAt": "2026-10-26T00:10:00Z",
+        "absoluteExpiresAt": "2026-10-26T01:00:00Z",
+        "revision": "1",
+        "state": "ACTIVE",
+        "contextToken": "must-not-be-public"
+      }
+    },
+    {
+      "schema": "ContextRenewInput",
+      "valid": true,
+      "value": {
+        "expectedRevision": "1",
+        "requestKey": "bounded-request-key"
+      }
+    },
+    {
+      "schema": "ContextRenewInput",
+      "valid": false,
+      "value": {
+        "expectedRevision": "1",
+        "requestKey": "bounded-request-key",
+        "expiresAt": "2099-01-01T00:00:00Z"
+      }
+    },
+    {
+      "schema": "ListDownloadsInput",
+      "valid": true,
+      "value": {
+        "limit": 20
+      }
+    },
+    {
+      "schema": "ListDownloadsInput",
+      "valid": false,
+      "value": {
+        "limit": 21
+      }
+    },
+    {
+      "schema": "RenewCredentialInput",
+      "valid": true,
+      "value": {
+        "credentialId": "80000000-0000-4000-8000-000000000001",
+        "requestKey": "bounded-request-key"
+      }
+    },
+    {
+      "schema": "ContextCreateInput",
+      "valid": false,
+      "value": {
+        "clientLabel": "untrusted",
+        "requestKey": "bounded-request-key",
+        "clientInstanceId": "86000000-0000-4000-8000-000000000001"
+      }
+    },
+    {
+      "schema": "ClientAdapterCapabilities",
+      "valid": true,
+      "value": {
+        "schemaVersion": "0.2",
+        "adapterVersion": "0.2.7",
+        "protocolVersion": "2025-11-25",
+        "entry": "NATIVE_HTTP_HELPER",
+        "privateDelivery": true,
+        "multiResourceActivation": true,
+        "syncDriver": "BOUNDED_WORKER",
+        "headerRefresh": "HOST_RECONNECT",
+        "expiredContextRecovery": "EXPLICIT_RECONNECT",
+        "revokedContextRecovery": "EXPLICIT_PRIVATE_REPAIR",
+        "modelVisibleSecrets": "FORBIDDEN",
+        "nativeDatabaseConnection": false,
+        "requiresPrivateHostHook": true
+      }
+    },
+    {
+      "schema": "ClientAdapterCapabilities",
+      "valid": false,
+      "value": {
+        "schemaVersion": "0.2",
+        "adapterVersion": "0.2.7",
+        "protocolVersion": "2025-11-25",
+        "entry": "NATIVE_HTTP_HELPER",
+        "privateDelivery": true,
+        "multiResourceActivation": true,
+        "syncDriver": "BOUNDED_WORKER",
+        "headerRefresh": "HOST_RECONNECT",
+        "expiredContextRecovery": "EXPLICIT_RECONNECT",
+        "revokedContextRecovery": "EXPLICIT_PRIVATE_REPAIR",
+        "modelVisibleSecrets": "FORBIDDEN",
+        "nativeDatabaseConnection": false,
+        "requiresPrivateHostHook": true,
+        "contextToken": "not-a-public-field"
+      }
+    },
+    {
+      "schema": "AdapterDeliveryNotice",
+      "valid": true,
+      "value": {
+        "state": "PENDING_PRIVATE_SYNC",
+        "recovery": "PRIVATE_SYNC_ONLY",
+        "businessRequestReplayed": false
+      }
+    },
+    {
+      "schema": "AdapterDeliveryNotice",
+      "valid": false,
+      "value": {
+        "state": "PENDING_PRIVATE_SYNC",
+        "recovery": "REPLAY_BUSINESS_REQUEST",
+        "businessRequestReplayed": true
+      }
+    }
+  ],
+  "x-contract-revision": "0.2.7",
+  "x-credential-format": {
+    "version": "1",
+    "algorithm": "AES-256-GCM",
+    "nonceBytes": 12,
+    "tagBytes": 16,
+    "encoding": "RFC4648 unpadded canonical base64url",
+    "envelopeEncoding": "UTF-8 compact JSON in generated CredentialEnvelope property order; no trailing bytes",
+    "aad": "UTF-8 compact JSON array [\"mcpguard-reference\",\"1\",issuer,keyId,\"mcpguard-execution\"]",
+    "plaintext": "UTF-8 compact JSON in generated CredentialReference property order; reference metadata only",
+    "nonceReservation": "A random 96-bit nonce is durably reserved under the real key fingerprint before encryption; reservations are never reused or deleted."
+  }
+}

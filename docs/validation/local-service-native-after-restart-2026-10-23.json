@@ -1,0 +1,48 @@
+{
+  "capturedAt": "2026-10-23T04:39:42.687Z",
+  "status": "PASS",
+  "client": "Official Codex app-server mcpServer/tool/call",
+  "threadId": "01a1670e-bd90-7183-8631-128015cced72",
+  "endpoint": "http://127.0.0.1:18080/mcp",
+  "transport": "Streamable HTTP",
+  "server": "mcpguard_local",
+  "tool": "pg.get_demo_item",
+  "arguments": {
+    "itemId": "item_demo_1"
+  },
+  "officialClientConfiguredToolInvocation": true,
+  "ephemeralClientContext": true,
+  "cloudPluginUsed": false,
+  "modelTurnStarted": false,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"kind\":\"FINAL\",\"actionId\":\"0e75cfdd-3e70-4214-855a-b5941ccae8dc\",\"attemptId\":\"48781059-1e2d-41ac-959c-13c670611642\",\"executionId\":\"4cd52744-93e0-4a73-8ba3-160ab170629e\",\"requestStatus\":\"SUCCEEDED\",\"dispatchState\":\"DISPATCHED\",\"sideEffectStatus\":\"NONE\",\"data\":{\"found\":true,\"item\":{\"itemId\":\"item_demo_1\",\"note\":\"Alice scope A\",\"version\":\"1\"}},\"error\":null,\"metadata\":{\"encoding\":\"json\",\"observedAt\":\"2026-10-23T04:39:42.648809969Z\",\"truncated\":false}}"
+      }
+    ],
+    "structuredContent": {
+      "kind": "FINAL",
+      "actionId": "0e75cfdd-3e70-4214-855a-b5941ccae8dc",
+      "attemptId": "48781059-1e2d-41ac-959c-13c670611642",
+      "executionId": "4cd52744-93e0-4a73-8ba3-160ab170629e",
+      "requestStatus": "SUCCEEDED",
+      "dispatchState": "DISPATCHED",
+      "sideEffectStatus": "NONE",
+      "data": {
+        "found": true,
+        "item": {
+          "itemId": "item_demo_1",
+          "note": "Alice scope A",
+          "version": "1"
+        }
+      },
+      "error": null,
+      "metadata": {
+        "encoding": "json",
+        "observedAt": "2026-10-23T04:39:42.648809969Z",
+        "truncated": false
+      }
+    }
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "capturedAt": "2026-10-23T02:29:31Z",
+  "status": "RECOVERED_VIA_REPLACEMENT_PLUGIN_NATIVE_CALL_AND_AUDIT_PASS",
+  "completedAt": "2026-10-23T02:37:01Z",
+  "replacementPlugin": {
+    "name": "MCPGuard Local Read Restored",
+    "id": "plugin_asdk_app_6adac7752f08819191228eb7dbbf9c88",
+    "url": "https://chatgpt.com/plugins/plugin_asdk_app_6adac7752f08819191228eb7dbbf9c88",
+    "resource": "https://devoted-coins-widescreen-substitute.trycloudflare.com/mcp",
+    "oauthSubject": "alice",
+    "scope": "mcp:read",
+    "tokenEndpointAuthMethod": "client_secret_post",
+    "nativeCallSucceeded": true,
+    "auditVerified": true,
+    "actionId": "1e87e0c4-6d0c-40f3-83e5-78173e5486ed",
+    "attemptId": "a843c9cb-390c-4a4e-8df6-c54fa49e171e",
+    "executionId": "e059e213-e3d3-4519-9965-590bc00d9e9f",
+    "auditSeq": [31, 32],
+    "nativeReadEvidence": "mcpguard-plugin-recovery-native-read-2026-10-23.json",
+    "auditEvidence": "mcpguard-plugin-recovery-audit-2026-10-23.json",
+    "screenshot": "mcpguard-plugin-recovery-connected-2026-10-23.png"
+  },
+  "originalPlugin": {
+    "name": "MCPGuard Local Read",
+    "id": "plugin_asdk_app_6ada2c1ed9e48191af1e36dd6e0c45e8",
+    "resource": "https://maiden-assuming-arrived-admitted.trycloudflare.com/mcp",
+    "nativeToolRetest": {
+      "status": "fulfilled",
+      "value": {
+        "content": [
+          {
+            "type": "text",
+            "text": "tool call error: tool call failed for `codex_apps/mcpguard_local_read.pg.get_demo_item`\n\nCaused by:\n    Mcp error: -32603: Internal error"
+          }
+        ],
+        "isError": true
+      }
+    }
+  },
+  "recoveredResource": "https://devoted-coins-widescreen-substitute.trycloudflare.com/mcp",
+  "terminalHarness": {
+    "status": "PASS",
+    "checkCount": 41,
+    "evidence": "mcpguard-plugin-recovery-https-2026-10-23.json",
+    "isCloudPluginProof": false
+  },
+  "localDirectRetest": {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"kind\":\"FINAL\",\"actionId\":\"d01be103-1b22-4ac0-8ee4-57849716c508\",\"attemptId\":\"0dabfcae-104b-4189-9c66-4958d3bcf6d0\",\"executionId\":\"9b5ed04e-4cf1-4f81-a48b-8cbcd01dafe0\",\"requestStatus\":\"SUCCEEDED\",\"dispatchState\":\"DISPATCHED\",\"sideEffectStatus\":\"NONE\",\"data\":{\"found\":true,\"item\":{\"itemId\":\"item_demo_1\",\"note\":\"Alice scope A\",\"version\":\"1\"}},\"error\":null,\"metadata\":{\"encoding\":\"json\",\"observedAt\":\"2026-10-23T02:29:31.406679167Z\",\"truncated\":false}}"
+        }
+      ],
+      "structuredContent": {
+        "kind": "FINAL",
+        "actionId": "d01be103-1b22-4ac0-8ee4-57849716c508",
+        "attemptId": "0dabfcae-104b-4189-9c66-4958d3bcf6d0",
+        "executionId": "9b5ed04e-4cf1-4f81-a48b-8cbcd01dafe0",
+        "requestStatus": "SUCCEEDED",
+        "dispatchState": "DISPATCHED",
+        "sideEffectStatus": "NONE",
+        "data": {
+          "found": true,
+          "item": {
+            "itemId": "item_demo_1",
+            "note": "Alice scope A",
+            "version": "1"
+          }
+        },
+        "error": null,
+        "metadata": {
+          "encoding": "json",
+          "observedAt": "2026-10-23T02:29:31.406679167Z",
+          "truncated": false
+        }
+      }
+    }
+  },
+  "rootCauseEvidence": {
+    "oauthStackExitedAt": "2026-10-23T01:29:07Z",
+    "oldTunnelError": "Unauthorized: Tunnel not found",
+    "errorFirstObservedAt": "2026-10-22T22:39:17Z",
+    "databasePortBefore": 32772,
+    "databasePortAfter": 32769,
+    "oauthStateInMemory": true
+  },
+  "restoredContainers": [
+    "mcpguard-oauth-postgres",
+    "mcpguard-oauth-gateway",
+    "mcpguard-oauth-https-v3"
+  ],
+  "preservedContainers": [
+    "mcpguard-oauth-gateway-before-20261023t022435z",
+    "mcpguard-oauth-https-v2"
+  ],
+  "originalPluginResourceChanged": false,
+  "replacementCloudPluginCreated": true,
+  "cloudPluginOAuthReconnected": true,
+  "webChatUiRetested": false,
+  "limitations": [
+    "Quick Tunnel resource changes after recreation; does not provide stable production ingress.",
+    "OAuth test grants are in memory and require reconnect after gateway restart.",
+    "Original cloud plugin still points to the expired HTTPS resource; use the verified replacement plugin."
+  ],
+  "secretsIncluded": false
+}

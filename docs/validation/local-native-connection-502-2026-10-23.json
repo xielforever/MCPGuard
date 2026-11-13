@@ -1,0 +1,61 @@
+{
+  "status": "CURRENT_CHAT_NATIVE_READ_PASS_AFTER_RESTART",
+  "endpoint": "http://127.0.0.1:18080/mcp",
+  "observedAt": "2026-10-23T06:07:02.189310486Z",
+  "userReportedRestart": true,
+  "nativeTool": "mcp__mcpguard_local__pg_get_demo_item",
+  "requestStatus": "SUCCEEDED",
+  "actionId": "39db1b98-2dbf-4f3a-9fc0-18654f66bf14",
+  "attemptId": "8b88ffb1-c453-4ae1-88fd-56f0484c5811",
+  "executionId": "3c83392e-d73a-46ec-8b35-283c9bdd45ad",
+  "actualReadPerformed": true,
+  "verifierScriptUsed": false,
+  "separateAppServerClientUsed": false,
+  "cloudPluginUsed": false,
+  "initialFailure": {
+    "status": "NATIVE_TOOL_VERIFICATION_PENDING_CURRENT_CLIENT_RELOAD",
+    "capturedAt": "2026-10-23 06:02:17 UTC",
+    "error": "resources/list failed: failed to get client: MCP startup failed: handshaking with MCP server failed: Send message error Transport [codex_rmcp_client::event_notification_transport::EventNotificationTransport<rmcp::transport::worker::WorkerTransport<rmcp::transport::streamable_http_client::StreamableHttpClientWorker<codex_rmcp_client::http_client_adapter::StreamableHttpClientAdapter>>>] error: unexpected server response: HTTP 502: , when send initialize request: Send message error Transport [codex_rmcp_client::event_notification_transport::EventNotificationTransport<rmcp::transport::worker::WorkerTransport<rmcp::transport::streamable_http_client::StreamableHttpClientWorker<codex_rmcp_client::http_client_adapter::StreamableHttpClientAdapter>>>] error: unexpected server response: HTTP 502: , when send initialize request",
+    "nativeTools": [],
+    "verifierScriptUsed": false,
+    "cloudPluginUsed": false,
+    "endpoint": "http://127.0.0.1:18080/mcp",
+    "currentThreadId": "01a1668d-e867-7910-8b82-dcfef238e29b",
+    "directHealthHttpStatus": 200,
+    "systemProxyHealthHttpStatus": 200,
+    "currentThreadLogEvidence": {
+      "database": "C:/Users/dzz/.codex/logs_2.sqlite",
+      "ids": [
+        2627138,
+        2643821,
+        2644748,
+        2646762,
+        2648477,
+        2649514
+      ],
+      "target": "codex_mcp::connection_manager::tool_catalog",
+      "message": "omitting MCP server without an exact ready client server_name=mcpguard_local"
+    },
+    "freshDesktopConnectionEvidence": {
+      "logIds": [
+        2653401,
+        2653482,
+        2653651
+      ],
+      "peerName": "MCPGuard",
+      "protocolVersion": "2025-11-25",
+      "scope": "Initialization only; not claimed as current-chat native tool-call acceptance"
+    },
+    "rootCauseConfirmed": false,
+    "runtimeReloadRequiredForFurtherDiagnosis": true,
+    "reloadApi": "config/mcpServer/reload",
+    "reloadApiExposedToCurrentTools": false,
+    "runningControlSocketAvailable": false,
+    "mcpReadIssued": false,
+    "serverOrProxyConfigurationChanged": false,
+    "secretsIncluded": false
+  },
+  "resolutionObserved": "After the user reported restarting, the current chat exposed the native local tool and its direct read succeeded. No server, credential, or system proxy change was needed in this repair turn.",
+  "original502NetworkCauseConfirmed": false,
+  "nativeEvidence": "local-native-tool-read-2026-10-23.json"
+}

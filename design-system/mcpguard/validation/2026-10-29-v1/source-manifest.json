@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-29",
+  "version": "1.0.0",
+  "files": {
+    "design-system/mcpguard/acceptance.md": "7a56e0d6edcf25dfa61cb416230da6cdd0d1d1c7b2a708f38cb233f6c8594c24",
+    "design-system/mcpguard/CHANGELOG.md": "04850e1a8ec30528faaa4021ea0341c10ca646d6d181614fc5218132d212b6e3",
+    "design-system/mcpguard/components.md": "ca4586ebfbf35e9d744dc7abec67ace695901bc16e6c82b0a5db2a252ebe8ada",
+    "design-system/mcpguard/MASTER.md": "2fc0efb7ae621458c7145c48f43570c21671be46c014f4afade6095a9445e829",
+    "design-system/mcpguard/pages/approvals.md": "a80dae74d90ad1ec565d0d5cda6e81d4ee306480c5ca6fc1053ccd0b985bc4de",
+    "design-system/mcpguard/pages/management.md": "ec50d602afdd3344c00c279417e367e00c2c877b8e33367220bf995372849ac6",
+    "design-system/mcpguard/pages/resources-and-credentials.md": "e4107a498462df10ca948c6ed99a7cbab2af9a22268f09ce3d8cdb288f772a89",
+    "design-system/mcpguard/state-labels.json": "4ec981be9dc98aa173fea0ddabf1e06cc4c35770c57343bd58daaf7a524d9c88",
+    "design-system/mcpguard/tokens.json": "af62d6c61104c4f7985cf93571e4c524bf31c8d08a81a1179e05cd31f5765611",
+    "design-system/mcpguard/validation/2026-10-29-v1/README.md": "32e48f29c3e2bbe48fde48bee5c3d9f2333c7c6de645f34cc649be953a45ea67",
+    "design-system/mcpguard/workflows.md": "c9afe4de358e48e3cc3a7eed646cf99f1d9d10e39c02d34fa08953c008ddee68",
+    "design-system/README.md": "7273aaf2e32b7e9681f39b3f71ad19284bc245600c20773e373c7c4bd54fe88b",
+    "docs/detailed/console-workflows.md": "d391d714662fc010ff45a53e6e5647bbbaf3c753fa43d4e3222f77d5977e2926",
+    "docs/README.md": "53dbccf18282bfa6e99fcb3e8b00a2785630dd6df1227fb57c37a41cf0cd5b4a"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "test": "stopped-service-started-by-local-MCP-header-helper",
+  "passed": true,
+  "elapsedSeconds": 5.904296,
+  "endpoint": "http://127.0.0.1:18080/mcp"
+}

@@ -110,3 +110,12 @@ SQL 错误、Redis 错误和 HTTP 错误不一定证明全部副作用已回滚�
 - [2025 生命周期](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/80041ab0a139a8f4fb3adbc99f7ae9113ea59671/docs/specification/2025-11-25/basic/lifecycle.mdx)与[2026 Streamable HTTP](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/80041ab0a139a8f4fb3adbc99f7ae9113ea59671/docs/specification/2026-07-28/basic/transports/streamable-http.mdx)
 - [工具](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/80041ab0a139a8f4fb3adbc99f7ae9113ea59671/docs/specification/2026-07-28/server/tools.mdx)、[MRTR](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/80041ab0a139a8f4fb3adbc99f7ae9113ea59671/docs/specification/2026-07-28/basic/patterns/mrtr.mdx)与[远程授权](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/80041ab0a139a8f4fb3adbc99f7ae9113ea59671/docs/specification/2026-07-28/basic/authorization/index.mdx)
 - [Go SDK v1.8.0](https://github.com/modelcontextprotocol/go-sdk/blob/v1.8.0/README.md)与[Go 版本要求](https://github.com/modelcontextprotocol/go-sdk/blob/v1.8.0/go.mod)
+
+
+## 2026-10-24 多资源与凭据接入补充
+
+新增业务工具目录、申请和状态接口见[增量契约](revisions/2026-10-24-resource-access/contracts.md)。资源目录业务工具不等同于 MCP resources/list；公开工具不返回原生秘密、密文字节或可兑换凭据的令牌。
+
+客户端仍以独立身份连接统一网关，受控组件通过私有接口下载密文并激活 CredentialContext，再在请求上下文自动提供其令牌。它不替代 MCP 认证或单次操作审批。能力边界与两入口验收见[客户端设计](revisions/2026-10-24-resource-access/credential-lifecycle.md)。
+
+本节不修改当前协议 profile、SDK 或既有工具 Schema；仅有远程 URL 不证明能够安全安装本地凭据。

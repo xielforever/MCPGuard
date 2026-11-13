@@ -31,7 +31,7 @@ func Migrate(ctx context.Context, dsn string) error {
 	if e = tx.QueryRow(ctx, "SELECT to_regclass('mcpguard.schema_versions') IS NOT NULL").Scan(&exists); e != nil {
 		return e
 	}
-	files := []string{"001_read_slice.sql", "002_authorization_lock.sql"}
+	files := []string{"001_read_slice.sql", "002_authorization_lock.sql", "003_controlled_tools.sql", "004_group_authorization.sql"}
 	if exists {
 		var max int
 		if e = tx.QueryRow(ctx, "SELECT coalesce(max(version),0) FROM mcpguard.schema_versions").Scan(&max); e != nil {

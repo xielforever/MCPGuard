@@ -132,3 +132,15 @@ SQL包含所有表、组合外键、查询索引和触发器声明；没有运�
 
 验收需覆盖：自批与伪造资格、跨组织FK、同Action双领取、意图窗口副作用UNKNOWN、终态回退、重复决定及命令、早期清理、旧租约恢复和备份回退。
 数据库模型通过不能替代HTTP/stdio、ChatGPT、企业身份与真实原生服务的验收。
+
+
+## 2026-10-24 多资源自助访问补充
+
+新增对象仍以权威状态、并发唯一、版本与包含组织的关联约束保护。包和授权吊销与业务资格在同一授权边界排序；账号开通 UNKNOWN 只核对既定任务。下载响应和上下文秘密不进入普通幂等响应快照。
+
+完整语义见[架构](../revisions/2026-10-24-resource-access/architecture.md)、[契约](../revisions/2026-10-24-resource-access/contracts.md)、[凭据生命周期](../revisions/2026-10-24-resource-access/credential-lifecycle.md)及[验收矩阵](../revisions/2026-10-24-resource-access/acceptance.md)。本节追加当前设计目标，原文和原验收保持；新增流程尚未实现。
+
+
+## 后续 RA-09 追加（2026-10-26）
+
+当前补齐登记客户端绑定的 CredentialContext、私有安全缓存、有界待领取队列、多资源激活和续期。Context 及凭据终态不续活，新 Context 不继承激活，重领与续期不创建原生账号；旧手动流程保留。具体协议、事务、Windows/Linux 权限、失败恢复和后续阶段边界见[RA-09 说明](../credential-contexts-local.md)，实际证明见[验收](../validation/local-ra09-2026-10-26.md)。前文保留各原时点记录。

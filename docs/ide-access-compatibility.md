@@ -131,3 +131,20 @@ HTTP 直连和 stdio 接入各至少一个真实 IDE 的完整组合通过上述
 建议使用官方 Go SDK v1.8.0 的 MCP Server 与 transport，按其 Go 1.25.0 要求升级当前 Go 1.22 项目；此为实现建议，尚未变更代码。SDK 支持 profile 不等于 Tasks、企业认证和具体 IDE 已开箱通过，需要分别验收。
 
 详情依据见[协议接入设计](mcp-protocol-design.md)中的固定版本规范与 SDK 来源。下游原生执行见[适配设计](native-adapter-design.md)，不新增后端 MCP 连接。
+
+
+## 2026-10-24 单配置多资源与私有凭据组件
+
+目标为一次客户端配置和独立登录，按身份发现资源、申请权限，之后由可信组件下载、缓存和激活密文。该组件可以持服务端加密文件与网关上下文，但不解密原生密码、不连接 PG、不拥有审批权。
+
+原生 HTTP 的本地 helper 与 stdio 连接器分别验证；没有私有下载/激活能力的远程客户端只证明目录与申请部分，不能把网页下载或模型代存凭据写成完整自动化通过。详见[客户端能力矩阵](revisions/2026-10-24-resource-access/credential-lifecycle.md)和[新验收计划](revisions/2026-10-24-resource-access/acceptance.md)。
+
+
+## 后续 RA-09 能力（2026-10-26）
+
+已交付独立私有 CLI 的缓存、有界同步、Context 和多资源激活，Linux/WSL 进程链及 Windows 原生文件安全分别验证。模型只收到安全元数据；同系统用户的任意文件访问不在隔离声明中。原生 HTTP helper、stdio 私有适配和能力声明是下一项 RA-10，真实 coding 客户端仍需独立验收。见[RA-09 说明](credential-contexts-local.md)。
+
+
+## 后续 RA-10 能力（2026-10-26）
+
+原生 HTTP 的宿主私有头 helper、有界 worker 和 stdio 私有适配已分别完成本地验证。HTTP 头可缓存：Context 短续期保持令牌，换头须宿主重连；stdio 每次远程请求使用内部当前头，自然到期在下次调用前恢复。主动 REVOKED 不自动重建。无宿主私有钩子的 URL-only 客户端不计为自动交付支持。具体命名 coding 客户端的真实钩子/界面及人工体验继续由 RA-18 单列，见[实现与配置](private-client-adapters-local.md)及[验收](validation/local-ra10-2026-10-26.md)。

@@ -1,0 +1,61 @@
+{
+  "status": "PASS_LOCAL_DESKTOP",
+  "date": "2026-10-29",
+  "scope": "Existing six embedded-console pages, desktop only",
+  "fixtureRunId": "9ca173a91c",
+  "goRaceTests": 294,
+  "goSkipped": 0,
+  "httpStdioChecks": 56,
+  "functionalBrowserChecks": 85,
+  "finalDesktopChecks": 60,
+  "sourceChecks": 311,
+  "historicalFilesPreserved": 126,
+  "finalDesktopScreenshots": [
+    "desktop-0.png",
+    "desktop-1.png",
+    "desktop-2.png",
+    "desktop-3.png",
+    "desktop-4.png",
+    "desktop-5.png",
+    "review-1280-compact.png",
+    "review-1280-expanded.png"
+  ],
+  "earlierFailures": [
+    {
+      "run": "2026-10-29T14-52-01-139Z",
+      "passedBeforeFailure": 33,
+      "message": "locator.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('form[data-form=\"调整现有身份\"]').getByLabel('用户', { exact: true })\u001b[22m\n"
+    },
+    {
+      "run": "2026-10-29T14-57-30-542Z",
+      "passedBeforeFailure": 83,
+      "message": "console uses no inline script, inline style or event attributes"
+    }
+  ],
+  "initialStaticTestCorrection": "Expected marker referenced an unused console CSS variable; asset was present. Test corrected to the actual shared separator token.",
+  "goVet": "PASS",
+  "generatorCheck": "PASS",
+  "javaScriptSyntax": "PASS",
+  "pythonSyntax": "PASS",
+  "oldServicesUnchanged": true,
+  "businessBackendTailByteEquivalent": true,
+  "apiContractsChanged": false,
+  "gitCommitted": false,
+  "gitPushed": false,
+  "humanVisualAcceptance": "PENDING",
+  "nativeCodingClientAcceptance": "NOT_CLAIMED",
+  "productionAcceptance": "NOT_CLAIMED",
+  "mobileScope": "Excluded by user; prior checks preserved as historical evidence without further mobile work",
+  "displayFaultInjection": [
+    "OUTCOME_UNKNOWN",
+    "DISPATCH_UNKNOWN",
+    "UNKNOWN side effects",
+    "expired client observation"
+  ],
+  "networkFaultInjection": "Commit via real backend, interrupt first browser acknowledgement, retry exact same command and idempotency key",
+  "limitations": [
+    "Legacy write decision accepts vote/planHash without a reason field",
+    "Future RA-16 lifecycle pages remain outside this six-page migration",
+    "Original local service image was not replaced"
+  ]
+}

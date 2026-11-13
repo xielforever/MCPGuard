@@ -1,0 +1,681 @@
+[
+  {
+    "schema": "ListResourcesInput",
+    "valid": true,
+    "value": {}
+  },
+  {
+    "schema": "ListResourcesInput",
+    "valid": true,
+    "value": {
+      "kind": "POSTGRES",
+      "limit": 100,
+      "after": ""
+    }
+  },
+  {
+    "schema": "ListResourcesInput",
+    "valid": false,
+    "value": {
+      "limit": 101
+    }
+  },
+  {
+    "schema": "ListResourcesInput",
+    "valid": false,
+    "value": {
+      "principalId": "30000000-0000-4000-8000-000000000001"
+    }
+  },
+  {
+    "schema": "GetResourceInput",
+    "valid": false,
+    "value": {
+      "resourceId": "orders"
+    }
+  },
+  {
+    "schema": "FixtureReadInput",
+    "valid": true,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "itemId": "item_demo_1"
+    }
+  },
+  {
+    "schema": "FixtureReadInput",
+    "valid": false,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "itemId": "item_demo_1",
+      "bindingId": "30000000-0000-4000-8000-000000000002"
+    }
+  },
+  {
+    "schema": "FixtureReadInput",
+    "valid": false,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "itemId": "item_demo_1",
+      "scopeId": "scope_b"
+    }
+  },
+  {
+    "schema": "FixtureReadInput",
+    "valid": false,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "itemId": "item_demo_1",
+      "sql": "SELECT * FROM demo.items"
+    }
+  },
+  {
+    "schema": "ReadItemInput",
+    "valid": false,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "itemId": "item_demo_1"
+    }
+  },
+  {
+    "schema": "ReadItemInput",
+    "valid": true,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "credentialId": "30000000-0000-4000-8000-000000000002",
+      "itemId": "item_demo_1"
+    }
+  },
+  {
+    "schema": "Version",
+    "valid": true,
+    "value": "9007199254740993"
+  },
+  {
+    "schema": "Version",
+    "valid": false,
+    "value": 9007199254740992
+  },
+  {
+    "schema": "Version",
+    "valid": false,
+    "value": "01"
+  },
+  {
+    "schema": "AccessRequestInput",
+    "valid": true,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "profileId": "30000000-0000-4000-8000-000000000002",
+      "requestedExpiry": "2027-01-01T00:00:00Z",
+      "reason": "isolated development",
+      "requestKey": "request-0000000001"
+    }
+  },
+  {
+    "schema": "AccessRequestInput",
+    "valid": false,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "profileId": "30000000-0000-4000-8000-000000000002",
+      "requestedExpiry": "2027-01-01T00:00:00Z",
+      "reason": "test",
+      "requestKey": "request-0000000001",
+      "ownerId": "30000000-0000-4000-8000-000000000003"
+    }
+  },
+  {
+    "schema": "AccessRequestInput",
+    "valid": false,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "profileId": "30000000-0000-4000-8000-000000000002",
+      "requestedExpiry": "2027-01-01T00:00:00Z",
+      "reason": "test",
+      "requestKey": "request-0000000001",
+      "approved": true
+    }
+  },
+  {
+    "schema": "CredentialEnvelope",
+    "valid": true,
+    "value": {
+      "formatVersion": "1",
+      "issuer": "fixture",
+      "keyId": "key-1",
+      "nonce": "aaaaaaaaaaaaaaaa",
+      "ciphertext": "encoded",
+      "authenticationTag": "aaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
+  {
+    "schema": "CredentialEnvelope",
+    "valid": false,
+    "value": {
+      "formatVersion": "1",
+      "issuer": "fixture",
+      "keyId": "key-1",
+      "nonce": "aaaaaaaaaaaaaaaa",
+      "ciphertext": "encoded",
+      "authenticationTag": "aaaaaaaaaaaaaaaaaaaaaa",
+      "password": "forbidden"
+    }
+  },
+  {
+    "schema": "CredentialStatus",
+    "valid": true,
+    "value": {
+      "credentialId": "30000000-0000-4000-8000-000000000001",
+      "leaseId": "30000000-0000-4000-8000-000000000002",
+      "expiresAt": "2027-01-01T00:00:00Z",
+      "state": "REVOKED",
+      "revision": "1"
+    }
+  },
+  {
+    "schema": "CredentialStatus",
+    "valid": false,
+    "value": {
+      "credentialId": "30000000-0000-4000-8000-000000000001",
+      "leaseId": "30000000-0000-4000-8000-000000000002",
+      "expiresAt": "2027-01-01T00:00:00Z",
+      "state": "DECRYPTED",
+      "revision": "1"
+    }
+  },
+  {
+    "schema": "Revocation",
+    "valid": true,
+    "value": {
+      "revocationId": "30000000-0000-4000-8000-000000000001",
+      "targetId": "30000000-0000-4000-8000-000000000002",
+      "targetType": "GRANT",
+      "actorId": "30000000-0000-4000-8000-000000000003",
+      "reason": "revoked",
+      "authEpoch": "2",
+      "committedAt": "2027-01-01T00:00:00Z",
+      "gatewayAccess": "REVOKED",
+      "inFlightStop": "PENDING",
+      "nativeCleanup": "FAILED"
+    }
+  },
+  {
+    "schema": "Revocation",
+    "valid": false,
+    "value": {
+      "revocationId": "30000000-0000-4000-8000-000000000001",
+      "targetId": "30000000-0000-4000-8000-000000000002",
+      "targetType": "GRANT",
+      "actorId": "30000000-0000-4000-8000-000000000003",
+      "reason": "revoked",
+      "authEpoch": "2",
+      "committedAt": "2027-01-01T00:00:00Z",
+      "gatewayAccess": "ACTIVE",
+      "inFlightStop": "CONFIRMED",
+      "nativeCleanup": "CONFIRMED"
+    }
+  },
+  {
+    "schema": "CredentialReference",
+    "valid": false,
+    "value": {
+      "password": "must-not-export"
+    }
+  },
+  {
+    "schema": "RequestIDInput",
+    "valid": true,
+    "value": {
+      "requestId": "30000000-0000-4000-8000-000000000001"
+    }
+  },
+  {
+    "schema": "RequestIDInput",
+    "valid": false,
+    "value": {
+      "id": "30000000-0000-4000-8000-000000000001"
+    }
+  },
+  {
+    "schema": "ContextPrivateResult",
+    "valid": false,
+    "value": {
+      "contextToken": "too-short"
+    }
+  },
+  {
+    "schema": "Timestamp",
+    "valid": false,
+    "value": "2027-02-30T00:00:00Z"
+  },
+  {
+    "schema": "Timestamp",
+    "valid": true,
+    "value": "2027-01-01T00:00:00.123456789Z"
+  },
+  {
+    "schema": "AccessGrant",
+    "valid": true,
+    "value": {
+      "grantId": "70000000-0000-4000-8000-000000000001",
+      "orgId": "70000000-0000-4000-8000-000000000002",
+      "subjectId": "70000000-0000-4000-8000-000000000003",
+      "resourceId": "70000000-0000-4000-8000-000000000004",
+      "resourceVersion": "1",
+      "profileId": "70000000-0000-4000-8000-000000000005",
+      "profileVersion": "1",
+      "state": "PROVISIONING",
+      "grantVersion": "1",
+      "expiresAt": "2027-01-01T00:00:00Z",
+      "authEpoch": "2",
+      "requestId": "70000000-0000-4000-8000-000000000006",
+      "decisionId": "70000000-0000-4000-8000-000000000007",
+      "revision": "1"
+    }
+  },
+  {
+    "schema": "AccessGrant",
+    "valid": false,
+    "value": {
+      "grantId": "70000000-0000-4000-8000-000000000001",
+      "orgId": "70000000-0000-4000-8000-000000000002",
+      "subjectId": "70000000-0000-4000-8000-000000000003",
+      "resourceId": "70000000-0000-4000-8000-000000000004",
+      "resourceVersion": "1",
+      "profileId": "70000000-0000-4000-8000-000000000005",
+      "profileVersion": "1",
+      "state": "ACTIVE",
+      "grantVersion": "1",
+      "expiresAt": "2027-01-01T00:00:00Z",
+      "authEpoch": "2",
+      "requestId": "70000000-0000-4000-8000-000000000006",
+      "decisionId": "70000000-0000-4000-8000-000000000007",
+      "revision": "1"
+    }
+  },
+  {
+    "schema": "AccessGrant",
+    "valid": true,
+    "value": {
+      "grantId": "70000000-0000-4000-8000-000000000001",
+      "orgId": "70000000-0000-4000-8000-000000000002",
+      "subjectId": "70000000-0000-4000-8000-000000000003",
+      "resourceId": "70000000-0000-4000-8000-000000000004",
+      "resourceVersion": "1",
+      "profileId": "70000000-0000-4000-8000-000000000005",
+      "profileVersion": "1",
+      "state": "ACTIVE",
+      "grantVersion": "1",
+      "expiresAt": "2027-01-01T00:00:00Z",
+      "authEpoch": "2",
+      "requestId": "70000000-0000-4000-8000-000000000006",
+      "decisionId": "70000000-0000-4000-8000-000000000007",
+      "revision": "1",
+      "accountId": "70000000-0000-4000-8000-000000000008",
+      "bindingId": "70000000-0000-4000-8000-000000000009"
+    }
+  },
+  {
+    "schema": "DecisionInput",
+    "valid": true,
+    "value": {
+      "requestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expectedRevision": "1",
+      "decision": "REJECT",
+      "reason": "Outside approved scope",
+      "requestKey": "test-contract-key-0001"
+    }
+  },
+  {
+    "schema": "DecisionInput",
+    "valid": false,
+    "value": {
+      "requestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expectedRevision": "1",
+      "decision": "APPROVE",
+      "reason": "Outside approved scope",
+      "requestKey": "test-contract-key-0001"
+    }
+  },
+  {
+    "schema": "DecisionInput",
+    "valid": false,
+    "value": {
+      "requestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expectedRevision": "1",
+      "decision": "REJECT",
+      "reason": "Outside approved scope",
+      "requestKey": "test-contract-key-0001",
+      "approvedExpiry": "2027-01-01T00:00:00Z"
+    }
+  },
+  {
+    "schema": "DecisionInput",
+    "valid": false,
+    "value": {
+      "requestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expectedRevision": "1",
+      "decision": "REJECT",
+      "reason": "Outside approved scope",
+      "requestKey": "test-contract-key-0001",
+      "deciderId": "70000000-0000-4000-8000-000000000003"
+    }
+  },
+  {
+    "schema": "AccessRequestInput",
+    "valid": false,
+    "value": {
+      "resourceId": "70000000-0000-4000-8000-000000000004",
+      "profileId": "70000000-0000-4000-8000-000000000005",
+      "requestedExpiry": "2027-01-01T00:00:00Z",
+      "reason": "test",
+      "requestKey": "test-contract-key-0001",
+      "ownerId": "70000000-0000-4000-8000-000000000003"
+    }
+  },
+  {
+    "schema": "AccessPolicy",
+    "valid": false,
+    "value": {
+      "orgId": "70000000-0000-4000-8000-000000000001",
+      "resourceId": "70000000-0000-4000-8000-000000000002",
+      "profileId": "70000000-0000-4000-8000-000000000003",
+      "resourceVersion": "1",
+      "profileVersion": "1",
+      "version": "1",
+      "approvalPolicyRef": "read",
+      "maxGrantTtlSeconds": 0,
+      "reviewTtlSeconds": 60
+    }
+  },
+  {
+    "schema": "ProvisioningTarget",
+    "valid": true,
+    "value": {
+      "orgId": "80000000-0000-4000-8000-000000000001",
+      "resourceId": "80000000-0000-4000-8000-000000000002",
+      "profileId": "80000000-0000-4000-8000-000000000003",
+      "resourceVersion": "1",
+      "profileVersion": "1",
+      "targetId": "80000000-0000-4000-8000-000000000004",
+      "endpointConfigRef": "pg.orders.v1",
+      "targetFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "template": "PG_OWNER_SELECT_V1",
+      "version": "1",
+      "enabled": true
+    }
+  },
+  {
+    "schema": "ProvisioningTarget",
+    "valid": false,
+    "value": {
+      "orgId": "80000000-0000-4000-8000-000000000001",
+      "resourceId": "80000000-0000-4000-8000-000000000002",
+      "profileId": "80000000-0000-4000-8000-000000000003",
+      "resourceVersion": "1",
+      "profileVersion": "1",
+      "targetId": "80000000-0000-4000-8000-000000000004",
+      "endpointConfigRef": "pg.orders.v1",
+      "targetFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "template": "PG_OWNER_SELECT_V1",
+      "version": "1",
+      "enabled": true,
+      "sql": "GRANT ALL"
+    }
+  },
+  {
+    "schema": "ProvisioningTarget",
+    "valid": false,
+    "value": {
+      "orgId": "80000000-0000-4000-8000-000000000001",
+      "resourceId": "80000000-0000-4000-8000-000000000002",
+      "profileId": "80000000-0000-4000-8000-000000000003",
+      "resourceVersion": "1",
+      "profileVersion": "1",
+      "targetId": "80000000-0000-4000-8000-000000000004",
+      "endpointConfigRef": "pg.orders.v1",
+      "targetFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "template": "PG_OWNER_SELECT_V1",
+      "version": "1",
+      "enabled": true,
+      "password": "must stay private"
+    }
+  },
+  {
+    "schema": "ProvisioningTarget",
+    "valid": false,
+    "value": {
+      "orgId": "80000000-0000-4000-8000-000000000001",
+      "resourceId": "80000000-0000-4000-8000-000000000002",
+      "profileId": "80000000-0000-4000-8000-000000000003",
+      "resourceVersion": "1",
+      "profileVersion": "1",
+      "targetId": "80000000-0000-4000-8000-000000000004",
+      "endpointConfigRef": "pg.orders.v1",
+      "targetFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "template": "ANY_SQL",
+      "version": "1",
+      "enabled": true
+    }
+  },
+  {
+    "schema": "ProvisioningJob",
+    "valid": true,
+    "value": {
+      "jobId": "70000000-0000-4000-8000-000000000001",
+      "grantId": "71000000-0000-4000-8000-000000000001",
+      "accountPlanHash": "frozen-plan",
+      "state": "CLEANED",
+      "recovery": {
+        "generation": "2",
+        "attempts": 1,
+        "cleanupAttempts": 1,
+        "operation": "CLEANUP",
+        "cleanupState": "SUCCEEDED",
+        "lastOutcome": "OWNED_TEMPLATE_PRIVILEGES_REMOVED"
+      }
+    }
+  },
+  {
+    "schema": "ProvisioningJob",
+    "valid": false,
+    "value": {
+      "jobId": "70000000-0000-4000-8000-000000000001",
+      "grantId": "71000000-0000-4000-8000-000000000001",
+      "accountPlanHash": "frozen-plan",
+      "state": "CLEANED",
+      "recovery": {
+        "generation": "2",
+        "attempts": 1,
+        "cleanupAttempts": 1,
+        "operation": "CLEANUP",
+        "cleanupState": "SUCCEEDED",
+        "lastOutcome": "OWNED_TEMPLATE_PRIVILEGES_REMOVED",
+        "ownerId": "71000000-0000-4000-8000-000000000001"
+      }
+    }
+  },
+  {
+    "schema": "ProvisioningJob",
+    "valid": false,
+    "value": {
+      "jobId": "70000000-0000-4000-8000-000000000001",
+      "grantId": "71000000-0000-4000-8000-000000000001",
+      "accountPlanHash": "frozen-plan",
+      "state": "CLEANED",
+      "recovery": {
+        "generation": "2",
+        "attempts": 7,
+        "cleanupAttempts": 1,
+        "operation": "CLEANUP",
+        "cleanupState": "SUCCEEDED",
+        "lastOutcome": "OWNED_TEMPLATE_PRIVILEGES_REMOVED"
+      }
+    }
+  },
+  {
+    "schema": "ProvisioningJob",
+    "valid": false,
+    "value": {
+      "jobId": "70000000-0000-4000-8000-000000000001",
+      "grantId": "71000000-0000-4000-8000-000000000001",
+      "accountPlanHash": "frozen-plan",
+      "state": "CLEANED",
+      "recovery": {
+        "generation": "2",
+        "attempts": 1,
+        "cleanupAttempts": 1,
+        "operation": "CLEANUP",
+        "cleanupState": "DROPPED_EVERYTHING",
+        "lastOutcome": "OWNED_TEMPLATE_PRIVILEGES_REMOVED"
+      }
+    }
+  },
+  {
+    "schema": "CredentialLeasePolicy",
+    "valid": true,
+    "value": {
+      "orgId": "10000000-0000-4000-8000-000000000001",
+      "resourceId": "40000000-0000-4000-8000-000000000001",
+      "resourceVersion": "1",
+      "profileId": "50000000-0000-4000-8000-000000000001",
+      "profileVersion": "1",
+      "version": "1",
+      "maxTtlSeconds": 600,
+      "enabled": true
+    }
+  },
+  {
+    "schema": "CredentialLeasePolicy",
+    "valid": false,
+    "value": {
+      "orgId": "10000000-0000-4000-8000-000000000001",
+      "resourceId": "40000000-0000-4000-8000-000000000001",
+      "resourceVersion": "1",
+      "profileId": "50000000-0000-4000-8000-000000000001",
+      "profileVersion": "1",
+      "version": "1",
+      "maxTtlSeconds": 0,
+      "enabled": true
+    }
+  },
+  {
+    "schema": "CredentialLeasePolicy",
+    "valid": false,
+    "value": {
+      "orgId": "10000000-0000-4000-8000-000000000001",
+      "resourceId": "40000000-0000-4000-8000-000000000001",
+      "resourceVersion": "1",
+      "profileId": "50000000-0000-4000-8000-000000000001",
+      "profileVersion": "1",
+      "version": "1",
+      "maxTtlSeconds": 86401,
+      "enabled": true
+    }
+  },
+  {
+    "schema": "CredentialLeasePolicy",
+    "valid": false,
+    "value": {
+      "orgId": "10000000-0000-4000-8000-000000000001",
+      "resourceId": "40000000-0000-4000-8000-000000000001",
+      "resourceVersion": "1",
+      "profileId": "50000000-0000-4000-8000-000000000001",
+      "profileVersion": "1",
+      "version": "1",
+      "maxTtlSeconds": 600,
+      "enabled": true,
+      "sql": "GRANT ALL"
+    }
+  },
+  {
+    "schema": "CredentialEnvelope",
+    "valid": false,
+    "value": {
+      "formatVersion": "1",
+      "issuer": "fixture",
+      "keyId": "key-1",
+      "nonce": "aaaaaaaaaaaaaaaa",
+      "ciphertext": "encoded",
+      "authenticationTag": "aaaaaaaaaaaaaaaaaaaaaa",
+      "algorithm": "AES-CBC"
+    }
+  },
+  {
+    "schema": "CredentialEnvelope",
+    "valid": false,
+    "value": {
+      "formatVersion": "1",
+      "issuer": "fixture",
+      "keyId": "key-1",
+      "nonce": "aaaaaaaaaaaaaaaa",
+      "ciphertext": "encoded",
+      "authenticationTag": "aaaaaaaaaaaaaaaaaaaaaa",
+      "keyUrl": "https://keys.invalid/key"
+    }
+  },
+  {
+    "schema": "DownloadTicket",
+    "valid": true,
+    "value": {
+      "downloadId": "83000000-0000-4000-8000-000000000001",
+      "credentialId": "80000000-0000-4000-8000-000000000001",
+      "leaseId": "81000000-0000-4000-8000-000000000001",
+      "ownerId": "20000000-0000-4000-8000-000000000001",
+      "expiresAt": "2026-10-26T00:01:00Z",
+      "credentialExpiresAt": "2026-10-26T00:10:00Z",
+      "state": "CLAIMED",
+      "revision": "2",
+      "deliveryMode": "MANUAL_OWNER",
+      "deliveryOutcome": "UNKNOWN"
+    }
+  },
+  {
+    "schema": "ClaimDownloadInput",
+    "valid": true,
+    "value": {}
+  },
+  {
+    "schema": "ClaimDownloadInput",
+    "valid": false,
+    "value": {
+      "ownerId": "20000000-0000-4000-8000-000000000001"
+    }
+  },
+  {
+    "schema": "DownloadTicket",
+    "valid": false,
+    "value": {
+      "downloadId": "83000000-0000-4000-8000-000000000001",
+      "credentialId": "80000000-0000-4000-8000-000000000001",
+      "leaseId": "81000000-0000-4000-8000-000000000001",
+      "ownerId": "20000000-0000-4000-8000-000000000001",
+      "expiresAt": "2026-10-26T00:01:00Z",
+      "credentialExpiresAt": "2026-10-26T00:10:00Z",
+      "state": "CLAIMED",
+      "revision": "2",
+      "deliveryMode": "MANUAL_OWNER",
+      "deliveryOutcome": "CLIENT_SAVED"
+    }
+  },
+  {
+    "schema": "PrepareDownloadInput",
+    "valid": false,
+    "value": {
+      "grantId": "71000000-0000-4000-8000-000000000001",
+      "requestKey": "bounded-request",
+      "downloadUrl": "https://other.invalid"
+    }
+  },
+  {
+    "schema": "DeliveryAuthorizationInfo",
+    "valid": true,
+    "value": {
+      "authorizationId": "84000000-0000-4000-8000-000000000001",
+      "ownerId": "20000000-0000-4000-8000-000000000001",
+      "expiresAt": "2026-10-26T00:01:00Z",
+      "audience": "mcpguard-delivery",
+      "scope": "credential:claim"
+    }
+  }
+]

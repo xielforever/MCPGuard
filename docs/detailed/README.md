@@ -45,3 +45,21 @@
 已确认风险分级、受控写他人审批、受控目录与ChatGPT首发；Q-01至Q-03的决定和剩余平台信息集中在[决策记录](decisions.md)。工程方案可并行推进，真实平台接通和客户端兼容范围以实际证据为准。
 
 返回[总文档目录](../README.md)；相关高层契约见[领域与调用契约](../contracts.md)。
+
+
+## 2026-10-24 详细设计增量
+
+后续多资源、账号权限申请、加密凭据文件、服务端执行和吊销采用[增量入口](../revisions/2026-10-24-resource-access/README.md)。当前设计补充不表示开发完成，上文按原日期保留。
+
+| 主题 | 当前文档 |
+|---|---|
+| 架构、开通、执行、控制台与恢复 | [完整流程](../revisions/2026-10-24-resource-access/architecture.md) |
+| 领域、状态、API 与存储责任 | [增量契约](../revisions/2026-10-24-resource-access/contracts.md) |
+| 文件格式、加解密、下载、激活和吊销 | [凭据生命周期](../revisions/2026-10-24-resource-access/credential-lifecycle.md) |
+| 开发顺序、兼容及迁移 | [开发计划](../revisions/2026-10-24-resource-access/development-plan.md) |
+| 新场景与证据门槛 | [验收矩阵](../revisions/2026-10-24-resource-access/acceptance.md) |
+
+
+## 后续 RA-10（2026-10-26）
+
+原生 HTTP helper/worker、stdio 私有模式、能力声明及分入口恢复现已实现，详见[客户端适配](../private-client-adapters-local.md)与[本轮验收](../validation/local-ra10-2026-10-26.md)。原详细设计和各阶段时点继续保留。

@@ -1,0 +1,55 @@
+{
+  "unchanged": true,
+  "before": [
+    {
+      "name": "mcpguard-local-gateway",
+      "image": "sha256:bcef992b77b1e2031aaaa51da75cebc32da8e9c182e12e633ea79023c79d9eff",
+      "startedAt": "2026-10-27T00:58:36.184604872Z",
+      "running": true
+    },
+    {
+      "name": "mcpguard-local-demo-http",
+      "image": "sha256:bcef992b77b1e2031aaaa51da75cebc32da8e9c182e12e633ea79023c79d9eff",
+      "startedAt": "2026-10-27T00:58:36.199819233Z",
+      "running": true
+    },
+    {
+      "name": "mcpguard-local-redis",
+      "image": "sha256:57e4255cc971b1c8d6f8a6ca283ac01bc3ecdd914273ef6bfaede87aaecd6541",
+      "startedAt": "2026-10-27T00:58:36.213540771Z",
+      "running": true
+    },
+    {
+      "name": "mcpguard-local-verified-postgres",
+      "image": "sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+      "startedAt": "2026-10-27T00:58:36.15503277Z",
+      "running": true
+    }
+  ],
+  "after": [
+    {
+      "name": "mcpguard-local-gateway",
+      "image": "sha256:bcef992b77b1e2031aaaa51da75cebc32da8e9c182e12e633ea79023c79d9eff",
+      "startedAt": "2026-10-27T00:58:36.184604872Z",
+      "running": true
+    },
+    {
+      "name": "mcpguard-local-demo-http",
+      "image": "sha256:bcef992b77b1e2031aaaa51da75cebc32da8e9c182e12e633ea79023c79d9eff",
+      "startedAt": "2026-10-27T00:58:36.199819233Z",
+      "running": true
+    },
+    {
+      "name": "mcpguard-local-redis",
+      "image": "sha256:57e4255cc971b1c8d6f8a6ca283ac01bc3ecdd914273ef6bfaede87aaecd6541",
+      "startedAt": "2026-10-27T00:58:36.213540771Z",
+      "running": true
+    },
+    {
+      "name": "mcpguard-local-verified-postgres",
+      "image": "sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+      "startedAt": "2026-10-27T00:58:36.15503277Z",
+      "running": true
+    }
+  ]
+}

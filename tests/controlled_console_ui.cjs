@@ -1,0 +1,27 @@
+// Development UI acceptance against the isolated fixture, never native MCP proof.
+const fs=require('node:fs');const path=require('node:path');
+const {chromium}=require(process.env.MCPGUARD_PLAYWRIGHT);
+const root=path.resolve(__dirname,'..');const state=path.join(root,'.dev','controlled-test-v2-2026-10-23');const cfg=JSON.parse(fs.readFileSync(path.join(state,'env.json'),'utf8'));const origin='http://'+cfg.MCPGUARD_LISTEN;
+let rpcId=0,session;const checks=[];
+function check(ok,name){if(!ok)throw new Error(name);checks.push(name)}
+async function rpc(method,params){const r=await fetch(origin+'/mcp',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json, text/event-stream',Authorization:'Bearer '+cfg.alice_token,'MCP-Protocol-Version':'2025-11-25',...(session?{'Mcp-Session-Id':session}:{})},body:JSON.stringify({jsonrpc:'2.0',id:++rpcId,method,params})});check(r.ok,'development wire transport: '+method);if(r.headers.get('mcp-session-id'))session=r.headers.get('mcp-session-id');const v=await r.json();check(!v.error,'development fixture RPC: '+method);return v.result}
+(async()=>{
+ const browser=await chromium.launch({headless:true,executablePath:process.env.MCPGUARD_BROWSER,args:['--no-proxy-server']});
+ try{
+  const context=await browser.newContext({viewport:{width:1440,height:1100}});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await rpc('initialize',{protocolVersion:'2025-11-25',capabilities:{},clientInfo:{name:'isolated-console-test',version:'1'}});
+  const created=await rpc('tools/call',{name:'pg.update_demo_note',arguments:{itemId:'item_demo_1',note:'Console fixture approval',expectedVersion:'1'}});check(!created.isError&&created.structuredContent.kind==='DEFERRED','fixture produced pending approval');const id=created.structuredContent.actionId;
+  await page.goto(origin+'/web/#action='+id);await page.locator('#login').waitFor({state:'visible'});check(await page.locator('#workspace').isHidden(),'anonymous page has no management data');
+  async function login(name){await page.locator('#username').fill(name);await page.locator('#password').fill(cfg.console_secrets[name]);await page.locator('#loginForm button').click();await page.locator('#workspace').waitFor({state:'visible'});await page.goto(origin+'/web/#action='+id);await page.reload();await page.getByRole('heading',{name:'冻结的请求参数'}).waitFor()}
+  await login('alice');await page.getByText('此为本人申请，不能自行审批。').waitFor();check(await page.getByRole('button',{name:'批准',exact:true}).count()===0,'requester has no self-approval button');
+  await page.locator('#logout').click();await page.locator('#login').waitFor({state:'visible'});await login('visitor');await page.getByText('Console fixture approval',{exact:false}).waitFor();await page.screenshot({path:path.join(state,'console-review.png'),fullPage:true});
+  await page.getByRole('button',{name:'批准',exact:true}).click();await page.getByText('已批准，等待申请者显式恢复。').waitFor();const status=await rpc('tools/call',{name:'action.status',arguments:{actionId:id}});check(status.structuredContent.action.state==='READY'&&status.structuredContent.action.executionId===null,'browser approval records READY without execution');
+  await page.getByRole('button',{name:'资源',exact:true}).click();const row=page.locator('tr').filter({has:page.getByText('demo.directory',{exact:true})});await row.getByRole('button',{name:'停用',exact:true}).click();await page.getByText('已保存。旧审批计划在配置变化后需要重新申请。').waitFor();check(await page.getByRole('heading',{name:'资源',exact:true}).count()===1,'configuration form does not navigate away');await page.locator('tr').filter({has:page.getByText('demo.directory',{exact:true})}).getByRole('button',{name:'启用',exact:true}).click();
+  await page.getByRole('button',{name:'用户与权限',exact:true}).click();await page.getByLabel('新组名').fill('UI fixture readers');await page.getByRole('button',{name:'创建用户组',exact:true}).click();await page.getByText('UI fixture readers',{exact:true}).first().waitFor();check(true,'group creation uses persistent API');
+  await page.getByRole('button',{name:'本人审计',exact:true}).click();await page.getByRole('button',{name:'读取下一页',exact:true}).click();await page.getByRole('columnheader',{name:'序号',exact:true}).waitFor();check(true,'audit page loads current identity events');
+  await page.getByRole('button',{name:'通知与设置',exact:true}).click();await page.getByText('Telegram：待配置 Bot 和接收目标。审批无需依赖通知送达。').waitFor();await page.screenshot({path:path.join(state,'console-settings.png'),fullPage:true});check(true,'unconfigured notification state is visible');
+  await page.locator('#logout').click();await page.locator('#login').waitFor({state:'visible'});check(await page.locator('#workspace').isHidden(),'logout clears visible management data');check(errors.length===0,'no browser JavaScript exceptions');
+  const cancelled=await rpc('tools/call',{name:'action.cancel',arguments:{actionId:id}});check(!cancelled.isError,'fixture request cancelled after UI checks');
+  const report={kind:'ISOLATED_DEVELOPMENT_UI_TEST',nativeMCPVerification:false,passed:checks.length,checks,screenshots:['console-review.png','console-settings.png']};fs.writeFileSync(path.join(state,'ui-results.json'),JSON.stringify(report,null,2)+'\n');process.stdout.write(JSON.stringify({passed:checks.length,nativeMCPVerification:false})+'\n');
+ }finally{await browser.close()}
+})().catch(e=>{process.stderr.write(e.stack+'\n');process.exitCode=1});

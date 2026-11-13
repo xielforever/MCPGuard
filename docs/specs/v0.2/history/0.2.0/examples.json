@@ -1,0 +1,254 @@
+[
+  {
+    "schema": "ListResourcesInput",
+    "valid": true,
+    "value": {}
+  },
+  {
+    "schema": "ListResourcesInput",
+    "valid": true,
+    "value": {
+      "kind": "POSTGRES",
+      "limit": 100,
+      "after": ""
+    }
+  },
+  {
+    "schema": "ListResourcesInput",
+    "valid": false,
+    "value": {
+      "limit": 101
+    }
+  },
+  {
+    "schema": "ListResourcesInput",
+    "valid": false,
+    "value": {
+      "principalId": "30000000-0000-4000-8000-000000000001"
+    }
+  },
+  {
+    "schema": "GetResourceInput",
+    "valid": false,
+    "value": {
+      "resourceId": "orders"
+    }
+  },
+  {
+    "schema": "FixtureReadInput",
+    "valid": true,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "itemId": "item_demo_1"
+    }
+  },
+  {
+    "schema": "FixtureReadInput",
+    "valid": false,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "itemId": "item_demo_1",
+      "bindingId": "30000000-0000-4000-8000-000000000002"
+    }
+  },
+  {
+    "schema": "FixtureReadInput",
+    "valid": false,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "itemId": "item_demo_1",
+      "scopeId": "scope_b"
+    }
+  },
+  {
+    "schema": "FixtureReadInput",
+    "valid": false,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "itemId": "item_demo_1",
+      "sql": "SELECT * FROM demo.items"
+    }
+  },
+  {
+    "schema": "ReadItemInput",
+    "valid": false,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "itemId": "item_demo_1"
+    }
+  },
+  {
+    "schema": "ReadItemInput",
+    "valid": true,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "credentialId": "30000000-0000-4000-8000-000000000002",
+      "itemId": "item_demo_1"
+    }
+  },
+  {
+    "schema": "Version",
+    "valid": true,
+    "value": "9007199254740993"
+  },
+  {
+    "schema": "Version",
+    "valid": false,
+    "value": 9007199254740992
+  },
+  {
+    "schema": "Version",
+    "valid": false,
+    "value": "01"
+  },
+  {
+    "schema": "AccessRequestInput",
+    "valid": true,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "profileId": "30000000-0000-4000-8000-000000000002",
+      "requestedExpiry": "2027-01-01T00:00:00Z",
+      "reason": "isolated development",
+      "requestKey": "request-0000000001"
+    }
+  },
+  {
+    "schema": "AccessRequestInput",
+    "valid": false,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "profileId": "30000000-0000-4000-8000-000000000002",
+      "requestedExpiry": "2027-01-01T00:00:00Z",
+      "reason": "test",
+      "requestKey": "request-0000000001",
+      "ownerId": "30000000-0000-4000-8000-000000000003"
+    }
+  },
+  {
+    "schema": "AccessRequestInput",
+    "valid": false,
+    "value": {
+      "resourceId": "30000000-0000-4000-8000-000000000001",
+      "profileId": "30000000-0000-4000-8000-000000000002",
+      "requestedExpiry": "2027-01-01T00:00:00Z",
+      "reason": "test",
+      "requestKey": "request-0000000001",
+      "approved": true
+    }
+  },
+  {
+    "schema": "CredentialEnvelope",
+    "valid": true,
+    "value": {
+      "formatVersion": "1",
+      "issuer": "fixture",
+      "keyId": "key-1",
+      "nonce": "aaaaaaaaaaaaaaaa",
+      "ciphertext": "encoded",
+      "authenticationTag": "aaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
+  {
+    "schema": "CredentialEnvelope",
+    "valid": false,
+    "value": {
+      "formatVersion": "1",
+      "issuer": "fixture",
+      "keyId": "key-1",
+      "nonce": "aaaaaaaaaaaaaaaa",
+      "ciphertext": "encoded",
+      "authenticationTag": "aaaaaaaaaaaaaaaaaaaaaa",
+      "password": "forbidden"
+    }
+  },
+  {
+    "schema": "CredentialStatus",
+    "valid": true,
+    "value": {
+      "credentialId": "30000000-0000-4000-8000-000000000001",
+      "leaseId": "30000000-0000-4000-8000-000000000002",
+      "expiresAt": "2027-01-01T00:00:00Z",
+      "state": "REVOKED"
+    }
+  },
+  {
+    "schema": "CredentialStatus",
+    "valid": false,
+    "value": {
+      "credentialId": "30000000-0000-4000-8000-000000000001",
+      "leaseId": "30000000-0000-4000-8000-000000000002",
+      "expiresAt": "2027-01-01T00:00:00Z",
+      "state": "DECRYPTED"
+    }
+  },
+  {
+    "schema": "Revocation",
+    "valid": true,
+    "value": {
+      "revocationId": "30000000-0000-4000-8000-000000000001",
+      "targetId": "30000000-0000-4000-8000-000000000002",
+      "targetType": "GRANT",
+      "actorId": "30000000-0000-4000-8000-000000000003",
+      "reason": "revoked",
+      "authEpoch": "2",
+      "committedAt": "2027-01-01T00:00:00Z",
+      "gatewayAccess": "REVOKED",
+      "inFlightStop": "PENDING",
+      "nativeCleanup": "FAILED"
+    }
+  },
+  {
+    "schema": "Revocation",
+    "valid": false,
+    "value": {
+      "revocationId": "30000000-0000-4000-8000-000000000001",
+      "targetId": "30000000-0000-4000-8000-000000000002",
+      "targetType": "GRANT",
+      "actorId": "30000000-0000-4000-8000-000000000003",
+      "reason": "revoked",
+      "authEpoch": "2",
+      "committedAt": "2027-01-01T00:00:00Z",
+      "gatewayAccess": "ACTIVE",
+      "inFlightStop": "CONFIRMED",
+      "nativeCleanup": "CONFIRMED"
+    }
+  },
+  {
+    "schema": "CredentialReference",
+    "valid": false,
+    "value": {
+      "password": "must-not-export"
+    }
+  },
+  {
+    "schema": "RequestIDInput",
+    "valid": true,
+    "value": {
+      "requestId": "30000000-0000-4000-8000-000000000001"
+    }
+  },
+  {
+    "schema": "RequestIDInput",
+    "valid": false,
+    "value": {
+      "id": "30000000-0000-4000-8000-000000000001"
+    }
+  },
+  {
+    "schema": "ContextPrivateResult",
+    "valid": false,
+    "value": {
+      "contextToken": "too-short"
+    }
+  },
+  {
+    "schema": "Timestamp",
+    "valid": false,
+    "value": "2027-02-30T00:00:00Z"
+  },
+  {
+    "schema": "Timestamp",
+    "valid": true,
+    "value": "2027-01-01T00:00:00.123456789Z"
+  }
+]

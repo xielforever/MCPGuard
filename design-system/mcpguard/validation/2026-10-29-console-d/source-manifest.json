@@ -1,0 +1,25 @@
+{
+  "head": "a9d2760e97768e2a5fb8b206242036d78cd8a8f1",
+  "workingTreePreserved": true,
+  "files": {
+    "internal/controlled/console.go": "9e520a7d757adc902aa2fe9ada5fe9abe22cc3741ba30c9249aee3290fd6bca1",
+    "internal/controlled/console.html": "c303991eef75a5e4f240e13c84757dd208a2d76b603df7819e1177ffdff93a2a",
+    "internal/controlled/console.js": "c0599a3e20dbdf83522be73982ee5d23bf8317d4220e125843d1eab84e696dc9",
+    "internal/controlled/console.css": "eb4c43179793f95e0dc26a8743cc5f56b7f7807fce42147ab704dae6632a6e8d",
+    "internal/controlled/console_assets_test.go": "3a3fa530372800cd3b135e8e08bb7899dc296478c7a4651b1f132a87c536a15a",
+    "internal/uitheme/assets.go": "689e43c7137317a58952bed8291a407cdb11262cd60140a7394abf989cb385c3",
+    "internal/uitheme/components.css": "ae6ce8ddfd363ea8d814cba779b5e0f9c9f96be079d6f2aecaa1ef02e24c4b16",
+    "internal/uitheme/components.js": "f5718c436d5d82d33a932bc71f1ed80d032efbc9b1d9bd3cc1e2c250335c2ff1",
+    "internal/uitheme/tokens.generated.css": "f83793573ec6f5feef6de992aee59eb95862e4e66e44f873f1a2867b114b69b7",
+    "internal/uitheme/state-labels.generated.js": "d41d6aee7e589c2eafd90654cdbcaa5532d10b77d1ee82dd283291cdd81739ea",
+    "design-system/mcpguard/tokens.json": "8f267c5ad0cc75eb9e2bfbf5f00bd39802a7a4e06fe8085ef65d6bf1902ed0bd",
+    "design-system/mcpguard/state-labels.json": "4ec981be9dc98aa173fea0ddabf1e06cc4c35770c57343bd58daaf7a524d9c88",
+    "scripts/generate_ui_theme.py": "e98f179f200bc8677553b6c580a1215b073df1cd0e9670a91fbadfa7acff61eb",
+    "scripts/validate_console_d.py": "8dbae0bb11f077a4996e854cbc9ed7d3e21c8197bbfc034932f77e8432011f70",
+    "scripts/console_d_fixture.py": "d468d847d0045cce8f2373401a6afff4436773b12c0cf414eb82b26624b8773a",
+    "scripts/seal_console_d_evidence.py": "cdf368c39ca6ba1dc56af0c734664ca4a20ec25d32aa3a84e48b99e276614ed0",
+    "tests/console_d_ui.cjs": "3d19481a37d8db540ff36b224b5b22d5a5b619c3d7d08c3351f1e6e8a4c2e70f",
+    "tests/console_d_desktop.cjs": "46e80b9c10a623fe79cb87ba029eb15502e2e37fe46016b09613845c9afff8aa",
+    "design-system/mcpguard/implementation-console-d.md": "5cc5b06c9bb5d18554bfce4c9c291eae84e4ae9d43b752ff9c0e909a6ede0f7e"
+  }
+}

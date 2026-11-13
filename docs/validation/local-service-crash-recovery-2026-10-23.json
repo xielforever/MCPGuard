@@ -1,0 +1,10 @@
+{
+  "test": "gateway-abrupt-exit",
+  "passed": true,
+  "sameContainer": true,
+  "startedBefore": "2026-10-23T04:34:49.602697389Z",
+  "startedAfter": "2026-10-23T04:39:31.147375827Z",
+  "restartCountBefore": 0,
+  "restartCountAfter": 0,
+  "recoveryPoll": 2
+}

@@ -1,0 +1,106 @@
+{
+  "capturedAt": "2026-10-23T02:03:08.411Z",
+  "status": "HTTP_READ_AND_AUDIT_PASS_DESKTOP_TOOL_UNAVAILABLE",
+  "endpoint": "http://127.0.0.1:18080/mcp",
+  "transport": "Streamable HTTP",
+  "authMode": "dev-tokens",
+  "identity": {
+    "name": "alice",
+    "scope": "scope_a"
+  },
+  "checks": {
+    "windowsHealthStatus": 200,
+    "health": {
+      "auth": "dev-tokens",
+      "status": "up"
+    },
+    "anonymousRequestStatus": 401,
+    "sharedConfigParsed": true,
+    "existingConfigPreserved": true,
+    "tokenWrittenToConfig": false,
+    "localAppServerDiscoveredTools": [
+      "pg.get_demo_item"
+    ],
+    "toolReadOnly": true
+  },
+  "credentialSource": "Ignored private local header helper reads .dev/env.json",
+  "baseline": {
+    "actionCount": 75,
+    "executionCount": 75,
+    "auditCount": 175,
+    "maxAuditSeq": "175",
+    "postgresVersion": "16.14",
+    "capturedAt": "2026-10-23T10:03:08.381694+08:00",
+    "principal": "alice",
+    "scope": "scope_a",
+    "purpose": "Baseline before the desktop conversation invokes the local MCP tool"
+  },
+  "desktopRead": {
+    "validated": false,
+    "actionId": null,
+    "reason": "After user-confirmed desktop Restart and a new conversation turn, the current conversation still reports unknown MCP server. Fresh desktop runtime connections report this server ready. The diagnostic HTTP read is separately recorded and is not native desktop acceptance."
+  },
+  "officialDocs": "https://learn.chatgpt.com/docs/extend/mcp",
+  "desktopRestartConfirmedByUser": true,
+  "updatedAt": "2026-10-23T02:17:24.583Z",
+  "desktopRuntimeEvidence": {
+    "readyEvents": [
+      {
+        "timestamp": "2026-10-23T02:00:26.408Z",
+        "host": "local",
+        "server": "mcpguard_local",
+        "status": "ready"
+      },
+      {
+        "timestamp": "2026-10-23T02:00:27.607Z",
+        "host": "local",
+        "server": "mcpguard_local",
+        "status": "ready"
+      },
+      {
+        "timestamp": "2026-10-23T02:00:53.281Z",
+        "host": "local",
+        "server": "mcpguard_local",
+        "status": "ready"
+      },
+      {
+        "timestamp": "2026-10-23T02:01:39.340Z",
+        "host": "local",
+        "server": "mcpguard_local",
+        "status": "ready"
+      },
+      {
+        "timestamp": "2026-10-23T02:01:39.601Z",
+        "host": "local",
+        "server": "mcpguard_local",
+        "status": "ready"
+      },
+      {
+        "timestamp": "2026-10-23T02:09:35.950Z",
+        "host": "local",
+        "server": "mcpguard_local",
+        "status": "ready"
+      },
+      {
+        "timestamp": "2026-10-23T02:15:34.137Z",
+        "host": "local",
+        "server": "mcpguard_local",
+        "status": "ready"
+      }
+    ],
+    "scope": "Fresh desktop MCP runtime connections; not proof of availability in this existing conversation"
+  },
+  "httpDiagnostic": {
+    "validated": true,
+    "actionId": "e3468f69-068a-4979-8c57-191cfb0ee581",
+    "attemptId": "2285e662-ea8c-4a33-85ae-71f97f1f07c1",
+    "executionId": "e8ed9c98-52a2-4f85-8e2c-044df0e564d2",
+    "requestStatus": "SUCCEEDED",
+    "auditSeq": [
+      "176",
+      "177"
+    ],
+    "auditVerified": true,
+    "evidence": "local-chatgpt-streamable-http-read-2026-10-23.json"
+  }
+}

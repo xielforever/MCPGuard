@@ -115,3 +115,20 @@ reconciliation-requests仅请求读取可信业务回执并追加证据，不执
 本轮只校验文档和机器契约；实现后需以真实元数据PG验证同键并发、If-Match、审批/取消竞争、恢复和对象越权。
 OpenAPI Schema验证只覆盖结构；基础访问权、OTHER_PERSON、完整计划、状态迁移、数据库事务与真实副作用另验。
 具体用例关联[验证计划](validation-plan.md)的V08–V12、V14–V19及[交付追踪](../delivery-plan.md)的A-02–A-05、A-09–A-11。
+
+
+## 2026-10-24 多资源自助访问补充
+
+新增 /api/v2 的申请、账号开通视图、授权、包下载、客户端激活和吊销接口。v0.1 按原范围保留，不能成为新资源的无包旁路。浏览器审批与客户端认证分别校验，模型没有 approve/decrypt 工具。
+
+完整语义见[架构](../revisions/2026-10-24-resource-access/architecture.md)、[契约](../revisions/2026-10-24-resource-access/contracts.md)、[凭据生命周期](../revisions/2026-10-24-resource-access/credential-lifecycle.md)及[验收矩阵](../revisions/2026-10-24-resource-access/acceptance.md)。本节追加当前设计目标，原文和原验收保持；新增流程尚未实现。
+
+
+## 后续 RA-09 追加（2026-10-26）
+
+当前补齐登记客户端绑定的 CredentialContext、私有安全缓存、有界待领取队列、多资源激活和续期。Context 及凭据终态不续活，新 Context 不继承激活，重领与续期不创建原生账号；旧手动流程保留。具体协议、事务、Windows/Linux 权限、失败恢复和后续阶段边界见[RA-09 说明](../credential-contexts-local.md)，实际证明见[验收](../validation/local-ra09-2026-10-26.md)。前文保留各原时点记录。
+
+
+## 后续 RA-10 追加（2026-10-26）
+
+HTTP 宿主私有头 helper、有界 worker 与可选 stdio 私有模式已接通 RA-09 生命周期。模型输出和宿主头通道分开，MCP capability 不授予权限；过期、主动关闭、文件丢失与包撤销分别恢复或拒绝，未知结果不重放业务。具体协议、命令、能力与限制见[RA-10](../private-client-adapters-local.md)，分层成绩见[验收](../validation/local-ra10-2026-10-26.md)。原时点继续保留。

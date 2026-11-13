@@ -208,3 +208,20 @@ Redis 使用受限 ACL 用户和命令/key 范围；HTTP 服务凭据限定具�
 
 实现前仍需细化：具体工具与数据范围、DSL、敏感读例外、审批组、IdP/组同步、ChatGPT 账号/workspace 类型与能力验证、通知、凭据托管与保留策略。
 后续将选定策略、实现提交及证据关联上述验收；不得把示例 YAML、设计审阅或单元测试替代真实身份和原生服务联调。
+
+
+## 2026-10-24 多资源自助访问补充
+
+当前授权、文件归属、资源/原生身份绑定和单次操作审批同时校验。密文不可读不作为免认证依据；终端只持包，解密和原生连接均留在服务端。吊销在线阻止新领取，敏感历史结果也重验当前权限。
+
+完整语义见[架构](../revisions/2026-10-24-resource-access/architecture.md)、[契约](../revisions/2026-10-24-resource-access/contracts.md)、[凭据生命周期](../revisions/2026-10-24-resource-access/credential-lifecycle.md)及[验收矩阵](../revisions/2026-10-24-resource-access/acceptance.md)。本节追加当前设计目标，原文和原验收保持；新增流程尚未实现。
+
+
+## 后续 RA-09 追加（2026-10-26）
+
+当前补齐登记客户端绑定的 CredentialContext、私有安全缓存、有界待领取队列、多资源激活和续期。Context 及凭据终态不续活，新 Context 不继承激活，重领与续期不创建原生账号；旧手动流程保留。具体协议、事务、Windows/Linux 权限、失败恢复和后续阶段边界见[RA-09 说明](../credential-contexts-local.md)，实际证明见[验收](../validation/local-ra09-2026-10-26.md)。前文保留各原时点记录。
+
+
+## 后续 RA-10 追加（2026-10-26）
+
+HTTP 宿主私有头 helper、有界 worker 与可选 stdio 私有模式已接通 RA-09 生命周期。模型输出和宿主头通道分开，MCP capability 不授予权限；过期、主动关闭、文件丢失与包撤销分别恢复或拒绝，未知结果不重放业务。具体协议、命令、能力与限制见[RA-10](../private-client-adapters-local.md)，分层成绩见[验收](../validation/local-ra10-2026-10-26.md)。原时点继续保留。

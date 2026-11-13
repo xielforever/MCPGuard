@@ -1,0 +1,16 @@
+# Replace both the tunnel UUID and hostname before deployment.
+# The credentials file contains a secret and must stay outside Git.
+tunnel: 00000000-0000-0000-0000-000000000000
+credentials-file: /etc/cloudflared/tunnel.json
+no-autoupdate: true
+protocol: http2
+metrics: 127.0.0.1:18083
+
+ingress:
+  - hostname: mcp.example.com
+    service: http://127.0.0.1:18081
+    originRequest:
+      # Preserve the SDK's localhost Host / DNS-rebinding checks.
+      httpHostHeader: 127.0.0.1:18081
+      connectTimeout: 10s
+  - service: http_status:404

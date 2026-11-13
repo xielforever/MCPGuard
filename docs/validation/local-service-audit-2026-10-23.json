@@ -1,0 +1,157 @@
+{
+  "capturedAt": "2026-10-23T04:46:27.4496+00:00",
+  "auditEvents": [
+    {
+      "seq": 182,
+      "org_id": "10000000-0000-4000-8000-000000000001",
+      "principal_id": "20000000-0000-4000-8000-000000000001",
+      "action_id": "4e7ab51b-87f5-4b62-81f2-6a44a59457fb",
+      "attempt_id": "c062b30b-dbf4-4dff-b886-5e0193e4b87c",
+      "execution_id": "077fd05d-d0de-4ebf-9ab2-bbe585601f97",
+      "event_type": "EXECUTION_INTENT",
+      "created_at": "2026-10-23T04:37:54.198255+00:00"
+    },
+    {
+      "seq": 183,
+      "org_id": "10000000-0000-4000-8000-000000000001",
+      "principal_id": "20000000-0000-4000-8000-000000000001",
+      "action_id": "4e7ab51b-87f5-4b62-81f2-6a44a59457fb",
+      "attempt_id": "c062b30b-dbf4-4dff-b886-5e0193e4b87c",
+      "execution_id": "077fd05d-d0de-4ebf-9ab2-bbe585601f97",
+      "event_type": "SUCCEEDED",
+      "created_at": "2026-10-23T04:37:54.213385+00:00"
+    },
+    {
+      "seq": 184,
+      "org_id": "10000000-0000-4000-8000-000000000001",
+      "principal_id": "20000000-0000-4000-8000-000000000001",
+      "action_id": "ab4eaae9-2dbb-495d-b30c-d878e40fb92e",
+      "attempt_id": "5438ec12-247b-4459-a606-ec6affb52b0e",
+      "execution_id": "8c02e1bd-c40f-4839-8a8f-54f1aac0a994",
+      "event_type": "EXECUTION_INTENT",
+      "created_at": "2026-10-23T04:39:34.330264+00:00"
+    },
+    {
+      "seq": 185,
+      "org_id": "10000000-0000-4000-8000-000000000001",
+      "principal_id": "20000000-0000-4000-8000-000000000001",
+      "action_id": "ab4eaae9-2dbb-495d-b30c-d878e40fb92e",
+      "attempt_id": "5438ec12-247b-4459-a606-ec6affb52b0e",
+      "execution_id": "8c02e1bd-c40f-4839-8a8f-54f1aac0a994",
+      "event_type": "SUCCEEDED",
+      "created_at": "2026-10-23T04:39:34.338307+00:00"
+    },
+    {
+      "seq": 186,
+      "org_id": "10000000-0000-4000-8000-000000000001",
+      "principal_id": "20000000-0000-4000-8000-000000000001",
+      "action_id": "0e75cfdd-3e70-4214-855a-b5941ccae8dc",
+      "attempt_id": "48781059-1e2d-41ac-959c-13c670611642",
+      "execution_id": "4cd52744-93e0-4a73-8ba3-160ab170629e",
+      "event_type": "EXECUTION_INTENT",
+      "created_at": "2026-10-23T04:39:42.642645+00:00"
+    },
+    {
+      "seq": 187,
+      "org_id": "10000000-0000-4000-8000-000000000001",
+      "principal_id": "20000000-0000-4000-8000-000000000001",
+      "action_id": "0e75cfdd-3e70-4214-855a-b5941ccae8dc",
+      "attempt_id": "48781059-1e2d-41ac-959c-13c670611642",
+      "execution_id": "4cd52744-93e0-4a73-8ba3-160ab170629e",
+      "event_type": "SUCCEEDED",
+      "created_at": "2026-10-23T04:39:42.651554+00:00"
+    },
+    {
+      "seq": 188,
+      "org_id": "10000000-0000-4000-8000-000000000001",
+      "principal_id": "20000000-0000-4000-8000-000000000001",
+      "action_id": "c7f2124c-9562-40cd-9bd3-75f9fa7f1ac0",
+      "attempt_id": "ad0a92f3-8717-4975-8b82-f4b26f516691",
+      "execution_id": "97ce28aa-a79e-4968-9add-a317bb690fce",
+      "event_type": "EXECUTION_INTENT",
+      "created_at": "2026-10-23T04:41:42.825349+00:00"
+    },
+    {
+      "seq": 189,
+      "org_id": "10000000-0000-4000-8000-000000000001",
+      "principal_id": "20000000-0000-4000-8000-000000000001",
+      "action_id": "c7f2124c-9562-40cd-9bd3-75f9fa7f1ac0",
+      "attempt_id": "ad0a92f3-8717-4975-8b82-f4b26f516691",
+      "execution_id": "97ce28aa-a79e-4968-9add-a317bb690fce",
+      "event_type": "SUCCEEDED",
+      "created_at": "2026-10-23T04:41:42.832508+00:00"
+    },
+    {
+      "seq": 190,
+      "org_id": "10000000-0000-4000-8000-000000000001",
+      "principal_id": "20000000-0000-4000-8000-000000000001",
+      "action_id": "2860c205-e862-4cf9-b711-3d7a2eccfefc",
+      "attempt_id": "8d093acf-2aa7-4638-b572-a65d95e18ece",
+      "execution_id": "bd553928-1393-44eb-b782-17f64e3e7932",
+      "event_type": "EXECUTION_INTENT",
+      "created_at": "2026-10-23T04:43:19.95957+00:00"
+    },
+    {
+      "seq": 191,
+      "org_id": "10000000-0000-4000-8000-000000000001",
+      "principal_id": "20000000-0000-4000-8000-000000000001",
+      "action_id": "2860c205-e862-4cf9-b711-3d7a2eccfefc",
+      "attempt_id": "8d093acf-2aa7-4638-b572-a65d95e18ece",
+      "execution_id": "bd553928-1393-44eb-b782-17f64e3e7932",
+      "event_type": "SUCCEEDED",
+      "created_at": "2026-10-23T04:43:19.96483+00:00"
+    }
+  ],
+  "executions": [
+    {
+      "id": "077fd05d-d0de-4ebf-9ab2-bbe585601f97",
+      "action_id": "4e7ab51b-87f5-4b62-81f2-6a44a59457fb",
+      "attempt_id": "c062b30b-dbf4-4dff-b886-5e0193e4b87c",
+      "request_status": "SUCCEEDED",
+      "dispatch_state": "DISPATCHED",
+      "encrypted_result_present": true
+    },
+    {
+      "id": "8c02e1bd-c40f-4839-8a8f-54f1aac0a994",
+      "action_id": "ab4eaae9-2dbb-495d-b30c-d878e40fb92e",
+      "attempt_id": "5438ec12-247b-4459-a606-ec6affb52b0e",
+      "request_status": "SUCCEEDED",
+      "dispatch_state": "DISPATCHED",
+      "encrypted_result_present": true
+    },
+    {
+      "id": "4cd52744-93e0-4a73-8ba3-160ab170629e",
+      "action_id": "0e75cfdd-3e70-4214-855a-b5941ccae8dc",
+      "attempt_id": "48781059-1e2d-41ac-959c-13c670611642",
+      "request_status": "SUCCEEDED",
+      "dispatch_state": "DISPATCHED",
+      "encrypted_result_present": true
+    },
+    {
+      "id": "97ce28aa-a79e-4968-9add-a317bb690fce",
+      "action_id": "c7f2124c-9562-40cd-9bd3-75f9fa7f1ac0",
+      "attempt_id": "ad0a92f3-8717-4975-8b82-f4b26f516691",
+      "request_status": "SUCCEEDED",
+      "dispatch_state": "DISPATCHED",
+      "encrypted_result_present": true
+    },
+    {
+      "id": "bd553928-1393-44eb-b782-17f64e3e7932",
+      "action_id": "2860c205-e862-4cf9-b711-3d7a2eccfefc",
+      "attempt_id": "8d093acf-2aa7-4638-b572-a65d95e18ece",
+      "request_status": "SUCCEEDED",
+      "dispatch_state": "DISPATCHED",
+      "encrypted_result_present": true
+    }
+  ],
+  "legacyAuditRows": 181,
+  "alice": {
+    "enabled": true,
+    "expiresAt": "2026-10-23T14:48:35.171373+00:00",
+    "unexpired": true,
+    "canRead": true,
+    "scope": "scope_a"
+  },
+  "postgresVersion": "16.14",
+  "verified": true
+}

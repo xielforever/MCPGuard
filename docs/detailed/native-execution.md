@@ -229,3 +229,15 @@ Reconcile 仅查询可信的 operation receipt、版本证据或原生事务结�
 待确认：六个具体工具及细化数据范围、真实后端身份与凭据映射、企业 IdP 及组来源、IM 平台、ChatGPT 账号类型与接入能力、服务版本与部署配置。风险分级、受控目录和首发 ChatGPT 已确定，不再列为未决事项。
 
 参考：[pgx](https://github.com/jackc/pgx)、[go-redis 重试选项](https://github.com/redis/go-redis/blob/v9.12.1/options.go)、[Go Transport 重试](https://github.com/golang/go/blob/go1.25.0/src/net/http/transport.go)、[PG 事务](https://www.postgresql.org/docs/current/sql-set-transaction.html)和[Redis 事务](https://redis.io/docs/latest/develop/using-commands/transactions/)。引用版本用于核对行为，最终采用版本仍需锁定验证。
+
+
+## 2026-10-24 多资源自助访问补充
+
+新路径按主体、资源和套餐解析原生身份，服务端固定秘密版本执行；账号开通任务与业务执行资格分开。多 PG 和数据权限由登记绑定与原生权限落实，不普遍改写 scope 条件；原受控模板与未知写语义继续适用。
+
+完整语义见[架构](../revisions/2026-10-24-resource-access/architecture.md)、[契约](../revisions/2026-10-24-resource-access/contracts.md)、[凭据生命周期](../revisions/2026-10-24-resource-access/credential-lifecycle.md)及[验收矩阵](../revisions/2026-10-24-resource-access/acceptance.md)。本节追加当前设计目标，原文和原验收保持；新增流程尚未实现。
+
+
+## 后续 RA-09 追加（2026-10-26）
+
+当前补齐登记客户端绑定的 CredentialContext、私有安全缓存、有界待领取队列、多资源激活和续期。Context 及凭据终态不续活，新 Context 不继承激活，重领与续期不创建原生账号；旧手动流程保留。具体协议、事务、Windows/Linux 权限、失败恢复和后续阶段边界见[RA-09 说明](../credential-contexts-local.md)，实际证明见[验收](../validation/local-ra09-2026-10-26.md)。前文保留各原时点记录。

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MCPGuard · 科幻审批设计</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="preview.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#review-main">跳到审批内容</a>
+  <header class="design-switcher">
+    <div class="design-label"><strong>MCPGuard</strong><span>第二轮 / 科幻审批</span><small>独立设计预览 · 2026.10.29</small></div>
+    <div class="concept-options" role="group" aria-label="选择科幻方案">
+      <button data-concept="bridge" aria-pressed="true"><span class="concept-id">D</span><span><strong>星舰 · 审批舰桥</strong><small>深空、全息轨道、指挥式分栏</small></span><i class="concept-mark mark-dark" aria-hidden="true"></i></button>
+      <button data-concept="orbit" aria-pressed="false"><span class="concept-id">E</span><span><strong>光舱 · 轨道中枢</strong><small>银白、轨道结构、空间舱式工作面</small></span><i class="concept-mark mark-light" aria-hidden="true"></i></button>
+    </div>
+  </header>
+  <div class="preview-strip"><span><i></i>全部为样例数据，无服务连接；轨道光效仅作视觉装饰。</span><button id="motion-toggle" aria-pressed="true">关闭动效</button></div>
+  <div id="app"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="confirmation" aria-labelledby="confirmation-title">
+    <form method="dialog">
+      <div class="dialog-meta"><span class="tiny-cross" aria-hidden="true">＋</span>审批决定 / 仅设计演示</div>
+      <h2 id="confirmation-title">批准这份申请？</h2>
+      <div id="confirmation-summary"></div>
+      <div class="notice"><strong id="confirmation-effect">批准只记录决定，不会立即执行</strong><span>本预览不保存决定，也不派发业务执行。</span></div>
+      <label for="decision-reason">决定理由 <span class="muted">（选填）</span></label>
+      <textarea id="decision-reason" rows="3" placeholder="补充本次决定的依据"></textarea>
+      <div class="dialog-actions"><button class="btn" value="cancel">返回核对</button><button class="btn primary" value="confirm">确认批准 · 仅预览</button></div>
+    </form>
+  </dialog>
+</body>
+</html>

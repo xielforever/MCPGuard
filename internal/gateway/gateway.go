@@ -17,8 +17,10 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/auth"
 	"github.com/modelcontextprotocol/go-sdk/jsonrpc"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/xielforever/MCPGuard/internal/controlled"
 	"github.com/xielforever/MCPGuard/internal/metadata"
 	"github.com/xielforever/MCPGuard/internal/nativepg"
+	"github.com/xielforever/MCPGuard/internal/resources"
 	"github.com/xielforever/MCPGuard/internal/wireids"
 )
 
@@ -31,11 +33,19 @@ var resultSchema json.RawMessage
 var itemPattern = regexp.MustCompile(`^item_demo_[a-z0-9_]{1,32}$`)
 
 type Gateway struct {
-	Store  *metadata.Store
-	Reader *nativepg.Reader
-	Root   context.Context
-	MCP    *mcp.Server
-	slots  chan struct{}
+	Store       *metadata.Store
+	Reader      *nativepg.Reader
+	Root        context.Context
+	MCP         *mcp.Server
+	slots       chan struct{}
+	Controlled  *controlled.Service
+	Console     *controlled.Console
+	Notifier    *controlled.Notifier
+	Resources   *resources.Catalog
+	Access      *resources.AccessService
+	Credentials *resources.CredentialService
+	Downloads   *resources.DownloadService
+	Contexts    *resources.ContextService
 }
 
 func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
@@ -43,6 +53,8 @@ func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
 	g.MCP = mcp.NewServer(&mcp.Implementation{Name: "MCPGuard", Version: "0.1.0-read-slice"}, &mcp.ServerOptions{SupportedProtocolVersions: []string{Profile}, Capabilities: &mcp.ServerCapabilities{Tools: &mcp.ToolCapabilities{}}})
 	f := false
 	g.MCP.AddTool(&mcp.Tool{Name: "pg.get_demo_item", Description: "Read one demo item in your authorized scope. Scope is injected by the gateway.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"itemId": map[string]any{"type": "string", "pattern": itemPattern.String(), "maxLength": 42}}, "required": []string{"itemId"}, "additionalProperties": false}, OutputSchema: resultSchema, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: &f, OpenWorldHint: &f}}, g.call)
+	g.registerAuditTool()
+	g.registerHealthTool()
 	g.MCP.AddReceivingMiddleware(func(next mcp.MethodHandler) mcp.MethodHandler {
 		return func(ctx context.Context, method string, req mcp.Request) (mcp.Result, error) {
 			if method != "tools/list" {
@@ -62,8 +74,56 @@ func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
 			if e != nil {
 				return nil, e
 			}
-			if !cur.CanRead {
-				res.(*mcp.ListToolsResult).Tools = []*mcp.Tool{}
+			if g.Controlled != nil {
+				visible, err := g.Controlled.Visible(c, cur)
+				if err != nil {
+					return nil, safeProtocolError("Tool authorization is unavailable")
+				}
+				allowed := map[string]bool{"audit.list": true, "gateway.health": true, "action.status": true, "action.resume": true, "action.cancel": true, "history.list": true, "history.get_result": true, "pg.get_demo_item": cur.CanRead}
+				if g.Resources != nil {
+					allowed["resource.list"] = true
+					allowed["resource.get"] = true
+				}
+				if g.Access != nil {
+					for _, name := range []string{"access.request", "access.status", "access.cancel", "access.grants"} {
+						allowed[name] = true
+					}
+				}
+				if g.Credentials != nil {
+					allowed["credential.status"] = true
+				}
+				if g.Downloads != nil {
+					allowed["credential.prepare_download"] = true
+				}
+				if cur.CanRead {
+					var enabled bool
+					if err := g.Store.Pool.QueryRow(c, `SELECT coalesce((SELECT enabled FROM mcpguard.control_resources WHERE org_id=$1 AND name='demo.pg'),true)`, cur.OrgID).Scan(&enabled); err != nil {
+						return nil, safeProtocolError("Resource authorization is unavailable")
+					}
+					allowed["pg.get_demo_item"] = enabled
+				}
+				if cur.CanRead {
+					for _, name := range visible {
+						allowed[name] = true
+					}
+				}
+				tools := []*mcp.Tool{}
+				for _, tool := range res.(*mcp.ListToolsResult).Tools {
+					if allowed[tool.Name] {
+						tools = append(tools, tool)
+					}
+				}
+				res.(*mcp.ListToolsResult).Tools = tools
+			} else if !cur.CanRead {
+				// Own audit and health are available to every current identity.
+				// PG business reads still require the separate CanRead grant.
+				allowed := []*mcp.Tool{}
+				for _, tool := range res.(*mcp.ListToolsResult).Tools {
+					if tool.Name == "audit.list" || tool.Name == "gateway.health" || (g.Resources != nil && (tool.Name == "resource.list" || tool.Name == "resource.get")) || (g.Access != nil && (tool.Name == "access.request" || tool.Name == "access.status" || tool.Name == "access.cancel" || tool.Name == "access.grants")) || (g.Credentials != nil && tool.Name == "credential.status") || (g.Downloads != nil && tool.Name == "credential.prepare_download") {
+						allowed = append(allowed, tool)
+					}
+				}
+				res.(*mcp.ListToolsResult).Tools = allowed
 			}
 			return res, nil
 		}
@@ -248,8 +308,35 @@ func (g *Gateway) HandlerWithOptions(opts HTTPOptions) http.Handler {
 		})
 	}
 	mux.Handle("/mcp", secured(transport))
+	if g.Resources != nil {
+		mux.Handle("GET /api/v2/resources", secured(http.HandlerFunc(g.resourcesHTTP)))
+		mux.Handle("GET /api/v2/resources/{id}", secured(http.HandlerFunc(g.resourceHTTP)))
+	}
+	if g.Access != nil {
+		mux.Handle("POST /api/v2/access-requests", secured(http.HandlerFunc(g.accessHTTP)))
+		mux.Handle("GET /api/v2/access-requests/{id}", secured(http.HandlerFunc(g.accessHTTP)))
+		mux.Handle("POST /api/v2/access-requests/{id}/cancel", secured(http.HandlerFunc(g.accessHTTP)))
+		mux.Handle("GET /api/v2/access-grants", secured(http.HandlerFunc(g.accessHTTP)))
+		mux.Handle("GET /api/v2/access-grants/{id}", secured(http.HandlerFunc(g.accessHTTP)))
+	}
+	if g.Credentials != nil {
+		mux.Handle("GET /api/v2/credentials/{id}", secured(http.HandlerFunc(g.credentialHTTP)))
+	}
+	if g.Downloads != nil {
+		mux.Handle("POST /api/v2/credential-packages", secured(http.HandlerFunc(g.prepareDownloadHTTP)))
+		mux.Handle("GET /api/v2/credential-downloads/{id}", secured(http.HandlerFunc(g.privateDownloadHTTP)))
+		mux.Handle("POST /api/v2/credential-downloads/{id}/claim", secured(http.HandlerFunc(g.privateDownloadHTTP)))
+	}
+	if g.Contexts != nil {
+		for _, route := range []string{"POST /api/v2/credential-contexts", "GET /api/v2/credential-contexts/{id}", "POST /api/v2/credential-contexts/{id}/renewals", "DELETE /api/v2/credential-contexts/{id}", "POST /api/v2/credential-contexts/{id}/activations", "POST /api/v2/credential-contexts/{id}/deactivations", "GET /api/v2/credential-downloads", "POST /api/v2/credential-downloads/{id}/replacements", "POST /api/v2/credentials/{id}/renewals"} {
+			mux.Handle(route, secured(http.HandlerFunc(g.contextHTTP)))
+		}
+	}
 	if opts.PublicOrigin == "" {
 		mux.Handle("GET /api/v1/audit", secured(http.HandlerFunc(g.auditHTTP)))
+		if g.Console != nil {
+			g.Console.Register(mux)
+		}
 	}
 	if opts.Register != nil {
 		opts.Register(mux)
@@ -257,6 +344,13 @@ func (g *Gateway) HandlerWithOptions(opts HTTPOptions) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
+		privateRoute := g.Downloads != nil && privateDownloadPath(r.URL.Path) || g.Contexts != nil && privateContextPath(r.URL.Path)
+		queueQuery := g.Contexts != nil && r.Method == http.MethodGet && r.URL.Path == "/api/v2/credential-downloads"
+		if privateRoute && (r.URL.RawQuery != "" && !queueQuery || r.Header.Get("Origin") != "" || r.Header.Get("Cookie") != "") {
+			// Private credentials are never reflected into origin/query diagnostics.
+			http.Error(w, "private delivery request rejected", http.StatusForbidden)
+			return
+		}
 		origin := "http://" + r.Host
 		if opts.PublicOrigin != "" {
 			origin = opts.PublicOrigin
@@ -286,7 +380,7 @@ func (g *Gateway) auditHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	after := int64(0)
-	limit := 100
+	limit := auditMaxLimit
 	var e error
 	if q.Has("after") {
 		after, e = strconv.ParseInt(q.Get("after"), 10, 64)
@@ -297,24 +391,18 @@ func (g *Gateway) auditHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if q.Has("limit") {
 		limit, e = strconv.Atoi(q.Get("limit"))
-		if e != nil || limit < 1 || limit > 100 {
+		if e != nil || limit < 1 || limit > auditMaxLimit {
 			http.Error(w, "invalid limit", 400)
 			return
 		}
 	}
-	c, cancel := context.WithTimeout(r.Context(), 2*time.Second)
-	defer cancel()
-	events, e := g.Store.Audit(c, p, after, limit)
+	page, e := g.listAudit(r.Context(), p, auditQuery{After: after, Limit: limit})
 	if e != nil {
 		http.Error(w, "audit unavailable", 503)
 		return
 	}
-	next := after
-	if len(events) > 0 {
-		next = events[len(events)-1].Seq
-	}
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"events": events, "nextAfter": next})
+	_ = json.NewEncoder(w).Encode(page)
 }
 
 // RunRecovery records stale claims as unknown. No execution is resumed here.
@@ -333,6 +421,20 @@ func (g *Gateway) RunRecovery(ctx context.Context) {
 			}
 		}
 		cancel()
+		if g.Controlled != nil && ctx.Err() == nil {
+			c, done := context.WithTimeout(ctx, 3*time.Second)
+			if err := g.Controlled.Recover(c); err != nil {
+				slog.Error("controlled recovery storage unavailable")
+			}
+			done()
+		}
+		if g.Notifier != nil && ctx.Err() == nil {
+			c, done := context.WithTimeout(ctx, 4*time.Second)
+			if err := g.Notifier.Deliver(c); err != nil {
+				slog.Error("notification outbox unavailable")
+			}
+			done()
+		}
 		if e != nil && ctx.Err() == nil {
 			slog.Error("stale read recovery storage unavailable")
 		}
