@@ -1,0 +1,82 @@
+{
+  "schema_version": 2,
+  "repository": {
+    "url": "https://github.com/xielforever/MCPGuard",
+    "default_branch": "main",
+    "project_url": "https://github.com/users/xielforever/projects/6"
+  },
+  "work_items": {
+    "id_format": "W{wave}-{track}{seq:02}",
+    "milestone_format": "Wave {wave} — {goal}",
+    "id_location": "issue_title",
+    "wave_start": 1,
+    "wave_next": "max_used_plus_one",
+    "subwave_rule": "sequential_letters_before_issues",
+    "track_registry": "milestone_description",
+    "default_track": "T",
+    "sequence_scope": "repository_wave_track",
+    "allocation_mode": "serialized_issue_create",
+    "milestone_required": true
+  },
+  "project": {
+    "status_field": "Status",
+    "statuses": {
+      "backlog": "Backlog",
+      "ready": "Ready",
+      "in_progress": "In Progress",
+      "blocked": "Blocked",
+      "review": "Review",
+      "done": "Done"
+    },
+    "views": {
+      "all_tasks": "任务总览",
+      "current_wave": "当前波次",
+      "linked_prs": "关联 PR"
+    },
+    "issue_tracking": "all_actionable",
+    "pull_request_tracking": "linked_only",
+    "done_requires": "accepted_issue"
+  },
+  "completion": {
+    "requirements": [
+      "每个工作项的完成条件必须在对应 Issue 正文中可观察、可核对，且验收记录已提交到仓库 main 分支。",
+      "Project 的 Done 只表示该 Issue 的完成条件与验收证据均已核验，不以 PR 合并、Issue 关闭或 CI 结果代替。",
+      "真实 coding 客户端、企业 SSO 与生产部署未验收前，不得在 Issue、文档或报告中宣称已通过。"
+    ]
+  },
+  "templates": {
+    "task_form": {
+      "path": ".github/ISSUE_TEMPLATE/task.yml",
+      "fields": {
+        "background": "background",
+        "task": "task",
+        "scope": "scope",
+        "acceptance": "acceptance",
+        "verification": "verification",
+        "dependencies": "dependencies"
+      }
+    },
+    "bug_form": {
+      "path": ".github/ISSUE_TEMPLATE/bug.yml",
+      "fields": {
+        "task": "task",
+        "expected_actual": "expected_actual",
+        "reproduction": "reproduction",
+        "environment": "environment",
+        "impact": "impact",
+        "acceptance": "acceptance",
+        "evidence": "evidence"
+      }
+    },
+    "pull_request": {
+      "path": ".github/pull_request_template.md",
+      "sections": {
+        "change": "变更与原因",
+        "task": "关联任务",
+        "validation": "验证与证据",
+        "limits": "未完成项与影响",
+        "progress": "进度核对"
+      }
+    }
+  }
+}

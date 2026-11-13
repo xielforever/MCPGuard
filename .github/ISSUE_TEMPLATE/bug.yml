@@ -1,0 +1,56 @@
+name: 缺陷报告
+description: 提供预期与实际行为、复现、版本和修复验收条件；已有问题请更新原 Issue。
+body:
+  - type: markdown
+    attributes:
+      value: |
+        先查重、查工作项编号并阅读仓库 AGENTS.md。按 Milestone 中定义的轨道代码分配编号，Issue 标题以该编号开头，并设置对应波次的 Milestone。日志、截图和配置只保留定位问题所需的信息，移除凭据与认证连接信息。无法复现时说明已尝试的检查。
+  - type: input
+    id: task
+    attributes:
+      label: 工作项编号与关联 Issue
+      description: 按当前波次和轨道分配唯一编号，并列相关 Issue；编号还要写入标题。
+      placeholder: 例如 W2-R201 或 W1A-F01；关联 #42
+    validations:
+      required: true
+  - type: textarea
+    id: expected_actual
+    attributes:
+      label: 预期行为与实际行为
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 最小复现步骤
+      description: 写清输入、操作和观察；无法复现时记录已知现象、频率及已尝试步骤。
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境与代码版本
+      description: 提供分支/提交或工作区快照，以及适用的运行时、配置、seed 和数据版本；未知项注明。
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: 影响与已知阻塞
+      description: 说明受影响范围、频率和关联依赖；优先级按项目约定判断。
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 修复验收条件
+      description: 说明如何确认缺陷消失，以及需要覆盖的相关行为。
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 现有证据
+      description: 提供相关日志、截图或证据位置；没有时写“暂无”，不预填验证通过。
+    validations:
+      required: true

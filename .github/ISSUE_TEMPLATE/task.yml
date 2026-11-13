@@ -1,0 +1,51 @@
+name: 任务或需求
+description: 记录目标、范围、依赖和可核查的验收条件；已有任务请直接更新原 Issue。
+body:
+  - type: markdown
+    attributes:
+      value: |
+        先检索已有 Issue、Milestone 和工作项编号，并阅读仓库 AGENTS.md。按 Milestone 中定义的轨道代码分配编号，Issue 标题以该编号开头，并设置对应波次的 Milestone。新建记录不自动表示可以开工；不要在此预填验收通过。
+  - type: textarea
+    id: background
+    attributes:
+      label: 背景与目标
+      description: 说明当前问题、受影响的人或流程，以及希望达到的行为。
+    validations:
+      required: true
+  - type: input
+    id: task
+    attributes:
+      label: 工作项编号与关联 Issue
+      description: 按当前波次和轨道分配唯一编号，并列相关 Issue；编号还要写入标题。
+      placeholder: 例如 W2-R201 或 W1A-F01；关联 #42
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 实施范围与范围外内容
+      description: 写清本次覆盖的行为和边界；范围变更说明与原计划的差异。
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收条件
+      description: 用可观察、可核查的条件描述何时完成；此处是计划，不是验收结果。
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: 验证计划
+      description: 说明拟执行的检查、环境、数据/配置和预期证据；未知部分标待确认。
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: 依赖、阻塞与计划影响
+      description: 关联实际前置任务，说明解除条件和对计划的影响；没有已知依赖时留空。
+      placeholder: 无已知依赖；或：#17 完成后才能开始，解除条件是接口定稿。
+    validations:
+      required: false
