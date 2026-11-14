@@ -41,7 +41,11 @@ func ImportProvisioning(ctx context.Context, dsn string, raw []byte) error {
 		if e != nil || v02.Decode("ResourceVersion", resourceRaw, &r) != nil || v02.Decode("PermissionProfile", profileRaw, &p) != nil {
 			return ErrUnavailable
 		}
-		if r.Kind != "POSTGRES" || p.NativeEnforcement != "PG_OWNER_RLS_V1" || len(p.AllowedOperations) != 1 || p.AllowedOperations[0] != ReadOperation || r.EndpointConfigRef != target.EndpointConfigRef || r.TargetFingerprint != target.TargetFingerprint {
+		want := ReadOperation
+		if target.Template == "PG_OWNER_UPDATE_V1" {
+			want = WriteOperation
+		}
+		if r.Kind != "POSTGRES" || p.NativeEnforcement != "PG_OWNER_RLS_V1" || len(p.AllowedOperations) != 1 || p.AllowedOperations[0] != want || r.EndpointConfigRef != target.EndpointConfigRef || r.TargetFingerprint != target.TargetFingerprint {
 			return ErrDenied
 		}
 		value, _ := json.Marshal(target)

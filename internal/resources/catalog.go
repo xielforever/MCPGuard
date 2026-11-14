@@ -27,6 +27,7 @@ var (
 
 const FixtureToolName = "fixture.pg_read_item"
 const ReadOperation = "pg.item.read.v1"
+const WriteOperation = "pg.item.update.v1"
 
 type Catalog struct {
 	Store         *metadata.Store
