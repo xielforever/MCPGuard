@@ -152,6 +152,15 @@ func run() error {
 					return errors.New("context policy is unavailable")
 				}
 				g.AttachContexts(contexts)
+				if cfg.ResourceReads {
+					provider, err := resources.LoadFileSecrets(cfg.NativeSecrets)
+					if err != nil {
+						return errors.New("native secret provider is not ready for planned reads")
+					}
+					manager := resources.NewReadManager(catalog, provider)
+					defer manager.Close()
+					g.AttachReads(resources.NewReadService(catalog, credentials, manager))
+				}
 			}
 		}
 	}

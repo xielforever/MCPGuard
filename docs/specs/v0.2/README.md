@@ -90,3 +90,7 @@ Go 运行校验与离线检查共用 29 个正反样例，并额外实施重复�
 ## 2026-10-26 后续修订：0.2.7 / RA-10
 
 当前为 89 定义、70 正反样例、28 HTTP 契约与 11 MCP 契约。增加安全客户端能力和私有同步结果提示，没有新增公开私有头/claim/activate 工具。stdio 私有模式通过 experimental 声明实现范围，URL-only 明确无自动私有生命周期能力。0.2.6 六文件[快照](history/0.2.6/README.md)和前文各时点保留；见[RA-10 说明](../../private-client-adapters-local.md)。
+
+## 2026-11-14 后续状态：RA-11 实现（契约不变）
+
+`pg.get_item` 与 `ReadItemInput` 自 0.2.7 起即已声明（stage=RA-11），本次只实现运行路径，未新增或修改任何 schema 字段，因此不产生 0.2.8 修订与快照。读路径仅在显式配置时注册；见[验收](../../validation/local-ra11-2026-11-14.md)。

@@ -91,3 +91,7 @@ RA-09 已实现本地身份固定的安全缓存、待领取任务有界同步�
 ## 2026-10-26：RA-10 HTTP helper 与 stdio 私有适配
 
 RA-10 已补齐原生 HTTP 私有头 helper、有界同步 worker、可选 stdio 私有模式和客户端能力声明。HTTP 头缓存与重连限制明确，stdio 调用前/准备后驱动私有交付及 Context 激活，私有响应不进入模型；未知结果只恢复私有任务，不重放业务。286 Go race、130 新进程和 11 Windows 原生检查通过。见[实现说明](docs/private-client-adapters-local.md)、[验收](docs/validation/local-ra10-2026-10-26.md)。下一项为 RA-11 正式新资源读取和派发复查。
+
+## 2026-11-14：RA-11 计划读取与凭据绑定
+
+已实现 `pg.get_item` 计划读取：显式 `resourceId`/`credentialId`、不可变计划绑定、派发前后资格复查、服务端解析原生凭据和关联审计。工具只在 `MCPGUARD_RESOURCE_READS=enabled` 且提供显式私密文件时注册，默认构建仍不开放正式业务读取；契约保持 0.2.7，未新增字段。299 Go race 通过，见[验收](docs/validation/local-ra11-2026-11-14.md)。下一项为 RA-12 的受控写与他人审批，真实客户端与生产部署仍未验收。

@@ -25,6 +25,8 @@ type Config struct {
 	ResourceContexts                                                  bool
 	ContextDSN                                                        string
 	ContextTTL, ContextLifetime, ContextMaxActivations, SyncPageLimit int
+	ResourceReads                                                     bool
+	NativeSecrets                                                     string
 }
 
 func Load() (Config, error) {
@@ -96,6 +98,16 @@ func Load() (Config, error) {
 			return c, errors.New("explicit sync page limit from 1 to 20 required")
 		}
 		c.ResourceContexts = true
+	}
+	if value := os.Getenv("MCPGUARD_RESOURCE_READS"); value != "" {
+		if value != "enabled" || !c.ResourceContexts {
+			return c, errors.New("MCPGUARD_RESOURCE_READS=enabled requires credential contexts")
+		}
+		c.NativeSecrets = os.Getenv("MCPGUARD_READ_SECRETS")
+		if c.NativeSecrets == "" {
+			return c, errors.New("explicit native secret provider required for planned reads")
+		}
+		c.ResourceReads = true
 	}
 	if c.Listen == "" {
 		c.Listen = "127.0.0.1:8080"

@@ -46,6 +46,7 @@ type Gateway struct {
 	Credentials *resources.CredentialService
 	Downloads   *resources.DownloadService
 	Contexts    *resources.ContextService
+	Reads       *resources.ReadService
 }
 
 func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
@@ -94,6 +95,9 @@ func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
 				}
 				if g.Downloads != nil {
 					allowed["credential.prepare_download"] = true
+				}
+				if g.Reads != nil {
+					allowed["pg.get_item"] = true
 				}
 				if cur.CanRead {
 					var enabled bool

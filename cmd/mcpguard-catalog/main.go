@@ -62,7 +62,7 @@ func main() {
 		defer c.Close(ctx)
 		role := pgx.Identifier{os.Args[2]}.Sanitize()
 		_, err = c.Exec(ctx, "GRANT INSERT ON mcpguard_ra.delivery_authorizations,mcpguard_ra.download_audit TO "+role)
-	case "grant-credential-runtime", "grant-credential-status-runtime", "grant-delivery-runtime", "grant-context-runtime":
+	case "grant-credential-runtime", "grant-credential-status-runtime", "grant-delivery-runtime", "grant-context-runtime", "grant-read-runtime":
 		if len(os.Args) != 3 || !regexp.MustCompile(`^[a-z][a-z0-9_]{0,62}$`).MatchString(os.Args[2]) {
 			err = resources.ErrInput
 			break
@@ -81,18 +81,21 @@ func main() {
 		if err == nil && os.Args[1] == "grant-credential-status-runtime" {
 			_, err = c.Exec(ctx, "REVOKE SELECT ON mcpguard_ra.credential_blobs,mcpguard_ra.credential_commands,mcpguard_ra.credential_key_usage,mcpguard_ra.credential_nonce_reservations,mcpguard_ra.credential_key_registry FROM "+role)
 		}
-		if err == nil && (os.Args[1] == "grant-delivery-runtime" || os.Args[1] == "grant-context-runtime") {
+		if err == nil && (os.Args[1] == "grant-delivery-runtime" || os.Args[1] == "grant-context-runtime" || os.Args[1] == "grant-read-runtime") {
 			_, err = c.Exec(ctx, "GRANT SELECT ON mcpguard_ra.delivery_authorizations,mcpguard_ra.download_tickets,mcpguard_ra.download_commands,mcpguard_ra.download_audit TO "+role+";GRANT INSERT ON mcpguard_ra.download_tickets,mcpguard_ra.download_commands,mcpguard_ra.download_audit TO "+role+";GRANT UPDATE(state,revision,claimed_authorization_id,claimed_at) ON mcpguard_ra.download_tickets TO "+role)
 		}
-		if err == nil && (os.Args[1] == "grant-delivery-runtime" || os.Args[1] == "grant-context-runtime") {
+		if err == nil && (os.Args[1] == "grant-delivery-runtime" || os.Args[1] == "grant-context-runtime" || os.Args[1] == "grant-read-runtime") {
 			var ready bool
 			err = c.QueryRow(ctx, "SELECT to_regclass('mcpguard_ra.credential_contexts') IS NOT NULL").Scan(&ready)
 			if err == nil && ready {
 				_, err = c.Exec(ctx, "GRANT USAGE ON SEQUENCE mcpguard_ra.download_tickets_queue_seq_seq TO "+role)
 			}
 		}
-		if err == nil && os.Args[1] == "grant-context-runtime" {
+		if err == nil && (os.Args[1] == "grant-context-runtime" || os.Args[1] == "grant-read-runtime") {
 			_, err = c.Exec(ctx, "GRANT SELECT ON mcpguard_ra.credential_clients,mcpguard_ra.credential_contexts,mcpguard_ra.context_commands,mcpguard_ra.context_activation_versions,mcpguard_ra.context_activation_heads,mcpguard_ra.download_task_receipts,mcpguard_ra.credential_renewals,mcpguard_ra.context_audit TO "+role+";GRANT INSERT ON mcpguard_ra.credential_contexts,mcpguard_ra.context_commands,mcpguard_ra.context_activation_versions,mcpguard_ra.context_activation_heads,mcpguard_ra.download_task_receipts,mcpguard_ra.credential_renewals,mcpguard_ra.context_audit TO "+role+";GRANT UPDATE(state,expires_at,revision) ON mcpguard_ra.credential_contexts TO "+role+";GRANT UPDATE(revision) ON mcpguard_ra.context_activation_heads TO "+role+";GRANT UPDATE(claimed_context_id) ON mcpguard_ra.download_tickets TO "+role)
+		}
+		if err == nil && os.Args[1] == "grant-read-runtime" {
+			_, err = c.Exec(ctx, "GRANT SELECT ON mcpguard_ra.native_secrets,mcpguard_ra.account_claims,mcpguard_ra.native_observations,mcpguard_ra.native_accounts TO "+role+";GRANT SELECT,INSERT ON mcpguard_ra.read_plans,mcpguard_ra.read_audit TO "+role+";GRANT UPDATE(state,result_ciphertext) ON mcpguard_ra.read_plans TO "+role)
 		}
 	case "migrate":
 		if len(os.Args) != 2 {
@@ -218,3 +221,4 @@ func main() {
 	}
 	fmt.Println("Catalog administrative operation completed.")
 }
+
