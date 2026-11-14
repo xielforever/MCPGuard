@@ -1,4 +1,4 @@
-// Package runtimeconfig configures the first, deliberately local-only read slice.
+﻿// Package runtimeconfig configures the first, deliberately local-only read slice.
 // The former proxy configuration is not loaded by the new gateway.
 package runtimeconfig
 
@@ -26,6 +26,7 @@ type Config struct {
 	ContextDSN                                                        string
 	ContextTTL, ContextLifetime, ContextMaxActivations, SyncPageLimit int
 	ResourceReads                                                     bool
+	ResourceWrites                                                    bool
 	NativeSecrets                                                     string
 }
 
@@ -143,3 +144,4 @@ func Load() (Config, error) {
 	}
 	return c, nil
 }
+

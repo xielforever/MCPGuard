@@ -1,4 +1,4 @@
-package gateway
+﻿package gateway
 
 import (
 	"bytes"
@@ -47,6 +47,7 @@ type Gateway struct {
 	Downloads   *resources.DownloadService
 	Contexts    *resources.ContextService
 	Reads       *resources.ReadService
+	Writes      *resources.WriteService
 }
 
 func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
@@ -454,3 +455,4 @@ func (g *Gateway) Close() {
 		_ = session.Close()
 	}
 }
+

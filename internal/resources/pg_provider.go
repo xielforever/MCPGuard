@@ -1,4 +1,4 @@
-package resources
+﻿package resources
 
 import (
 	"bytes"
@@ -22,6 +22,9 @@ var providerDDL string
 
 //go:embed native_provider/002_recovery_fences.sql
 var providerRecoveryDDL string
+
+//go:embed native_provider/003_owner_write.sql
+var providerWriteDDL string
 
 func strconvI(n int) string { return strconv.Itoa(n) }
 
@@ -132,8 +135,12 @@ func (p *PGProvisioningProvider) Create(ctx context.Context, target v02.Provisio
 	if e != nil {
 		return e
 	}
+	create := "mcpguard_provision.create_account"
+	if target.Template == "PG_OWNER_UPDATE_V1" {
+		create = "mcpguard_provision.create_write_account"
+	}
 	var oid uint32
-	if e = c.QueryRow(ctx, "SELECT mcpguard_provision.create_account($1,$2,$3,$4,$5)", target.TargetID, plan.AccountID, hash, secret.Password, expiry).Scan(&oid); e != nil {
+	if e = c.QueryRow(ctx, "SELECT "+create+"($1,$2,$3,$4,$5)", target.TargetID, plan.AccountID, hash, secret.Password, expiry).Scan(&oid); e != nil {
 		return ErrUnavailable
 	}
 	return nil
@@ -150,11 +157,33 @@ const extendedRoleCheck = `SELECT session_user::text,current_user::text,current_
  AND NOT EXISTS(SELECT FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname!~'^pg_' AND n.nspname<>'information_schema' AND c.relkind IN ('r','v','m','f','p') AND c.oid<>'resource_demo.items'::regclass AND (has_table_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') OR has_any_column_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')))
  AND NOT EXISTS(SELECT FROM pg_proc f JOIN pg_namespace n ON n.oid=f.pronamespace WHERE n.nspname!~'^pg_' AND n.nspname<>'information_schema' AND f.prosecdef AND has_function_privilege(current_user,f.oid,'EXECUTE'))
  AND (SELECT c.relkind='r' AND c.relrowsecurity AND c.relowner<>r.oid FROM pg_class c WHERE c.oid='resource_demo.items'::regclass)
- AND (SELECT count(*)=1 AND bool_and(p.polcmd='r' AND p.polpermissive AND p.polroles=ARRAY[0::oid] AND pg_get_expr(p.polqual,p.polrelid)='(owner_name = CURRENT_USER)' AND p.polwithcheck IS NULL) FROM pg_policy p WHERE p.polrelid='resource_demo.items'::regclass)
+ AND (SELECT count(*)=1 AND bool_and(p.polcmd='r' AND p.polpermissive AND p.polroles=ARRAY[0::oid] AND pg_get_expr(p.polqual,p.polrelid)='(owner_name = CURRENT_USER)' AND p.polwithcheck IS NULL) FROM pg_policy p WHERE p.polrelid='resource_demo.items'::regclass AND p.polcmd='r')
+ AND (SELECT count(*)<=1 AND coalesce(bool_and(p.polpermissive AND p.polroles=ARRAY[0::oid] AND pg_get_expr(p.polqual,p.polrelid)='(owner_name = CURRENT_USER)' AND pg_get_expr(p.polwithcheck,p.polrelid)='(owner_name = CURRENT_USER)'),true) FROM pg_policy p WHERE p.polrelid='resource_demo.items'::regclass AND p.polcmd='w')
+ FROM pg_roles r WHERE r.rolname=current_user`
+
+// writeRoleCheck is the write identity counterpart: it may UPDATE only the
+// own-row policy target and keeps every other read guarantee.
+const writeRoleCheck = `SELECT session_user::text,current_user::text,current_database(),r.oid::text,
+ NOT(r.rolsuper OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls) AND r.rolcanlogin
+ AND NOT EXISTS(SELECT FROM pg_auth_members a WHERE a.member=r.oid)
+ AND (r.rolvaliduntil IS NULL OR r.rolvaliduntil>=$1::timestamptz)
+ AND NOT EXISTS(SELECT FROM pg_namespace n WHERE n.nspname!~'^pg_' AND n.nspname<>'information_schema' AND has_schema_privilege(current_user,n.oid,'CREATE'))
+ AND has_table_privilege(current_user,'resource_demo.items','SELECT')
+ AND has_table_privilege(current_user,'resource_demo.items','UPDATE')
+ AND NOT has_table_privilege(current_user,'resource_demo.items','INSERT,DELETE,TRUNCATE,REFERENCES,TRIGGER')
+ AND NOT EXISTS(SELECT FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname!~'^pg_' AND n.nspname<>'information_schema' AND c.relkind IN ('r','v','m','f','p') AND c.oid<>'resource_demo.items'::regclass AND (has_table_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') OR has_any_column_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')))
+ AND NOT EXISTS(SELECT FROM pg_proc f JOIN pg_namespace n ON n.oid=f.pronamespace WHERE n.nspname!~'^pg_' AND n.nspname<>'information_schema' AND f.prosecdef AND has_function_privilege(current_user,f.oid,'EXECUTE'))
+ AND (SELECT c.relkind='r' AND c.relrowsecurity AND c.relowner<>r.oid FROM pg_class c WHERE c.oid='resource_demo.items'::regclass)
+ AND (SELECT count(*)=1 AND bool_and(p.polcmd='r' AND p.polpermissive AND p.polroles=ARRAY[0::oid] AND pg_get_expr(p.polqual,p.polrelid)='(owner_name = CURRENT_USER)' AND p.polwithcheck IS NULL) FROM pg_policy p WHERE p.polrelid='resource_demo.items'::regclass AND p.polcmd='r')
+ AND (SELECT count(*)=1 AND bool_and(p.polpermissive AND p.polroles=ARRAY[0::oid] AND pg_get_expr(p.polqual,p.polrelid)='(owner_name = CURRENT_USER)' AND pg_get_expr(p.polwithcheck,p.polrelid)='(owner_name = CURRENT_USER)') FROM pg_policy p WHERE p.polrelid='resource_demo.items'::regclass AND p.polcmd='w')
  FROM pg_roles r WHERE r.rolname=current_user`
 
 func (p *PGProvisioningProvider) Verify(ctx context.Context, plan v02.ProvisioningPlan, secret NativeSecret) (v02.NativeObservation, error) {
 	var out v02.NativeObservation
+	check, templateName, e := p.roleCheck(ctx, plan)
+	if e != nil {
+		return out, e
+	}
 	ep, ok := p.Private.Endpoints[plan.EndpointConfigRef]
 	if !ok || !safeProviderEndpoint(ep) || ep.Fingerprint() != plan.TargetFingerprint || secret.Username != plan.NativeIdentity || secret.Version != plan.SecretVersion {
 		return out, ErrDenied
@@ -176,7 +205,7 @@ func (p *PGProvisioningProvider) Verify(ctx context.Context, plan v02.Provisioni
 	expiry, _, _ := normalizedTime(plan.ExpiresAt)
 	var login, effective, database, oid string
 	var safe bool
-	if e = tx.QueryRow(ctx, extendedRoleCheck, expiry).Scan(&login, &effective, &database, &oid, &safe); e != nil {
+	if e = tx.QueryRow(ctx, check, expiry).Scan(&login, &effective, &database, &oid, &safe); e != nil {
 		return out, ErrUnavailable
 	}
 	if !safe || login != plan.NativeIdentity || effective != login || database != ep.Database {
@@ -187,7 +216,7 @@ func (p *PGProvisioningProvider) Verify(ctx context.Context, plan v02.Provisioni
 		return out, ErrDenied
 	}
 	out = v02.NativeObservation{AccountID: plan.AccountID, NativeIdentity: login, RoleOid: oid, Database: database, ObservedAt: time.Now().UTC().Format(time.RFC3339Nano)}
-	raw, _ := json.Marshal(struct{ Identity, OID, Database, Fingerprint, Template string }{login, oid, database, ep.Fingerprint(), "PG_OWNER_SELECT_V1"})
+	raw, _ := json.Marshal(struct{ Identity, OID, Database, Fingerprint, Template string }{login, oid, database, ep.Fingerprint(), templateName})
 	sum := sha256.Sum256(raw)
 	out.PermissionHash = hex.EncodeToString(sum[:])
 	return out, nil
@@ -208,6 +237,26 @@ func (p *PGProvisioningProvider) Disable(ctx context.Context, plan v02.Provision
 	return nil
 }
 
+// roleCheck selects the pinned verification query for the target template.
+func (p *PGProvisioningProvider) roleCheck(ctx context.Context, plan v02.ProvisioningPlan) (string, string, error) {
+	c, e := p.manager(ctx, plan.EndpointConfigRef)
+	if e != nil {
+		return "", "", e
+	}
+	defer c.Close(context.Background())
+	var template string
+	if e = c.QueryRow(ctx, "SELECT definition->>'template' FROM mcpguard_provision.targets WHERE target_id=$1", plan.TargetID).Scan(&template); e != nil {
+		return "", "", ErrDenied
+	}
+	switch template {
+	case "PG_OWNER_SELECT_V1":
+		return extendedRoleCheck, template, nil
+	case "PG_OWNER_UPDATE_V1":
+		return writeRoleCheck, template, nil
+	default:
+		return "", "", ErrDenied
+	}
+}
 // InstallPGProvider is explicitly administrative and is never called at startup.
 func InstallPGProvider(ctx context.Context, dsn, manager string, targets []v02.ProvisioningTarget) error {
 	if !regexp.MustCompile(`^[a-z][a-z0-9_]{0,62}$`).MatchString(manager) {
@@ -259,7 +308,7 @@ func InstallPGProvider(ctx context.Context, dsn, manager string, targets []v02.P
 		}
 	}
 	var latest int
-	if e = tx.QueryRow(ctx, "SELECT max(version) FROM mcpguard_provision.schema_versions").Scan(&latest); e != nil || latest > 2 {
+	if e = tx.QueryRow(ctx, "SELECT max(version) FROM mcpguard_provision.schema_versions").Scan(&latest); e != nil || latest > 3 {
 		return ErrConflict
 	}
 	recoverySum := sha256.Sum256([]byte(providerRecoveryDDL))
@@ -277,6 +326,21 @@ func InstallPGProvider(ctx context.Context, dsn, manager string, targets []v02.P
 			return ErrConflict
 		}
 	}
+	writeSum := sha256.Sum256([]byte(providerWriteDDL))
+	writeChecksum := hex.EncodeToString(writeSum[:])
+	if latest <= 2 {
+		if _, e = tx.Exec(ctx, providerWriteDDL); e != nil {
+			return e
+		}
+		if _, e = tx.Exec(ctx, "INSERT INTO mcpguard_provision.schema_versions VALUES(3,$1)", writeChecksum); e != nil {
+			return e
+		}
+	} else {
+		var saved string
+		if tx.QueryRow(ctx, "SELECT checksum FROM mcpguard_provision.schema_versions WHERE version=3").Scan(&saved) != nil || saved != writeChecksum {
+			return ErrConflict
+		}
+	}
 	for _, target := range targets {
 		if !valid("ProvisioningTarget", target) {
 			return ErrInput
@@ -291,7 +355,7 @@ func InstallPGProvider(ctx context.Context, dsn, manager string, targets []v02.P
 		}
 	}
 	role := pgx.Identifier{manager}.Sanitize()
-	_, e = tx.Exec(ctx, "GRANT USAGE ON SCHEMA mcpguard_provision TO "+role+";GRANT EXECUTE ON FUNCTION mcpguard_provision.create_account(uuid,uuid,text,text,timestamptz),mcpguard_provision.disable_account(uuid,text),mcpguard_provision.target_matches(uuid,jsonb) TO "+role)
+	_, e = tx.Exec(ctx, "GRANT USAGE ON SCHEMA mcpguard_provision TO "+role+";GRANT SELECT ON mcpguard_provision.targets TO "+role+";GRANT EXECUTE ON FUNCTION mcpguard_provision.create_account(uuid,uuid,text,text,timestamptz),mcpguard_provision.disable_account(uuid,text),mcpguard_provision.target_matches(uuid,jsonb),mcpguard_provision.create_write_account(uuid,uuid,text,text,timestamptz) TO "+role)
 	if e != nil {
 		return e
 	}
@@ -300,3 +364,5 @@ func InstallPGProvider(ctx context.Context, dsn, manager string, targets []v02.P
 	}
 	return tx.Commit(ctx)
 }
+
+

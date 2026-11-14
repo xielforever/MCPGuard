@@ -760,7 +760,7 @@
     "valid": true,
     "value": {
       "schemaVersion": "0.2",
-      "adapterVersion": "0.2.7",
+      "adapterVersion": "0.2.8",
       "protocolVersion": "2025-11-25",
       "entry": "NATIVE_HTTP_HELPER",
       "privateDelivery": true,
@@ -779,7 +779,7 @@
     "valid": false,
     "value": {
       "schemaVersion": "0.2",
-      "adapterVersion": "0.2.7",
+      "adapterVersion": "0.2.8",
       "protocolVersion": "2025-11-25",
       "entry": "NATIVE_HTTP_HELPER",
       "privateDelivery": true,

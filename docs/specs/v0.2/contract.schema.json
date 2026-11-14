@@ -2375,7 +2375,10 @@
         },
         "template": {
           "type": "string",
-          "const": "PG_OWNER_SELECT_V1"
+          "enum": [
+            "PG_OWNER_SELECT_V1",
+            "PG_OWNER_UPDATE_V1"
+          ]
         },
         "version": {
           "$ref": "#/$defs/Version"
@@ -3027,7 +3030,7 @@
         "adapterVersion": {
           "type": "string",
           "enum": [
-            "0.2.7"
+            "0.2.8"
           ]
         },
         "protocolVersion": {

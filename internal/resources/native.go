@@ -123,6 +123,16 @@ func (m *ReadManager) Close() {
 	}
 }
 func (m *ReadManager) pool(ctx context.Context, p metadata.Principal, s Snapshot) (*pgxpool.Pool, error) {
+	return m.poolMode(ctx, p, s, "ro")
+}
+
+// writePool serves the single fixed write function. The account still has no
+// table-level write privilege; only the definer function may modify its row.
+func (m *ReadManager) writePool(ctx context.Context, p metadata.Principal, s Snapshot) (*pgxpool.Pool, error) {
+	return m.poolMode(ctx, p, s, "rw")
+}
+
+func (m *ReadManager) poolMode(ctx context.Context, p metadata.Principal, s Snapshot, mode string) (*pgxpool.Pool, error) {
 	endpoint, secret, e := m.provider.Resolve(ctx, s.Resource.EndpointConfigRef, s.Binding.SecretRef, s.Binding.SecretVersion)
 	if e != nil || endpoint.Fingerprint() != s.Resource.TargetFingerprint || secret.Username != s.Binding.NativeIdentity || secret.Version != s.Binding.SecretVersion {
 		return nil, ErrUnavailable
@@ -131,13 +141,13 @@ func (m *ReadManager) pool(ctx context.Context, p metadata.Principal, s Snapshot
 	if ip == nil || !ip.IsLoopback() || endpoint.SSLMode != "disable" || endpoint.Database == "mcpguard_meta" {
 		return nil, ErrUnavailable
 	}
-	key := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", p.OrgID, p.ID, s.Resource.ResourceID, s.Resource.Version, s.Binding.BindingID, s.Binding.BindingVersion, s.Binding.NativeIdentity, s.Binding.SecretVersion, s.Profile.Version, endpoint.Fingerprint())
+	key := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", mode, p.OrgID, p.ID, s.Resource.ResourceID, s.Resource.Version, s.Binding.BindingID, s.Binding.BindingVersion, s.Binding.NativeIdentity, s.Binding.SecretVersion, s.Profile.Version, endpoint.Fingerprint())
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.closed {
 		return nil, ErrUnavailable
 	}
-	prefix := p.OrgID + "/" + p.ID + "/" + s.Resource.ResourceID + "/"
+	prefix := mode + "/" + p.OrgID + "/" + p.ID + "/" + s.Resource.ResourceID + "/"
 	for previous, old := range m.pools {
 		if previous != key && strings.HasPrefix(previous, prefix) {
 			delete(m.pools, previous)
@@ -159,7 +169,11 @@ func (m *ReadManager) pool(ctx context.Context, p metadata.Principal, s Snapshot
 	config.MinConns = 0
 	config.MaxConnIdleTime = time.Minute
 	config.ConnConfig.ConnectTimeout = 2 * time.Second
-	config.ConnConfig.RuntimeParams = map[string]string{"application_name": "mcpguard-ra03-reader", "default_transaction_read_only": "on", "row_security": "on", "statement_timeout": "3000", "idle_in_transaction_session_timeout": "5000", "search_path": "pg_catalog"}
+	readOnly, appName := "on", "mcpguard-ra03-reader"
+	if mode == "rw" {
+		readOnly, appName = "off", "mcpguard-ra12-writer"
+	}
+	config.ConnConfig.RuntimeParams = map[string]string{"application_name": appName, "default_transaction_read_only": readOnly, "row_security": "on", "statement_timeout": "3000", "idle_in_transaction_session_timeout": "5000", "search_path": "pg_catalog"}
 	config.ConnConfig.BuildContextWatcherHandler = func(conn *pgconn.PgConn) ctxwatch.Handler {
 		return &pgconn.CancelRequestContextWatcherHandler{Conn: conn, CancelRequestDelay: 0, DeadlineDelay: time.Second}
 	}
@@ -189,7 +203,11 @@ const roleCheck = `SELECT session_user::text,current_user::text,current_database
  AND (SELECT c.relkind='r' AND c.relrowsecurity AND c.relowner<>r.oid FROM pg_class c WHERE c.oid='resource_demo.items'::regclass)
  AND (SELECT count(*)=1 AND bool_and(p.polcmd='r' AND p.polpermissive AND p.polroles=ARRAY[0::oid]
   AND pg_get_expr(p.polqual,p.polrelid)='(owner_name = CURRENT_USER)' AND p.polwithcheck IS NULL)
-  FROM pg_policy p WHERE p.polrelid='resource_demo.items'::regclass)
+  FROM pg_policy p WHERE p.polrelid='resource_demo.items'::regclass AND p.polcmd='r')
+ AND (SELECT count(*)<=1 AND coalesce(bool_and(p.polpermissive AND p.polroles=ARRAY[0::oid]
+  AND pg_get_expr(p.polqual,p.polrelid)='(owner_name = CURRENT_USER)'
+  AND pg_get_expr(p.polwithcheck,p.polrelid)='(owner_name = CURRENT_USER)'),true)
+  FROM pg_policy p WHERE p.polrelid='resource_demo.items'::regclass AND p.polcmd='w')
  FROM pg_roles r WHERE r.rolname=current_user`
 const ReadItemSQL = "SELECT item_id,note,version::text FROM resource_demo.items WHERE item_id=$1 LIMIT 1"
 
