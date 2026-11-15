@@ -272,8 +272,22 @@ func (s *WriteService) nativeUpdate(ctx context.Context, p metadata.Principal, s
 		return "", ErrInput
 	}
 	var outcome string
-	if e = tx.QueryRow(call, "SELECT mcpguard_provision.update_owned_item($1,$2,$3)", in.ItemID, in.Note, expected).Scan(&outcome); e != nil {
+	tag, e := tx.Exec(call, "UPDATE resource_demo.items SET note=$1, version=version+1 WHERE item_id=$2 AND version=$3", in.Note, in.ItemID, expected)
+	if e != nil {
 		return "", ErrUnavailable
+	}
+	if tag.RowsAffected() == 1 {
+		outcome = "UPDATED"
+	} else {
+		var exists bool
+		if tx.QueryRow(call, "SELECT EXISTS(SELECT 1 FROM resource_demo.items WHERE item_id=$1)", in.ItemID).Scan(&exists) != nil {
+			return "", ErrUnavailable
+		}
+		if exists {
+			outcome = "VERSION_CONFLICT"
+		} else {
+			outcome = "NOT_FOUND"
+		}
 	}
 	if e = commit(call, tx); e != nil {
 		return "", ErrUnavailable

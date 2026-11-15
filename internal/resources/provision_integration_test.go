@@ -67,6 +67,10 @@ func newProvisionFixture(t *testing.T) *provisionFixture {
 	}
 	out := &provisionFixture{accessFixture: f, worker: w, private: private, config: v02.ProvisioningConfiguration{SchemaVersion: "0.2", Targets: []v02.ProvisioningTarget{}, ExistingAccounts: []v02.ExistingAccountRegistration{}}}
 	for i, p := range f.bundle.Profiles {
+		// Write profiles carry their own target and must not borrow a read scene slot.
+		if p.Name != "isolated-read" || i >= len(scene.PG) {
+			continue
+		}
 		r := f.bundle.Resources[i]
 		target := v02.ProvisioningTarget{OrgID: r.OrgID, ResourceID: r.ResourceID, ResourceVersion: r.Version, ProfileID: p.ProfileID, ProfileVersion: p.Version, TargetID: uuid.NewString(), EndpointConfigRef: r.EndpointConfigRef, TargetFingerprint: r.TargetFingerprint, Template: "PG_OWNER_SELECT_V1", Version: "1", Enabled: true}
 		out.config.Targets = append(out.config.Targets, target)
