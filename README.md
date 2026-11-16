@@ -103,3 +103,7 @@ RA-10 已补齐原生 HTTP 私有头 helper、有界同步 worker、可选 stdio
 ## 2026-11-16：RA-13 文件/授权/主体/资源级吊销与 epoch
 
 已实现运营方特权的 `mcpguard-catalog revoke`：按文件（凭据）、授权、主体、资源四级撤销，单事务内锁定并推进授权 epoch、级联终态化租约/未领取 ticket/context/grant、禁用绑定与资源头，并写入带影响计数的撤销审计。撤销提交后新领取与新派发失败，另一副本连接池也能观察到 epoch 与终态。标准场景 299 Go race 通过；吊销场景 5 项端到端用例通过，见[实现说明](docs/revocations-local.md)与[验收](docs/validation/local-ra13-2026-11-16.md)。在途停止与原生清理（RA-14）、客户端缓存清理与真实客户端（RA-18）、控制台撤销页（RA-16）未验收。
+
+## 2026-11-16：RA-14 在途停止、池淘汰与清理状态
+
+已实现撤销时把在途写计划/读计划标记为 `OUTCOME_UNKNOWN`（不重放）、按 authorization epoch 淘汰原生连接池、撤销历史结果按 epoch 拒绝返回载荷，以及原生账号清理的 PENDING/FAILED/CLEANED 状态与可重试清理（失败不误报成功）。标准场景 299 Go race、写场景 6 项、吊销/清理场景 6 项用例通过，见[验收](docs/validation/local-ra14-2026-11-16.md)。真正终止原生后端语句、控制台与真实客户端未验收。

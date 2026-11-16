@@ -31,8 +31,11 @@ type RevocationResult struct {
 	Grants      int    `json:"grants"`
 	Credentials int    `json:"credentials"`
 	Tickets     int    `json:"tickets"`
-	Contexts    int    `json:"contexts"`
-	Epoch       string `json:"epoch"`
+	Contexts       int    `json:"contexts"`
+	WriteUnknown   int    `json:"writeUnknown"`
+	ReadUnknown    int    `json:"readUnknown"`
+	CleanupPending int    `json:"cleanupPending"`
+	Epoch          string `json:"epoch"`
 }
 
 func NewRevocationService(pool *pgxpool.Pool, vault *metadata.Vault) *RevocationService {
@@ -79,6 +82,12 @@ func (s *RevocationService) Revoke(ctx context.Context, actor metadata.Principal
 	}
 	if e != nil {
 		return out, e
+	}
+	if e = s.markInflight(ctx, tx, actor.OrgID, kind, targetID, &out); e != nil {
+		return out, ErrUnavailable
+	}
+	if e = s.enqueueCleanup(ctx, tx, actor.OrgID, kind, targetID, &out); e != nil {
+		return out, ErrUnavailable
 	}
 	out.Epoch = fmt.Sprintf("%d", epoch)
 	var cipher []byte
@@ -223,6 +232,119 @@ func (s *RevocationService) cancelTickets(ctx context.Context, tx pgx.Tx, org, p
 		return 0
 	}
 	return int(tag.RowsAffected())
+}
+
+
+// markInflight records uncertainty for plans that were already dispatched. The
+// gateway never replays them; the completed native fact is not rewritten.
+func (s *RevocationService) markInflight(ctx context.Context, tx pgx.Tx, org, kind, target string, out *RevocationResult) error {
+	var wp, rp string
+	switch kind {
+	case "CREDENTIAL":
+		wp, rp = "credential_id=$2", "credential_id=$2"
+	case "GRANT":
+		wp = "credential_id IN (SELECT credential_id FROM mcpguard_ra.credential_leases WHERE org_id=$1 AND grant_id=$2)"
+		rp = wp
+	case "PRINCIPAL":
+		wp, rp = "subject_id=$2", "principal_id=$2"
+	case "RESOURCE":
+		wp, rp = "resource_id=$2", "resource_id=$2"
+	default:
+		return ErrInput
+	}
+	tag, e := tx.Exec(ctx, `UPDATE mcpguard_ra.write_requests SET state='OUTCOME_UNKNOWN' WHERE org_id=$1 AND state='EXECUTING' AND `+wp, org, target)
+	if e != nil {
+		return e
+	}
+	out.WriteUnknown = int(tag.RowsAffected())
+	if out.WriteUnknown > 0 {
+		if _, e = tx.Exec(ctx, `INSERT INTO mcpguard_ra.write_audit(org_id,subject_id,request_id,event_type) SELECT org_id,subject_id,request_id,'OUTCOME_UNKNOWN' FROM mcpguard_ra.write_requests WHERE org_id=$1 AND state='OUTCOME_UNKNOWN' AND `+wp, org, target); e != nil {
+			return e
+		}
+	}
+	tag, e = tx.Exec(ctx, `UPDATE mcpguard_ra.read_plans SET state='OUTCOME_UNKNOWN' WHERE org_id=$1 AND state='RUNNING' AND `+rp, org, target)
+	if e != nil {
+		return e
+	}
+	out.ReadUnknown = int(tag.RowsAffected())
+	return nil
+}
+
+// enqueueCleanup records every native account affected by the revocation as a
+// pending cleanup; the revocation itself never claims the native side effect is
+// gone.
+func (s *RevocationService) enqueueCleanup(ctx context.Context, tx pgx.Tx, org, kind, target string, out *RevocationResult) error {
+	var filter string
+	switch kind {
+	case "CREDENTIAL":
+		filter = "binding_id IN (SELECT binding_id FROM mcpguard_ra.credential_leases WHERE org_id=$1 AND credential_id=$2)"
+	case "GRANT":
+		filter = "binding_id IN (SELECT binding_id FROM mcpguard_ra.credential_leases WHERE org_id=$1 AND grant_id=$2)"
+	case "PRINCIPAL":
+		filter = "principal_id=$2"
+	case "RESOURCE":
+		filter = "resource_id=$2"
+	default:
+		return ErrInput
+	}
+	tag, e := tx.Exec(ctx, `INSERT INTO mcpguard_ra.revocation_cleanup(org_id,account_id,resource_id,state)
+ SELECT $1,(b.definition->>'accountId')::uuid,b.resource_id,'PENDING' FROM mcpguard_ra.identity_bindings b
+ WHERE b.org_id=$1 AND (b.definition->>'accountId') IS NOT NULL AND `+filter+`
+ ON CONFLICT (org_id,account_id) DO UPDATE SET state='PENDING',updated_at=clock_timestamp()`, org, target)
+	if e != nil {
+		return e
+	}
+	out.CleanupPending = int(tag.RowsAffected())
+	return nil
+}
+
+// AccountCleaner removes one native account through the provisioning provider.
+type AccountCleaner func(ctx context.Context, org, accountID string) error
+
+// Cleanup retries pending/failed native account cleanups. A failed attempt is
+// recorded and stays retryable; nothing is reported as cleaned without proof.
+func (s *RevocationService) Cleanup(ctx context.Context, org string, cleaner AccountCleaner, limit int) (int, int, error) {
+	if cleaner == nil || limit <= 0 || limit > 100 {
+		return 0, 0, ErrInput
+	}
+	rows, e := s.Pool.Query(ctx, `SELECT account_id::text FROM mcpguard_ra.revocation_cleanup WHERE org_id=$1 AND state IN ('PENDING','FAILED') ORDER BY updated_at LIMIT $2`, org, limit)
+	if e != nil {
+		return 0, 0, ErrUnavailable
+	}
+	var accounts []string
+	for rows.Next() {
+		var id string
+		if rows.Scan(&id) != nil {
+			rows.Close()
+			return 0, 0, ErrUnavailable
+		}
+		accounts = append(accounts, id)
+	}
+	rows.Close()
+	cleaned, failed := 0, 0
+	for _, accountID := range accounts {
+		_, _ = s.Pool.Exec(ctx, `UPDATE mcpguard_ra.revocation_cleanup SET attempts=attempts+1,updated_at=clock_timestamp() WHERE org_id=$1 AND account_id=$2`, org, accountID)
+		if err := cleaner(ctx, org, accountID); err != nil {
+			failed++
+			if _, e = s.Pool.Exec(ctx, `UPDATE mcpguard_ra.revocation_cleanup SET state='FAILED',last_error=$3,updated_at=clock_timestamp() WHERE org_id=$1 AND account_id=$2`, org, accountID, truncateError(err)); e != nil {
+				return cleaned, failed, ErrUnavailable
+			}
+			continue
+		}
+		cleaned++
+		if _, e = s.Pool.Exec(ctx, `UPDATE mcpguard_ra.revocation_cleanup SET state='CLEANED',last_error=NULL,updated_at=clock_timestamp() WHERE org_id=$1 AND account_id=$2`, org, accountID); e != nil {
+			return cleaned, failed, ErrUnavailable
+		}
+	}
+	return cleaned, failed, nil
+}
+
+func truncateError(err error) string {
+	msg := err.Error()
+	if len(msg) > 200 {
+		msg = msg[:200]
+	}
+	return msg
 }
 
 func revocationAAD(org, kind, target string) string {

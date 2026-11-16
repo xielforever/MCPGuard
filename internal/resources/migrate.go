@@ -11,7 +11,7 @@ import (
 
 //go:embed migrations/*.sql
 var migrations embed.FS
-var migrationFiles = []string{"001_catalog.sql", "002_access_workflow.sql", "003_native_provisioning.sql", "004_provision_recovery.sql", "005_credential_packages.sql", "006_private_downloads.sql", "007_credential_contexts.sql", "008_planned_reads.sql", "009_controlled_writes.sql", "010_revocation.sql"}
+var migrationFiles = []string{"001_catalog.sql", "002_access_workflow.sql", "003_native_provisioning.sql", "004_provision_recovery.sql", "005_credential_packages.sql", "006_private_downloads.sql", "007_credential_contexts.sql", "008_planned_reads.sql", "009_controlled_writes.sql", "010_revocation.sql", "011_revocation_cleanup.sql"}
 
 func migrationBytes(version int) []byte {
 	b, _ := migrations.ReadFile("migrations/" + migrationFiles[version-1])

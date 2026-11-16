@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -185,5 +186,51 @@ func TestRevocationAnotherReplicaSeesTheEpoch(t *testing.T) {
 	status, e := replicaCredentials.Status(f.ctx, f.people["alice"], v02.CredentialIDInput{CredentialID: ticket.CredentialID})
 	if e != nil || status.State != "REVOKED" {
 		t.Fatalf("second replica still sees state=%q err=%v", status.State, e)
+	}
+}
+
+// TestRevocationCleanupStaysPendingUntilProven proves a revoked native account
+// is not reported cleaned until a retry actually removed it.
+func TestRevocationCleanupStaysPendingUntilProven(t *testing.T) {
+	f := newRevokeFixture(t)
+	ticket, _ := f.activatedCredential(t, 0)
+	res, e := f.revocations.Revoke(f.ctx, f.people["alice"], "RESOURCE", *ticket.ResourceID, "resource retired")
+	if e != nil {
+		t.Fatal(e)
+	}
+	if res.CleanupPending < 1 {
+		t.Fatalf("revocation did not enqueue a native cleanup: %+v", res)
+	}
+	alice := f.people["alice"]
+	var pending int
+	if e = f.admin.QueryRow(f.ctx, `SELECT count(*) FROM mcpguard_ra.revocation_cleanup WHERE org_id=$1 AND state='PENDING'`, alice.OrgID).Scan(&pending); e != nil {
+		t.Fatal(e)
+	}
+	if pending != res.CleanupPending {
+		t.Fatalf("cleanup rows=%d report=%d", pending, res.CleanupPending)
+	}
+	failing := func(context.Context, string, string) error { return errors.New("provider unavailable") }
+	cleaned, failed, e := f.revocations.Cleanup(f.ctx, alice.OrgID, failing, 10)
+	if e != nil || failed < 1 || cleaned != 0 {
+		t.Fatalf("failed cleanup run cleaned=%d failed=%d err=%v", cleaned, failed, e)
+	}
+	var state string
+	var attempts int
+	if e = f.admin.QueryRow(f.ctx, `SELECT state,attempts FROM mcpguard_ra.revocation_cleanup WHERE org_id=$1 ORDER BY updated_at DESC LIMIT 1`, alice.OrgID).Scan(&state, &attempts); e != nil {
+		t.Fatal(e)
+	}
+	if state != "FAILED" || attempts < 1 {
+		t.Fatalf("failed cleanup is state=%q attempts=%d, want FAILED/retryable", state, attempts)
+	}
+	succeeding := func(context.Context, string, string) error { return nil }
+	cleaned, failed, e = f.revocations.Cleanup(f.ctx, alice.OrgID, succeeding, 10)
+	if e != nil || failed != 0 || cleaned < 1 {
+		t.Fatalf("retry result cleaned=%d failed=%d err=%v", cleaned, failed, e)
+	}
+	if e = f.admin.QueryRow(f.ctx, `SELECT state FROM mcpguard_ra.revocation_cleanup WHERE org_id=$1 ORDER BY updated_at DESC LIMIT 1`, alice.OrgID).Scan(&state); e != nil {
+		t.Fatal(e)
+	}
+	if state != "CLEANED" {
+		t.Fatalf("proven cleanup state=%q, want CLEANED", state)
 	}
 }

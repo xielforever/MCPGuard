@@ -144,7 +144,7 @@ func (m *ReadManager) poolMode(ctx context.Context, p metadata.Principal, s Snap
 	if ip == nil || !ip.IsLoopback() || endpoint.SSLMode != "disable" || endpoint.Database == "mcpguard_meta" {
 		return nil, fmt.Errorf("pool endpoint (host=%s db=%s): %w", endpoint.Host, endpoint.Database, ErrUnavailable)
 	}
-	key := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", mode, p.OrgID, p.ID, s.Resource.ResourceID, s.Resource.Version, s.Binding.BindingID, s.Binding.BindingVersion, s.Binding.NativeIdentity, s.Binding.SecretVersion, s.Profile.Version, endpoint.Fingerprint())
+	key := fmt.Sprintf("%s/%s/%s/%s/%s/%d/%s/%s/%s/%s/%s/%s", mode, p.OrgID, p.ID, s.Resource.ResourceID, s.Resource.Version, s.Epoch, s.Binding.BindingID, s.Binding.BindingVersion, s.Binding.NativeIdentity, s.Binding.SecretVersion, s.Profile.Version, endpoint.Fingerprint())
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.closed {

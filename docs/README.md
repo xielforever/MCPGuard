@@ -110,3 +110,7 @@
 ## 2026-11-16 后续状态：RA-13 本地完成
 
 新增文件/授权/主体/资源四级撤销与 epoch：特权 CLI `mcpguard-catalog revoke` 在单事务内锁定并推进授权 epoch，级联终态化租约、未领取 ticket、context 与 grant，禁用绑定/资源头，并写撤销审计（含影响计数）。撤销先提交则新领取失败；另一副本连接池可见同一 epoch 与终态。见[实现说明](revocations-local.md)与[验收](validation/local-ra13-2026-11-16.md)。在途停止/原生清理（RA-14）、客户端缓存与真实客户端（RA-18）、控制台撤销页（RA-16）未验收。
+
+## 2026-11-16 后续状态：RA-14 本地完成
+
+撤销时在途写/读计划转 `OUTCOME_UNKNOWN`（保留完成事实、不重放）、原生池按 `auth_epoch` 淘汰、历史结果按 epoch 拒绝载荷，并新增原生账号清理台账：撤销只登记 PENDING，失败可重试，成功证据才 CLEANED。见[验收](validation/local-ra14-2026-11-16.md)。后端在途语句终止、控制台与真实客户端未验收。

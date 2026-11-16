@@ -124,6 +124,11 @@ func TestNativePoolHygieneIntegration(t *testing.T) {
 	if _, e = m.pool(ctx, p, next); e != nil || m.PoolCount() != 1 {
 		t.Fatal("superseded credential pool not retired")
 	}
+	epochNext := snapshot
+	epochNext.Epoch++
+	if _, e = m.pool(ctx, p, epochNext); e != nil || m.PoolCount() != 1 {
+		t.Fatal("authorization epoch change did not retire the native pool")
+	}
 	// A private endpoint change without the corresponding immutable catalog
 	// fingerprint must not silently point an existing binding at a different PG.
 	original := provider.endpoints[snapshot.Resource.EndpointConfigRef]

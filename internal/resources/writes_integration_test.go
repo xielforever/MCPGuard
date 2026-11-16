@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	v02 "github.com/xielforever/MCPGuard/internal/contracts/v02"
 	"github.com/xielforever/MCPGuard/internal/metadata"
 )
@@ -250,5 +251,56 @@ func TestControlledWriteRejectsNonReviewer(t *testing.T) {
 	}
 	if _, e := writes.Approve(f.ctx, f.people["bob"], planned.RequestID, true, ""); !errors.Is(e, ErrDenied) {
 		t.Fatal("a non-reviewer approved a write: ", e)
+	}
+}
+
+// TestControlledWriteInFlightRevocation proves an already dispatched write is
+// recorded as uncertain instead of being replayed, and its history is refused.
+func TestControlledWriteInFlightRevocation(t *testing.T) {
+	f, writes := newWriteFixture(t)
+	ticket := activateWrite(t, f, writes)
+	seedWriteItem(t, f, *ticket.ResourceID)
+	approver := writeApprover(t, f, writes, *ticket.ResourceID)
+	alice := f.people["alice"]
+	var grantID string
+	if e := f.admin.QueryRow(f.ctx, `SELECT grant_id::text FROM mcpguard_ra.credential_leases WHERE org_id=$1 AND credential_id=$2`, alice.OrgID, ticket.CredentialID).Scan(&grantID); e != nil {
+		t.Fatal(e)
+	}
+	planned, e := writes.Plan(f.ctx, alice, writeInput(ticket, "in flight", "1"), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = writes.Approve(f.ctx, approver, planned.RequestID, true, ""); e != nil {
+		t.Fatal(e)
+	}
+	if _, e = f.admin.Exec(f.ctx, `UPDATE mcpguard_ra.write_requests SET state='EXECUTING' WHERE org_id=$1 AND request_id=$2`, alice.OrgID, planned.RequestID); e != nil {
+		t.Fatal(e)
+	}
+	pool, e := pgxpool.New(f.ctx, os.Getenv("MCPGUARD_TEST_METADATA_ADMIN_DSN"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	t.Cleanup(pool.Close)
+	revocations := NewRevocationService(pool, f.s.Catalog.Store.Vault)
+	res, e := revocations.Revoke(f.ctx, alice, "GRANT", grantID, "revoked during dispatch")
+	if e != nil {
+		t.Fatal("revocation: ", e)
+	}
+	if res.WriteUnknown != 1 || res.CleanupPending < 1 {
+		t.Fatalf("in-flight revocation report is incomplete: %+v", res)
+	}
+	var state string
+	if e = f.admin.QueryRow(f.ctx, `SELECT state FROM mcpguard_ra.write_requests WHERE org_id=$1 AND request_id=$2`, alice.OrgID, planned.RequestID).Scan(&state); e != nil {
+		t.Fatal(e)
+	}
+	if state != "OUTCOME_UNKNOWN" {
+		t.Fatalf("in-flight write state=%q, want OUTCOME_UNKNOWN", state)
+	}
+	if _, e := writes.Resume(f.ctx, alice, planned.RequestID); !errors.Is(e, ErrDenied) {
+		t.Fatal("an uncertain write was replayed: ", e)
+	}
+	history, e := writes.Status(f.ctx, alice, planned.RequestID)
+	if e != nil || history.State != "OUTCOME_UNKNOWN" || history.Result != nil {
+		t.Fatalf("historical write result was not redacted: state=%q result=%v err=%v", history.State, history.Result, e)
 	}
 }

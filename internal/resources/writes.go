@@ -121,7 +121,7 @@ func (s *WriteService) Approve(ctx context.Context, p metadata.Principal, id str
 	}
 	tx, _, e := s.Catalog.begin(ctx, p)
 	if e != nil {
-		return out, e
+		return out, fmt.Errorf("approve begin2: %w", e)
 	}
 	defer rollback(tx)
 	var subject, resource string
@@ -353,6 +353,13 @@ func (s *WriteService) Status(ctx context.Context, p metadata.Principal, id stri
 			return out, ErrDenied
 		}
 	}
+	var currentEpoch int64
+	if e := s.Catalog.Store.Pool.QueryRow(ctx, `SELECT auth_epoch FROM mcpguard.authorization_heads WHERE org_id=$1`, p.OrgID).Scan(&currentEpoch); e != nil {
+		return out, ErrUnavailable
+	}
+	// The state stays visible, but a result recorded under an older authorization
+	// epoch is historical data and is not served after a revocation changed it.
+	redactResult := currentEpoch != r.AuthEpoch
 	out.RequestID = id
 	out.State = r.State
 	out.ResourceID = r.ResourceID
@@ -360,7 +367,7 @@ func (s *WriteService) Status(ctx context.Context, p metadata.Principal, id stri
 	out.ItemID = r.ItemID
 	out.ExpectedVersion = v02.Version(strconv.FormatInt(r.ExpectedVersion, 10))
 	out.DecidedBy = r.DecidedBy
-	if r.State == "SUCCEEDED" || r.State == "FAILED" {
+	if !redactResult && (r.State == "SUCCEEDED" || r.State == "FAILED") {
 		var cipher []byte
 		if s.Catalog.Store.Pool.QueryRow(ctx, `SELECT result_ciphertext FROM mcpguard_ra.write_requests WHERE org_id=$1 AND request_id=$2`, p.OrgID, id).Scan(&cipher) == nil && len(cipher) > 0 {
 			if plain, err := s.Catalog.Store.Vault.Open(cipher, writeAAD(p, id)); err == nil {
