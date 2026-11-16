@@ -1,6 +1,10 @@
 package resources
 
 import (
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"encoding/json"
 	"errors"
 	"os"
@@ -440,5 +444,49 @@ func TestControlledWriteRecoveryFenceBlocksStaleMetadata(t *testing.T) {
 	done, e := writes.Resume(f.ctx, alice, second.RequestID)
 	if e != nil || done.State != "SUCCEEDED" {
 		t.Fatal("verified recovery point did not resume work: ", e)
+	}
+}
+
+// TestControlledWriteConsoleApprovals drives the real console HTTP endpoint:
+// the reviewer sees the queue, the subject cannot approve, and a stale decision
+// returns an explicit conflict code.
+func TestControlledWriteConsoleApprovals(t *testing.T) {
+	f, writes := newWriteFixture(t)
+	ticket := activateWrite(t, f, writes)
+	seedWriteItem(t, f, *ticket.ResourceID)
+	approver := writeApprover(t, f, writes, *ticket.ResourceID)
+	alice := f.people["alice"]
+	planned, e := writes.Plan(f.ctx, alice, writeInput(ticket, "console approval", "1"), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	console := &SelfServiceConsole{Catalog: f.s.Catalog, Access: f.s, Writes: writes}
+	do := func(method, path string, body string, p metadata.Principal) (int, string) {
+		t.Helper()
+		var reader io.Reader
+		if body != "" {
+			reader = strings.NewReader(body)
+		}
+		req := httptest.NewRequest(method, path, reader)
+		rec := httptest.NewRecorder()
+		if !console.ServeHTTP(rec, req, p) {
+			t.Fatalf("console route %s %s was not served", method, path)
+		}
+		return rec.Code, rec.Body.String()
+	}
+	code, body := do("GET", "/console/api/v2/self-service/write-requests", "", approver)
+	if code != http.StatusOK || !strings.Contains(body, planned.RequestID) {
+		t.Fatalf("reviewer queue code=%d body=%s", code, body)
+	}
+	if code, _ = do("POST", "/console/api/v2/self-service/write-requests/"+planned.RequestID+"/decisions", `{"approve":true}`, alice); code != http.StatusForbidden {
+		t.Fatalf("self approval over HTTP returned %d, want 403", code)
+	}
+	code, body = do("POST", "/console/api/v2/self-service/write-requests/"+planned.RequestID+"/decisions", `{"approve":true}`, approver)
+	if code != http.StatusOK || !strings.Contains(body, "APPROVED") {
+		t.Fatalf("reviewer decision code=%d body=%s", code, body)
+	}
+	code, body = do("POST", "/console/api/v2/self-service/write-requests/"+planned.RequestID+"/decisions", `{"approve":true}`, approver)
+	if code != http.StatusConflict || !strings.Contains(body, "STATE_CONFLICT") {
+		t.Fatalf("stale decision code=%d body=%s", code, body)
 	}
 }

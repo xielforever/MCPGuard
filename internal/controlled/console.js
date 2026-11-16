@@ -6,6 +6,7 @@
   const {el, button, badge, stateBadge, notice, panel, table, field, keyValues} = ui;
   const pages = [
     ['操作与审批', 'actions', '受控操作 / CONTROL BRIDGE', '核对身份、资源与冻结计划，再作出审批决定。'],
+    ['自助访问', 'key', '自助访问 / SELF-SERVICE', '查看 v0.2 资源、凭据、撤销与写审批（真实服务端 API）。'],
     ['资源', 'database', '资源管理 / RESOURCES', '查看真实资源绑定，管理受控工具的启用状态。'],
     ['规则', 'rules', '策略管理 / POLICIES', '拒绝规则优先；工具授权与审批要求分别校验。'],
     ['用户与权限', 'users', '身份与授权 / IDENTITIES', '维护现有身份、工具授权、资源审批资格和用户组。'],
@@ -132,7 +133,7 @@
     const [label, , eyebrow, description] = pages[page];
     $('page-title').textContent = label; $('pageEyebrow').textContent = eyebrow; $('pageDescription').textContent = description;
     $('content').replaceChildren();
-    [renderApprovals, renderResources, renderRules, renderIdentities, renderAudit, renderSettings][page]($('content'));
+    [renderApprovals, renderSelfService, renderResources, renderRules, renderIdentities, renderAudit, renderSettings][page]($('content'));
     renderRecovery();
   }
   function closeMenu(focus) {
@@ -446,4 +447,40 @@
     if (error.silent) return;
     showLogin('暂时无法确认浏览器会话，可使用独立凭据重新登录。');
   });
+
+  async function decideWrite(id, approve, trigger) {
+    if (trigger) trigger.disabled = true;
+    try {
+      await api('api/v2/self-service/write-requests/' + encodeURIComponent(id) + '/decisions', {method: 'POST', body: JSON.stringify({approve, reason: ''})});
+      showMessage(approve ? '已记录批准决定（派发仍需申请人 resume）。' : '已记录拒绝决定。', 'success');
+    } catch (error) {
+      showMessage(error.publicMessage || '决定未能记录。', 'danger');
+    } finally { if (trigger) trigger.disabled = false; }
+  }
+  async function renderSelfService(parent) {
+    parent.append(notice('v0.2 自助访问：数据来自服务端真实 API；不显示原生秘密、包内容或计划正文。', 'info'));
+    let resources = [], credentials = [], revocations = [], writes = [];
+    try { ({resources} = await api('api/v2/self-service/resources')); } catch (error) { parent.append(notice(error.publicMessage || '读取资源失败。', 'danger')); return; }
+    try { ({credentials} = await api('api/v2/self-service/credentials')); } catch (error) {}
+    try { ({revocations} = await api('api/v2/self-service/revocations')); } catch (error) {}
+    try { ({writeRequests: writes} = await api('api/v2/self-service/write-requests')); } catch (error) {}
+    parent.append(listPanel('资源与用量', '计数为当前真实状态；停用资源不影响历史记录。', ['资源', '类型', '状态', '套餐', '绑定', '授予', '凭据', '待批写'], resources.map(row => [row.resourceId, row.kind, boolBadge(row.enabled, '启用', '停用'), String(row.profiles), String(row.bindings), String(row.activeGrants), String(row.activeCredentials), String(row.pendingWrites)])));
+    parent.append(listPanel('凭据', '只显示状态与到期；不含包内容或原生秘密。', ['凭据', '主体', '资源', '状态', '到期'], credentials.map(row => [ui.shortID(row.credentialId), ui.shortID(row.subjectId), ui.shortID(row.resourceId), stateBadge(row.state), row.expiresAt])));
+    parent.append(listPanel('待批写', '申请人不能自批；重复决定返回明确的版本冲突。', ['计划', '状态', '资源', '操作'], writes.map(row => [ui.shortID(row.requestId), stateBadge(row.state), ui.shortID(row.resourceId), row.state === 'DEFERRED' ? button('批准', trigger => decideWrite(row.requestId, true, trigger), {small: true}) : '—'])));
+    parent.append(listPanel('撤销记录', '每次撤销的影响计数来自服务端审计。', ['序号', '级别', '目标', '主体', '资源', '授予', '凭据', '时间'], revocations.map(row => [row.seq, row.kind, ui.shortID(row.targetId), row.subjectId ? ui.shortID(row.subjectId) : '—', row.resourceId ? ui.shortID(row.resourceId) : '—', String(row.grants), String(row.credentials), row.createdAt])));
+    let kind, target, reason;
+    const form = ui.form('执行撤销', '撤销先提交即生效；影响计数随后出现在上方记录。', '确认撤销', async trigger => {
+      trigger.disabled = true;
+      try {
+        await api('api/v2/self-service/revocations', {method: 'POST', body: JSON.stringify({kind: kind.value, targetId: target.value.trim(), reason: reason.value})});
+        showMessage('撤销已提交，记录已刷新。', 'success');
+        target.value = ''; reason.value = '';
+      } catch (error) { showMessage(error.publicMessage || '撤销未执行。', 'danger'); }
+      finally { trigger.disabled = false; }
+    });
+    kind = field(form.fields, '级别', 'select', {choices: [{value: 'CREDENTIAL', label: '凭据/文件'}, {value: 'GRANT', label: '授权'}, {value: 'PRINCIPAL', label: '主体'}, {value: 'RESOURCE', label: '资源'}]});
+    target = field(form.fields, '目标 ID', 'text', {required: true, maxLength: 64});
+    reason = field(form.fields, '原因', 'text', {maxLength: 200});
+    parent.append(form.element);
+  }
 })();

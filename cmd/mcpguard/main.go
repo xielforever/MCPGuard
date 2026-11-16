@@ -162,6 +162,7 @@ func run() error {
 					g.AttachReads(resources.NewReadService(catalog, credentials, manager))
 					if cfg.ResourceWrites {
 						g.AttachWrites(resources.NewWriteService(catalog, credentials, manager))
+						g.AttachSelfService(console)
 					}
 				}
 			}

@@ -1,6 +1,10 @@
 package resources
 
 import (
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"context"
 	"encoding/json"
 	"errors"
@@ -298,5 +302,44 @@ func TestRevocationRecoveryFenceBlocksOldPackage(t *testing.T) {
 	status, e := f.service.Status(f.ctx, alice, v02.CredentialIDInput{CredentialID: ticket.CredentialID})
 	if e != nil || status.State != "REVOKED" {
 		t.Fatalf("a stale metadata fence did not retire the old package: state=%q err=%v", status.State, e)
+	}
+}
+
+// TestRevocationConsolePageAndRevoke drives the revocation page endpoints.
+func TestRevocationConsolePageAndRevoke(t *testing.T) {
+	f := newRevokeFixture(t)
+	ticket, _ := f.activatedCredential(t, 0)
+	alice := f.people["alice"]
+	if _, e := f.admin.Exec(f.ctx, `INSERT INTO mcpguard_ra.access_reviewers(org_id,resource_id,principal_id,can_approve) VALUES($1,$2,$3,true) ON CONFLICT (org_id,resource_id,principal_id) DO UPDATE SET can_approve=true`, alice.OrgID, *ticket.ResourceID, alice.ID); e != nil {
+		t.Fatal(e)
+	}
+	console := &SelfServiceConsole{Catalog: f.s.Catalog, Access: f.s, Revoker: f.revocations}
+	do := func(method, path, body string, p metadata.Principal) (int, string) {
+		t.Helper()
+		var reader io.Reader
+		if body != "" {
+			reader = strings.NewReader(body)
+		}
+		req := httptest.NewRequest(method, path, reader)
+		rec := httptest.NewRecorder()
+		if !console.ServeHTTP(rec, req, p) {
+			t.Fatalf("console route %s %s was not served", method, path)
+		}
+		return rec.Code, rec.Body.String()
+	}
+	if code, _ := do("GET", "/console/api/v2/self-service/resources", "", f.people["bob"]); code != http.StatusForbidden {
+		t.Fatalf("non-reviewer resource page returned %d, want 403", code)
+	}
+	code, body := do("GET", "/console/api/v2/self-service/resources", "", alice)
+	if code != http.StatusOK || strings.Contains(strings.ToLower(body), "password") {
+		t.Fatalf("resource page code=%d body=%s", code, body)
+	}
+	code, body = do("POST", "/console/api/v2/self-service/revocations", `{"kind":"CREDENTIAL","targetId":"`+ticket.CredentialID+`","reason":"console"}`, alice)
+	if code != http.StatusOK || !strings.Contains(body, "CREDENTIAL") {
+		t.Fatalf("revocation POST code=%d body=%s", code, body)
+	}
+	code, body = do("GET", "/console/api/v2/self-service/revocations", "", alice)
+	if code != http.StatusOK || !strings.Contains(body, ticket.CredentialID) {
+		t.Fatalf("revocation ledger code=%d body=%s", code, body)
 	}
 }
