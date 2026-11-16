@@ -472,13 +472,33 @@ func (v *VaultSecretProvider) Resolve(ctx context.Context, endpointRef, secretRe
 	if e != nil {
 		return Endpoint{}, NativeSecret{}, ErrDenied
 	}
-	snap, e := v.Catalog.Snapshot(ctx, p, resource)
+	tx, e := v.Catalog.Store.Pool.Begin(ctx)
+	if e != nil {
+		return Endpoint{}, NativeSecret{}, ErrUnavailable
+	}
+	defer rollback(tx)
+	// One person may hold several bindings for the same resource (for example a
+	// read identity and a separate write identity); select the binding that owns
+	// this secret instead of the highest binding version.
+	var rawBinding []byte
+	if e := tx.QueryRow(ctx, `SELECT definition FROM mcpguard_ra.identity_bindings WHERE org_id=$1 AND principal_id=$2 AND resource_id=$3 AND enabled AND definition->>'secretRef'=$4 AND definition->>'secretVersion'=$5 ORDER BY binding_version DESC LIMIT 1`, org, subject, resource, secretRef, version).Scan(&rawBinding); e != nil {
+		return Endpoint{}, NativeSecret{}, ErrDenied
+	}
+	var binding v02.CredentialBinding
+	if v02.Decode("CredentialBinding", rawBinding, &binding) != nil {
+		return Endpoint{}, NativeSecret{}, ErrUnavailable
+	}
+	operation, toolName, e := v.Catalog.bindingOperation(ctx, tx, org, resource, binding.ProfileID, binding.ProfileVersion)
+	if e != nil {
+		return Endpoint{}, NativeSecret{}, e
+	}
+	snap, e := v.Catalog.snapshotBound(ctx, tx, p, resource, binding.ProfileID, binding.ProfileVersion, operation, toolName, 0)
 	if e != nil || snap.Binding.AccountID == nil || *snap.Binding.AccountID != account || snap.Binding.SecretRef != secretRef || snap.Binding.SecretVersion != version {
 		return Endpoint{}, NativeSecret{}, ErrDenied
 	}
 	plain, e := v.Catalog.Store.Vault.Open(ciphertext, "native-secret/"+org+"/"+account+"/"+version)
 	var secret NativeSecret
-	if e != nil || json.Unmarshal(plain, &secret) != nil || secret.Username != snap.Binding.NativeIdentity || secret.Version != version {
+	if e != nil || json.Unmarshal(plain, &secret) != nil || secret.Username != binding.NativeIdentity || secret.Version != version {
 		return Endpoint{}, NativeSecret{}, ErrUnavailable
 	}
 	return ep, secret, nil

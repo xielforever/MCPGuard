@@ -145,15 +145,15 @@ func (s *WriteService) Approve(ctx context.Context, p metadata.Principal, id str
 	if reason != "" {
 		reasonValue = reason
 	}
-	tag, e := tx.Exec(ctx, `UPDATE mcpguard_ra.write_requests SET state=$4,decided_by=$5,decided_at=clock_timestamp(),decision_reason=$6 WHERE org_id=$1 AND request_id=$2 AND state='DEFERRED' AND subject_id<>$5`, p.OrgID, id, next, p.ID, reasonValue)
+	tag, e := tx.Exec(ctx, `UPDATE mcpguard_ra.write_requests SET state=$3,decided_by=$4,decided_at=clock_timestamp(),decision_reason=$5 WHERE org_id=$1 AND request_id=$2 AND state='DEFERRED' AND subject_id<>$4`, p.OrgID, id, next, p.ID, reasonValue)
 	if e != nil {
-		return out, fmt.Errorf("approve begin: %w", ErrUnavailable)
+		return out, fmt.Errorf("approve update: %w", e)
 	}
 	if tag.RowsAffected() != 1 {
 		return out, fmt.Errorf("approve update rows=%d: %w", tag.RowsAffected(), ErrConflict)
 	}
 	if e = writeAudit(ctx, tx, p, id, event); e != nil {
-		return out, fmt.Errorf("approve update: %w", ErrUnavailable)
+		return out, fmt.Errorf("approve audit: %w", e)
 	}
 	if e = commit(ctx, tx); e != nil {
 		return out, fmt.Errorf("approve audit: %w", ErrUnavailable)
@@ -265,7 +265,7 @@ func (s *WriteService) nativeUpdate(ctx context.Context, p metadata.Principal, s
 	defer cancel()
 	pool, e := s.Manager.writePool(call, p, snap)
 	if e != nil {
-		return "", e
+		return "", fmt.Errorf("native pool: %w", e)
 	}
 	tx, e := pool.Begin(call)
 	if e != nil {
@@ -274,7 +274,7 @@ func (s *WriteService) nativeUpdate(ctx context.Context, p metadata.Principal, s
 	defer rollback(tx)
 	var login string
 	if tx.QueryRow(call, "SELECT session_user::text").Scan(&login) != nil || login != snap.Binding.NativeIdentity {
-		return "", ErrDenied
+		return "", fmt.Errorf("native session (login=%s): %w", login, ErrDenied)
 	}
 	expected, e := strconv.ParseInt(string(in.ExpectedVersion), 10, 64)
 	if e != nil {
@@ -283,14 +283,14 @@ func (s *WriteService) nativeUpdate(ctx context.Context, p metadata.Principal, s
 	var outcome string
 	tag, e := tx.Exec(call, "UPDATE resource_demo.items SET note=$1, version=version+1 WHERE item_id=$2 AND version=$3", in.Note, in.ItemID, expected)
 	if e != nil {
-		return "", ErrUnavailable
+		return "", fmt.Errorf("native update: %w", e)
 	}
 	if tag.RowsAffected() == 1 {
 		outcome = "UPDATED"
 	} else {
 		var exists bool
-		if tx.QueryRow(call, "SELECT EXISTS(SELECT 1 FROM resource_demo.items WHERE item_id=$1)", in.ItemID).Scan(&exists) != nil {
-			return "", ErrUnavailable
+		if e := tx.QueryRow(call, "SELECT EXISTS(SELECT 1 FROM resource_demo.items WHERE item_id=$1)", in.ItemID).Scan(&exists); e != nil {
+			return "", fmt.Errorf("native exists: %w", e)
 		}
 		if exists {
 			outcome = "VERSION_CONFLICT"

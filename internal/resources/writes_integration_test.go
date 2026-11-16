@@ -72,18 +72,11 @@ func writeApprover(t *testing.T, f *contextFixture, writes *WriteService, resour
 		t.Fatal("no approver principal in the fixture")
 	}
 	const seed = `INSERT INTO mcpguard_ra.access_reviewers(org_id,resource_id,principal_id,can_approve) VALUES($1,$2,$3,true) ON CONFLICT (org_id,resource_id,principal_id) DO UPDATE SET can_approve=true`
-	var ctxDB, appDB string
-	_ = writes.Catalog.Store.Pool.QueryRow(f.ctx, "SELECT current_database()||'/'||inet_server_port()::text").Scan(&ctxDB)
-	_ = f.s.Catalog.Store.Pool.QueryRow(f.ctx, "SELECT current_database()||'/'||inet_server_port()::text").Scan(&appDB)
 	if _, e := writes.Catalog.Store.Pool.Exec(f.ctx, seed, alice.OrgID, resourceID, approver.ID); e != nil {
-		t.Logf("write runtime seed failed: %v (ctxDB=%s appDB=%s)", e, ctxDB, appDB)
 		if _, e2 := f.admin.Exec(f.ctx, seed, alice.OrgID, resourceID, approver.ID); e2 != nil {
 			t.Fatal("could not seed the write approver: ", e2)
 		}
 	}
-	var rows int
-	_ = writes.Catalog.Store.Pool.QueryRow(f.ctx, `SELECT count(*) FROM mcpguard_ra.access_reviewers WHERE org_id=$1 AND resource_id=$2`, alice.OrgID, resourceID).Scan(&rows)
-	t.Logf("approver seed ctxDB=%s appDB=%s rows=%d org=%s", ctxDB, appDB, rows, alice.OrgID)
 	return approver
 }
 
@@ -136,6 +129,7 @@ func TestControlledWriteNeedsAnotherApprover(t *testing.T) {
 	ticket := activateWrite(t, f, writes)
 	seedWriteItem(t, f, *ticket.ResourceID)
 
+	approver := writeApprover(t, f, writes, *ticket.ResourceID)
 	planned, e := writes.Plan(f.ctx, f.people["alice"], writeInput(ticket, "approved note", "1"), uuid.NewString())
 	if e != nil || planned.State != "DEFERRED" {
 		t.Fatal("plan was not deferred: ", e, planned.State)
@@ -146,7 +140,7 @@ func TestControlledWriteNeedsAnotherApprover(t *testing.T) {
 	if _, e := writes.Resume(f.ctx, f.people["alice"], planned.RequestID); !errors.Is(e, ErrDenied) {
 		t.Fatal("an unapproved plan was dispatched: ", e)
 	}
-	approved, e := writes.Approve(f.ctx, writeApprover(t, f, writes, *ticket.ResourceID), planned.RequestID, true, "reviewed")
+	approved, e := writes.Approve(f.ctx, approver, planned.RequestID, true, "reviewed")
 	if e != nil || approved.State != "APPROVED" {
 		t.Fatal("reviewer could not approve: ", e, approved.State)
 	}

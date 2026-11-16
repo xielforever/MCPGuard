@@ -95,3 +95,7 @@ RA-10 已补齐原生 HTTP 私有头 helper、有界同步 worker、可选 stdio
 ## 2026-11-14：RA-11 计划读取与凭据绑定
 
 已实现 `pg.get_item` 计划读取：显式 `resourceId`/`credentialId`、不可变计划绑定、派发前后资格复查、服务端解析原生凭据和关联审计。工具只在 `MCPGUARD_RESOURCE_READS=enabled` 且提供显式私密文件时注册，默认构建仍不开放正式业务读取；契约保持 0.2.7，未新增字段。299 Go race 通过，见[验收](docs/validation/local-ra11-2026-11-14.md)。下一项为 RA-12 的受控写与他人审批，真实客户端与生产部署仍未验收。
+
+## 2026-11-16：RA-12 受控写与他人审批
+
+已实现 `pg.update_note` 受控写：写计划冻结、他人审批（申请人不可自批）、显式恢复派发、单次派发、乐观锁版本冲突、派发前后凭据与绑定复查、关联审计；写身份为独立 `mg_` 受限账号，仅持有条级 UPDATE 与 `owner_update` 行策略，工具默认不注册。契约升级 0.2.8（开通模板新增 `PG_OWNER_UPDATE_V1`），provider DDL 为 v3。标准场景 299 Go race 通过；隔离写场景 4 项端到端用例通过，见[验收](docs/validation/local-ra12-2026-11-16.md)。控制台审批页面、真实客户端与生产部署仍未验收。

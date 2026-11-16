@@ -265,6 +265,25 @@ func (c *Catalog) snapshot(ctx context.Context, tx pgx.Tx, p metadata.Principal,
 // snapshotBound selects the binding of one profile. A person may hold both a
 // read and a write identity for the same resource; credential issuance and
 // resource reads must use the binding that belongs to their profile.
+// bindingOperation reports the single operation a profile binds and the tool
+// name that operation is exposed through.
+func (c *Catalog) bindingOperation(ctx context.Context, tx pgx.Tx, org, resourceID, profileID, profileVersion string) (string, string, error) {
+	var raw []byte
+	if e := tx.QueryRow(ctx, `SELECT definition FROM mcpguard_ra.profile_versions WHERE org_id=$1 AND resource_id=$2 AND profile_id=$3 AND version=$4`, org, resourceID, profileID, profileVersion).Scan(&raw); e != nil {
+		return "", "", ErrUnavailable
+	}
+	var profile v02.PermissionProfile
+	if v02.Decode("PermissionProfile", raw, &profile) != nil || len(profile.AllowedOperations) != 1 {
+		return "", "", ErrDenied
+	}
+	operation := profile.AllowedOperations[0]
+	toolName := FixtureToolName
+	if operation == WriteOperation {
+		toolName = WriteToolName
+	}
+	return operation, toolName, nil
+}
+
 func (c *Catalog) snapshotBound(ctx context.Context, tx pgx.Tx, p metadata.Principal, resourceID, profileID, profileVersion, operation, toolName string, epoch int64) (Snapshot, error) {
 	var snap Snapshot
 	var raw []byte

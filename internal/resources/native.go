@@ -134,12 +134,15 @@ func (m *ReadManager) writePool(ctx context.Context, p metadata.Principal, s Sna
 
 func (m *ReadManager) poolMode(ctx context.Context, p metadata.Principal, s Snapshot, mode string) (*pgxpool.Pool, error) {
 	endpoint, secret, e := m.provider.Resolve(ctx, s.Resource.EndpointConfigRef, s.Binding.SecretRef, s.Binding.SecretVersion)
-	if e != nil || endpoint.Fingerprint() != s.Resource.TargetFingerprint || secret.Username != s.Binding.NativeIdentity || secret.Version != s.Binding.SecretVersion {
-		return nil, ErrUnavailable
+	if e != nil {
+		return nil, fmt.Errorf("pool resolve: %w", e)
+	}
+	if endpoint.Fingerprint() != s.Resource.TargetFingerprint || secret.Username != s.Binding.NativeIdentity || secret.Version != s.Binding.SecretVersion {
+		return nil, fmt.Errorf("pool binding mismatch: %w", ErrUnavailable)
 	}
 	ip := net.ParseIP(endpoint.Host)
 	if ip == nil || !ip.IsLoopback() || endpoint.SSLMode != "disable" || endpoint.Database == "mcpguard_meta" {
-		return nil, ErrUnavailable
+		return nil, fmt.Errorf("pool endpoint (host=%s db=%s): %w", endpoint.Host, endpoint.Database, ErrUnavailable)
 	}
 	key := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", mode, p.OrgID, p.ID, s.Resource.ResourceID, s.Resource.Version, s.Binding.BindingID, s.Binding.BindingVersion, s.Binding.NativeIdentity, s.Binding.SecretVersion, s.Profile.Version, endpoint.Fingerprint())
 	m.mu.Lock()
@@ -158,7 +161,7 @@ func (m *ReadManager) poolMode(ctx context.Context, p metadata.Principal, s Snap
 		return pool, nil
 	}
 	if len(m.pools) >= v02.MaxFixturePools {
-		return nil, ErrUnavailable
+		return nil, fmt.Errorf("pool limit %d: %w", v02.MaxFixturePools, ErrUnavailable)
 	}
 	target := url.URL{Scheme: "postgres", User: url.UserPassword(secret.Username, secret.Password), Host: net.JoinHostPort(endpoint.Host, strconv.Itoa(endpoint.Port)), Path: "/" + endpoint.Database, RawQuery: "sslmode=disable"}
 	config, e := pgxpool.ParseConfig(target.String())
