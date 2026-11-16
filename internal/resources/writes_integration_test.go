@@ -154,6 +154,38 @@ func TestControlledWriteNeedsAnotherApprover(t *testing.T) {
 	if _, e := writes.Resume(f.ctx, f.people["alice"], planned.RequestID); !errors.Is(e, ErrDenied) {
 		t.Fatal("the same plan was dispatched twice: ", e)
 	}
+	alice := f.people["alice"]
+	var events int
+	if e := f.s.Catalog.Store.Pool.QueryRow(f.ctx, `SELECT count(DISTINCT event_type) FROM mcpguard_ra.write_audit WHERE org_id=$1 AND request_id=$2`, alice.OrgID, planned.RequestID).Scan(&events); e != nil || events < 3 {
+		t.Fatalf("write audit is not correlated to the plan: events=%d err=%v", events, e)
+	}
+	var state string
+	if e := f.s.Catalog.Store.Pool.QueryRow(f.ctx, `SELECT state FROM mcpguard_ra.write_requests WHERE org_id=$1 AND request_id=$2`, alice.OrgID, planned.RequestID).Scan(&state); e != nil || state != "SUCCEEDED" {
+		t.Fatalf("write result is not correlated to the plan: state=%q err=%v", state, e)
+	}
+}
+
+// TestControlledWriteRejectsBindingChange proves a change after approval makes
+// the frozen plan stale (RA-AC-15).
+func TestControlledWriteRejectsBindingChange(t *testing.T) {
+	f, writes := newWriteFixture(t)
+	ticket := activateWrite(t, f, writes)
+	seedWriteItem(t, f, *ticket.ResourceID)
+	approver := writeApprover(t, f, writes, *ticket.ResourceID)
+	planned, e := writes.Plan(f.ctx, f.people["alice"], writeInput(ticket, "binding change", "1"), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = writes.Approve(f.ctx, approver, planned.RequestID, true, ""); e != nil {
+		t.Fatal(e)
+	}
+	alice := f.people["alice"]
+	if _, e = f.admin.Exec(f.ctx, `UPDATE mcpguard_ra.identity_bindings SET enabled=false WHERE org_id=$1 AND principal_id=$2 AND resource_id=$3 AND profile_id=$4`, alice.OrgID, alice.ID, *ticket.ResourceID, writeProfileID(t, f)); e != nil {
+		t.Fatal("could not disable the binding: ", e)
+	}
+	if _, e := writes.Resume(f.ctx, f.people["alice"], planned.RequestID); !errors.Is(e, ErrDenied) {
+		t.Fatal("a changed binding still dispatched the write: ", e)
+	}
 }
 
 func TestControlledWriteRejectsVersionConflict(t *testing.T) {
