@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/xielforever/MCPGuard/internal/controlled"
 	"github.com/xielforever/MCPGuard/internal/gateway"
 	"github.com/xielforever/MCPGuard/internal/metadata"
@@ -93,6 +94,10 @@ func run() error {
 	}
 	console.Notifications = notifier
 	g.AttachControlled(control, console, notifier)
+	fence, fenceErr := restoreFence(boot)
+	if fenceErr != nil {
+		return fenceErr
+	}
 	if cfg.ResourceAccess {
 		access, err := resources.NewAccessService(g.Resources)
 		if err != nil {
@@ -109,6 +114,7 @@ func run() error {
 		if err != nil {
 			return errors.New("credential lifecycle is not ready; migrate and configure explicitly")
 		}
+		credentials.Fence = fence
 		g.AttachCredentials(credentials)
 		if cfg.ResourceDownloads {
 			deliveryStore, err := metadata.Open(boot, cfg.DeliveryDSN, v)
@@ -124,6 +130,7 @@ func run() error {
 			if err != nil {
 				return errors.New("private delivery issuer is unavailable")
 			}
+			issuer.Fence = fence
 			downloads, err := resources.NewDownloadService(issuer, cfg.DownloadTTL, cfg.DownloadMaxReady)
 			if err != nil {
 				return errors.New("private delivery policy is unavailable")
@@ -143,6 +150,7 @@ func run() error {
 				if err != nil {
 					return errors.New("context issuer is unavailable")
 				}
+				credentials.Fence = fence
 				downloads, err := resources.NewDownloadService(credentials, cfg.DownloadTTL, cfg.DownloadMaxReady)
 				if err != nil {
 					return errors.New("context download runtime is unavailable")
@@ -159,9 +167,13 @@ func run() error {
 					}
 					manager := resources.NewReadManager(catalog, provider)
 					defer manager.Close()
-					g.AttachReads(resources.NewReadService(catalog, credentials, manager))
+					reads := resources.NewReadService(catalog, credentials, manager)
+					reads.Fence = fence
+					g.AttachReads(reads)
 					if cfg.ResourceWrites {
-						g.AttachWrites(resources.NewWriteService(catalog, credentials, manager))
+						writes := resources.NewWriteService(catalog, credentials, manager)
+						writes.Fence = fence
+						g.AttachWrites(writes)
 						g.AttachSelfService(console)
 					}
 				}
@@ -206,3 +218,25 @@ func run() error {
 	return nil
 }
 
+// restoreFence wires the cross-store recovery fence when the operator enabled
+// it. Without the DSN the pre-RA-15 behaviour is preserved; with the DSN set a
+// missing provider configuration is a startup error instead of a silent bypass.
+func restoreFence(ctx context.Context) (*resources.RestoreFence, error) {
+	dsn := os.Getenv("MCPGUARD_RECOVERY_FENCE_DSN")
+	if dsn == "" {
+		return nil, nil
+	}
+	path := os.Getenv("MCPGUARD_PROVIDER_CONFIG")
+	if path == "" {
+		return nil, errors.New("MCPGUARD_RECOVERY_FENCE_DSN requires MCPGUARD_PROVIDER_CONFIG")
+	}
+	private, err := resources.LoadProviderPrivate(path)
+	if err != nil {
+		return nil, err
+	}
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		return nil, err
+	}
+	return resources.NewRestoreFence(pool, &resources.PGProvisioningProvider{Private: private}), nil
+}
