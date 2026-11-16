@@ -26,6 +26,9 @@ def prepare():
         if cfg.get(key):
             cfg[key] = swap(cfg[key])
     base.admin(cfg, 'postgres', 'GRANT CONNECT ON DATABASE %s TO mcpguard_app,mcpguard_contexts,mcpguard_credentials,mcpguard_downloads,mcpguard_provisioner;' % name)
+    env = os.environ.copy() | {'MCPGUARD_MIGRATION_DSN': cfg['MCPGUARD_MIGRATION_DSN']}
+    for role in ('mcpguard_app', 'mcpguard_contexts'):
+        subprocess.run([str(base.BUILD / 'mcpguard-catalog'), 'grant-write-runtime', role], env=env, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # The isolated write scene does not run the legacy HTTP/Redis regression.
     cfg.pop('raRedis', None)
     cfg['raWritePhase'] = True

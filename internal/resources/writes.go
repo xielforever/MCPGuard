@@ -101,13 +101,13 @@ func (s *WriteService) Plan(ctx context.Context, p metadata.Principal, in v02.Up
  VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'DEFERRED',$17)`,
 		p.OrgID, id, p.ID, in.ResourceID, snap.Resource.Version, snap.Binding.BindingID, snap.Binding.BindingVersion, in.CredentialID, row.revision, snap.Binding.NativeIdentity, snap.Binding.SecretVersion, in.ItemID, expected, epoch, s.Catalog.Store.Vault.Hash(plan), s.Catalog.Store.Vault.Seal(plan, writeAAD(p, id)), requestKey)
 	if e != nil {
-		return out, ErrUnavailable
+		return out, fmt.Errorf("plan insert: %w", e)
 	}
 	if e = writeAudit(ctx, tx, p, id, "PLANNED"); e != nil {
-		return out, ErrUnavailable
+		return out, fmt.Errorf("plan audit: %w", e)
 	}
 	if e = commit(ctx, tx); e != nil {
-		return out, ErrUnavailable
+		return out, fmt.Errorf("plan commit: %w", e)
 	}
 	return s.Status(ctx, p, id)
 }
@@ -126,14 +126,16 @@ func (s *WriteService) Approve(ctx context.Context, p metadata.Principal, id str
 	defer rollback(tx)
 	var subject, resource string
 	if tx.QueryRow(ctx, `SELECT subject_id::text,resource_id::text FROM mcpguard_ra.write_requests WHERE org_id=$1 AND request_id=$2`, p.OrgID, id).Scan(&subject, &resource) != nil {
-		return out, ErrDenied
+		return out, fmt.Errorf("approve load: %w", ErrDenied)
 	}
 	if subject == p.ID {
-		return out, ErrDenied
+		return out, fmt.Errorf("approve self: %w", ErrDenied)
 	}
 	var allowed bool
 	if tx.QueryRow(ctx, `SELECT EXISTS(SELECT FROM mcpguard_ra.access_reviewers WHERE org_id=$1 AND resource_id=$2 AND principal_id=$3 AND can_approve)`, p.OrgID, resource, p.ID).Scan(&allowed) != nil || !allowed {
-		return out, ErrDenied
+		var total int
+		_ = tx.QueryRow(ctx, `SELECT count(*) FROM mcpguard_ra.access_reviewers WHERE org_id=$1 AND resource_id=$2`, p.OrgID, resource).Scan(&total)
+		return out, fmt.Errorf("approve reviewer (org=%s resource=%s principal=%s total=%d): %w", p.OrgID, resource, p.ID, total, ErrDenied)
 	}
 	next, event := "REJECTED", "REJECTED"
 	if approve {
@@ -145,16 +147,16 @@ func (s *WriteService) Approve(ctx context.Context, p metadata.Principal, id str
 	}
 	tag, e := tx.Exec(ctx, `UPDATE mcpguard_ra.write_requests SET state=$4,decided_by=$5,decided_at=clock_timestamp(),decision_reason=$6 WHERE org_id=$1 AND request_id=$2 AND state='DEFERRED' AND subject_id<>$5`, p.OrgID, id, next, p.ID, reasonValue)
 	if e != nil {
-		return out, ErrUnavailable
+		return out, fmt.Errorf("approve begin: %w", ErrUnavailable)
 	}
 	if tag.RowsAffected() != 1 {
-		return out, ErrConflict
+		return out, fmt.Errorf("approve update rows=%d: %w", tag.RowsAffected(), ErrConflict)
 	}
 	if e = writeAudit(ctx, tx, p, id, event); e != nil {
-		return out, ErrUnavailable
+		return out, fmt.Errorf("approve update: %w", ErrUnavailable)
 	}
 	if e = commit(ctx, tx); e != nil {
-		return out, ErrUnavailable
+		return out, fmt.Errorf("approve audit: %w", ErrUnavailable)
 	}
 	return s.Status(ctx, p, id)
 }
@@ -194,14 +196,16 @@ func (s *WriteService) Resume(ctx context.Context, p metadata.Principal, id stri
 	var subject string
 	if e = tx.QueryRow(ctx, `UPDATE mcpguard_ra.write_requests SET state='EXECUTING' WHERE org_id=$1 AND request_id=$2 AND subject_id=$3 AND state='APPROVED' RETURNING subject_id::text`, p.OrgID, id, p.ID).Scan(&subject); e != nil {
 		rollback(tx)
-		return out, ErrDenied
+		var state string
+		_ = s.Catalog.Store.Pool.QueryRow(ctx, `SELECT state FROM mcpguard_ra.write_requests WHERE org_id=$1 AND request_id=$2`, p.OrgID, id).Scan(&state)
+		return out, fmt.Errorf("resume claim (state=%s): %w", state, ErrDenied)
 	}
 	if e = writeAudit(ctx, tx, p, id, "DISPATCH_INTENT"); e != nil {
 		rollback(tx)
-		return out, ErrUnavailable
+		return out, fmt.Errorf("resume intent: %w", e)
 	}
 	if e = commit(ctx, tx); e != nil {
-		return out, ErrUnavailable
+		return out, fmt.Errorf("resume dispatch commit: %w", e)
 	}
 	row, e := s.row(ctx, p, id)
 	if e != nil {
@@ -246,10 +250,14 @@ func (s *WriteService) Resume(ctx context.Context, p metadata.Principal, id stri
 	if err := s.finish(p, id, state, raw); err != nil {
 		return out, ErrUnavailable
 	}
-	if state != "SUCCEEDED" {
-		return s.Status(ctx, p, id)
+	final, e2 := s.Status(ctx, p, id)
+	if e2 != nil {
+		return out, fmt.Errorf("resume status: %w", e2)
 	}
-	return s.Status(ctx, p, id)
+	if state != "SUCCEEDED" {
+		return final, nil
+	}
+	return final, nil
 }
 
 func (s *WriteService) nativeUpdate(ctx context.Context, p metadata.Principal, snap Snapshot, in v02.UpdateNoteInput) (string, error) {

@@ -12,18 +12,6 @@ import (
 )
 
 // newWriteFixture binds the write service to the context runtime, like RA-11.
-// requireWriteScene skips the write tests unless the RA-12 fixture prepared them.
-func requireWriteScene(t *testing.T) {
-	t.Helper()
-	raw, e := os.ReadFile(os.Getenv("MCPGUARD_RA_CONFIG"))
-	var scene struct {
-		Write bool `json:"raWritePhase"`
-	}
-	if e != nil || json.Unmarshal(raw, &scene) != nil || !scene.Write {
-		t.Skip("explicit RA-12 write fixture required")
-	}
-}
-
 func newWriteFixture(t *testing.T) (*contextFixture, *WriteService) {
 	t.Helper()
 	requireWriteScene(t)
@@ -46,6 +34,18 @@ func newWriteFixture(t *testing.T) (*contextFixture, *WriteService) {
 	return f, NewWriteService(catalog, credentials, manager)
 }
 
+// requireWriteScene skips the write tests unless the RA-12 fixture prepared them.
+func requireWriteScene(t *testing.T) {
+	t.Helper()
+	raw, e := os.ReadFile(os.Getenv("MCPGUARD_RA_CONFIG"))
+	var scene struct {
+		Write bool `json:"raWritePhase"`
+	}
+	if e != nil || json.Unmarshal(raw, &scene) != nil || !scene.Write {
+		t.Skip("explicit RA-12 write fixture required")
+	}
+}
+
 func writeProfileID(t *testing.T, f *contextFixture) string {
 	t.Helper()
 	for _, profile := range f.bundle.Profiles {
@@ -57,7 +57,39 @@ func writeProfileID(t *testing.T, f *contextFixture) string {
 	return ""
 }
 
-func activateWrite(t *testing.T, f *contextFixture) v02.PrepareDownloadResult {
+// writeApprover registers a reviewer on the write runtime and returns it.
+func writeApprover(t *testing.T, f *contextFixture, writes *WriteService, resourceID string) metadata.Principal {
+	t.Helper()
+	alice := f.people["alice"]
+	var approver metadata.Principal
+	for _, name := range []string{"visitor", "reviewer", "bob"} {
+		if p, ok := f.people[name]; ok && p.ID != alice.ID {
+			approver = p
+			break
+		}
+	}
+	if approver.ID == "" {
+		t.Fatal("no approver principal in the fixture")
+	}
+	const seed = `INSERT INTO mcpguard_ra.access_reviewers(org_id,resource_id,principal_id,can_approve) VALUES($1,$2,$3,true) ON CONFLICT (org_id,resource_id,principal_id) DO UPDATE SET can_approve=true`
+	var ctxDB, appDB string
+	_ = writes.Catalog.Store.Pool.QueryRow(f.ctx, "SELECT current_database()||'/'||inet_server_port()::text").Scan(&ctxDB)
+	_ = f.s.Catalog.Store.Pool.QueryRow(f.ctx, "SELECT current_database()||'/'||inet_server_port()::text").Scan(&appDB)
+	if _, e := writes.Catalog.Store.Pool.Exec(f.ctx, seed, alice.OrgID, resourceID, approver.ID); e != nil {
+		t.Logf("write runtime seed failed: %v (ctxDB=%s appDB=%s)", e, ctxDB, appDB)
+		if _, e2 := f.admin.Exec(f.ctx, seed, alice.OrgID, resourceID, approver.ID); e2 != nil {
+			t.Fatal("could not seed the write approver: ", e2)
+		}
+	}
+	var rows int
+	_ = writes.Catalog.Store.Pool.QueryRow(f.ctx, `SELECT count(*) FROM mcpguard_ra.access_reviewers WHERE org_id=$1 AND resource_id=$2`, alice.OrgID, resourceID).Scan(&rows)
+	t.Logf("approver seed ctxDB=%s appDB=%s rows=%d org=%s", ctxDB, appDB, rows, alice.OrgID)
+	return approver
+}
+
+// activateWrite requests the write profile, approves it, provisions the write
+// identity and issues the write credential.
+func activateWrite(t *testing.T, f *contextFixture, writes *WriteService) v02.PrepareDownloadResult {
 	t.Helper()
 	input := f.input()
 	input.ProfileID = writeProfileID(t, f)
@@ -65,12 +97,11 @@ func activateWrite(t *testing.T, f *contextFixture) v02.PrepareDownloadResult {
 	if e != nil {
 		t.Fatal("write access request: ", e)
 	}
-	out, e := f.s.Decide(f.ctx, f.people["reviewer"], r.RequestID, approveInput(r))
+	out, e := f.s.Decide(f.ctx, writeApprover(t, f, writes, input.ResourceID), r.RequestID, approveInput(r))
 	if e != nil {
 		t.Fatal("write approval: ", e)
 	}
-	done := f.run(t, out, "VERIFIED")
-	t.Logf("grant state=%s request=%s account=%v binding=%v profile=%s", done.Grant.State, done.Request.State, done.Grant.AccountID, done.Grant.BindingID, done.Grant.ProfileID)
+	f.run(t, out, "VERIFIED")
 	status, e := f.service.Issue(f.ctx, f.people["alice"], v02.IssueCredentialInput{GrantID: out.Grant.GrantID, RequestKey: uuid.NewString()})
 	if e != nil {
 		t.Fatal("write issue: ", e)
@@ -79,6 +110,7 @@ func activateWrite(t *testing.T, f *contextFixture) v02.PrepareDownloadResult {
 	return v02.PrepareDownloadResult{CredentialID: status.CredentialID, ResourceID: &resource}
 }
 
+// seedWriteItem inserts one row owned by the provisioned write identity.
 func seedWriteItem(t *testing.T, f *contextFixture, resourceID string) {
 	t.Helper()
 	profile := writeProfileID(t, f)
@@ -101,7 +133,7 @@ func writeInput(ticket v02.PrepareDownloadResult, note, expected string) v02.Upd
 
 func TestControlledWriteNeedsAnotherApprover(t *testing.T) {
 	f, writes := newWriteFixture(t)
-	ticket := activateWrite(t, f)
+	ticket := activateWrite(t, f, writes)
 	seedWriteItem(t, f, *ticket.ResourceID)
 
 	planned, e := writes.Plan(f.ctx, f.people["alice"], writeInput(ticket, "approved note", "1"), uuid.NewString())
@@ -114,7 +146,7 @@ func TestControlledWriteNeedsAnotherApprover(t *testing.T) {
 	if _, e := writes.Resume(f.ctx, f.people["alice"], planned.RequestID); !errors.Is(e, ErrDenied) {
 		t.Fatal("an unapproved plan was dispatched: ", e)
 	}
-	approved, e := writes.Approve(f.ctx, f.people["reviewer"], planned.RequestID, true, "reviewed")
+	approved, e := writes.Approve(f.ctx, writeApprover(t, f, writes, *ticket.ResourceID), planned.RequestID, true, "reviewed")
 	if e != nil || approved.State != "APPROVED" {
 		t.Fatal("reviewer could not approve: ", e, approved.State)
 	}
@@ -132,14 +164,15 @@ func TestControlledWriteNeedsAnotherApprover(t *testing.T) {
 
 func TestControlledWriteRejectsVersionConflict(t *testing.T) {
 	f, writes := newWriteFixture(t)
-	ticket := activateWrite(t, f)
+	ticket := activateWrite(t, f, writes)
 	seedWriteItem(t, f, *ticket.ResourceID)
+	approver := writeApprover(t, f, writes, *ticket.ResourceID)
 
 	first, e := writes.Plan(f.ctx, f.people["alice"], writeInput(ticket, "first", "1"), uuid.NewString())
 	if e != nil {
 		t.Fatal(e)
 	}
-	if _, e = writes.Approve(f.ctx, f.people["reviewer"], first.RequestID, true, ""); e != nil {
+	if _, e = writes.Approve(f.ctx, approver, first.RequestID, true, ""); e != nil {
 		t.Fatal(e)
 	}
 	if _, e = writes.Resume(f.ctx, f.people["alice"], first.RequestID); e != nil {
@@ -149,7 +182,7 @@ func TestControlledWriteRejectsVersionConflict(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	if _, e = writes.Approve(f.ctx, f.people["reviewer"], stale.RequestID, true, ""); e != nil {
+	if _, e = writes.Approve(f.ctx, approver, stale.RequestID, true, ""); e != nil {
 		t.Fatal(e)
 	}
 	out, e := writes.Resume(f.ctx, f.people["alice"], stale.RequestID)
@@ -163,8 +196,9 @@ func TestControlledWriteRejectsVersionConflict(t *testing.T) {
 
 func TestControlledWriteRejectsRevokedCredential(t *testing.T) {
 	f, writes := newWriteFixture(t)
-	ticket := activateWrite(t, f)
+	ticket := activateWrite(t, f, writes)
 	seedWriteItem(t, f, *ticket.ResourceID)
+	approver := writeApprover(t, f, writes, *ticket.ResourceID)
 	planned, e := writes.Plan(f.ctx, f.people["alice"], writeInput(ticket, "before revoke", "1"), uuid.NewString())
 	if e != nil {
 		t.Fatal(e)
@@ -172,7 +206,7 @@ func TestControlledWriteRejectsRevokedCredential(t *testing.T) {
 	if _, e = f.service.Revoke(f.ctx, f.people["alice"], v02.RevokeCredentialInput{CredentialID: ticket.CredentialID, ExpectedRevision: "1", RequestKey: uuid.NewString(), Reason: "write approval revoked credential"}); e != nil {
 		t.Fatal(e)
 	}
-	if _, e = writes.Approve(f.ctx, f.people["reviewer"], planned.RequestID, true, ""); e != nil {
+	if _, e = writes.Approve(f.ctx, approver, planned.RequestID, true, ""); e != nil {
 		t.Fatal(e)
 	}
 	if _, e := writes.Resume(f.ctx, f.people["alice"], planned.RequestID); !errors.Is(e, ErrDenied) {
@@ -182,7 +216,7 @@ func TestControlledWriteRejectsRevokedCredential(t *testing.T) {
 
 func TestControlledWriteRejectsNonReviewer(t *testing.T) {
 	f, writes := newWriteFixture(t)
-	ticket := activateWrite(t, f)
+	ticket := activateWrite(t, f, writes)
 	seedWriteItem(t, f, *ticket.ResourceID)
 	planned, e := writes.Plan(f.ctx, f.people["alice"], writeInput(ticket, "x", "1"), uuid.NewString())
 	if e != nil {

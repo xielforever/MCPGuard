@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -57,18 +58,18 @@ func NewCatalog(ctx context.Context, s *metadata.Store) (*Catalog, error) {
 func (c *Catalog) begin(ctx context.Context, p metadata.Principal) (pgx.Tx, int64, error) {
 	tx, err := c.Store.Pool.Begin(ctx)
 	if err != nil {
-		return nil, 0, ErrUnavailable
+		return nil, 0, fmt.Errorf("begin tx: %w", err)
 	}
 	var epoch int64
 	if err = tx.QueryRow(ctx, "SELECT mcpguard.lock_auth_epoch($1)", p.OrgID).Scan(&epoch); err != nil {
 		rollback(tx)
-		return nil, 0, ErrUnavailable
+		return nil, 0, fmt.Errorf("begin lock: %w", err)
 	}
 	var current bool
 	err = tx.QueryRow(ctx, "SELECT EXISTS(SELECT FROM mcpguard.principals WHERE org_id=$1 AND id=$2 AND token_hash=$3 AND enabled AND expires_at>clock_timestamp())", p.OrgID, p.ID, p.TokenHash).Scan(&current)
 	if err != nil {
 		rollback(tx)
-		return nil, 0, ErrUnavailable
+		return nil, 0, fmt.Errorf("begin principal: %w", err)
 	}
 	if !current {
 		rollback(tx)
