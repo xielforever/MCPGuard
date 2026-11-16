@@ -233,4 +233,14 @@ func TestRevocationCleanupStaysPendingUntilProven(t *testing.T) {
 	if state != "CLEANED" {
 		t.Fatalf("proven cleanup state=%q, want CLEANED", state)
 	}
+	// A repeated revocation must not resurrect an already proven cleanup.
+	if _, e = f.revocations.Revoke(f.ctx, alice, "RESOURCE", *ticket.ResourceID, "retired again"); e != nil {
+		t.Fatal(e)
+	}
+	if e = f.admin.QueryRow(f.ctx, `SELECT state FROM mcpguard_ra.revocation_cleanup WHERE org_id=$1 ORDER BY updated_at DESC LIMIT 1`, alice.OrgID).Scan(&state); e != nil {
+		t.Fatal(e)
+	}
+	if state != "CLEANED" {
+		t.Fatalf("repeated revocation reset proven cleanup to %q", state)
+	}
 }

@@ -290,7 +290,7 @@ func (s *RevocationService) enqueueCleanup(ctx context.Context, tx pgx.Tx, org, 
 	tag, e := tx.Exec(ctx, `INSERT INTO mcpguard_ra.revocation_cleanup(org_id,account_id,resource_id,state)
  SELECT $1,(b.definition->>'accountId')::uuid,b.resource_id,'PENDING' FROM mcpguard_ra.identity_bindings b
  WHERE b.org_id=$1 AND (b.definition->>'accountId') IS NOT NULL AND `+filter+`
- ON CONFLICT (org_id,account_id) DO UPDATE SET state='PENDING',updated_at=clock_timestamp()`, org, target)
+ ON CONFLICT (org_id,account_id) DO UPDATE SET state=CASE WHEN mcpguard_ra.revocation_cleanup.state='CLEANED' THEN 'CLEANED' ELSE 'PENDING' END,updated_at=clock_timestamp()`, org, target)
 	if e != nil {
 		return e
 	}
