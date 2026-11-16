@@ -350,3 +350,40 @@ func TestControlledWritePendingApprovalStaleAfterRevocation(t *testing.T) {
 		t.Fatalf("stale plan state=%q", state)
 	}
 }
+
+// TestControlledWriteRejectedAfterIssuerRotation proves a rotated package-key
+// epoch invalidates an approval that was recorded under the old identity.
+func TestControlledWriteRejectedAfterIssuerRotation(t *testing.T) {
+	f, writes := newWriteFixture(t)
+	ticket := activateWrite(t, f, writes)
+	seedWriteItem(t, f, *ticket.ResourceID)
+	approver := writeApprover(t, f, writes, *ticket.ResourceID)
+	alice := f.people["alice"]
+	planned, e := writes.Plan(f.ctx, alice, writeInput(ticket, "old epoch", "1"), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = writes.Approve(f.ctx, approver, planned.RequestID, true, ""); e != nil {
+		t.Fatal(e)
+	}
+	rotated := f.config
+	rotated.Issuer.Version = "2"
+	rotated.Issuer.IssuerEpoch = uuid.NewString()
+	raw, e := json.Marshal(rotated)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = ImportCredentials(f.ctx, f.dsn, raw); e != nil {
+		t.Fatal("issuer rotation: ", e)
+	}
+	if _, e := writes.Resume(f.ctx, alice, planned.RequestID); !errors.Is(e, ErrDenied) {
+		t.Fatal("an approval from the old issuer epoch executed: ", e)
+	}
+	var version int
+	if e = f.native[0].QueryRow(f.ctx, "SELECT version FROM resource_demo.items WHERE item_id='item_demo_1'").Scan(&version); e != nil {
+		t.Fatal(e)
+	}
+	if version != 1 {
+		t.Fatalf("native row changed after a stale approval: version=%d", version)
+	}
+}
