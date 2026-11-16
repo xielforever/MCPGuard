@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -74,19 +75,19 @@ func (s *WriteService) Plan(ctx context.Context, p metadata.Principal, in v02.Up
 	}
 	tx, epoch, e := s.Catalog.begin(ctx, p)
 	if e != nil {
-		return out, e
+		return out, fmt.Errorf("plan begin: %w", e)
 	}
 	defer rollback(tx)
-	snap, e := s.Catalog.snapshot(ctx, tx, p, in.ResourceID, epoch)
-	if e != nil {
-		return out, e
-	}
 	row, e := s.Credentials.row(ctx, tx, p, in.CredentialID)
 	if e != nil || s.Credentials.refresh(ctx, tx, p, row) != nil {
 		return out, ErrDenied
 	}
 	if row.state != "ACTIVE" || row.ref.ResourceID != in.ResourceID {
 		return out, ErrDenied
+	}
+	snap, e := s.Catalog.snapshotBound(ctx, tx, p, in.ResourceID, row.ref.ProfileID, row.ref.ProfileVersion, WriteOperation, WriteToolName, epoch)
+	if e != nil {
+		return out, fmt.Errorf("plan snapshot: %w", e)
 	}
 	id := uuid.NewString()
 	plan, _ := json.Marshal(struct {
@@ -204,7 +205,7 @@ func (s *WriteService) Resume(ctx context.Context, p metadata.Principal, id stri
 	}
 	row, e := s.row(ctx, p, id)
 	if e != nil {
-		return out, ErrUnavailable
+		return out, fmt.Errorf("resume row: %w", e)
 	}
 	plan, e := s.Catalog.Store.Vault.Open(row.PlanCipher, writeAAD(p, id))
 	var frozen struct {
@@ -215,12 +216,12 @@ func (s *WriteService) Resume(ctx context.Context, p metadata.Principal, id stri
 	}
 	if e != nil || json.Unmarshal(plan, &frozen) != nil {
 		s.finish(p, id, "FAILED", nil)
-		return out, ErrUnavailable
+		return out, fmt.Errorf("resume plan: %w", ErrUnavailable)
 	}
 	// Pre-dispatch re-check: credential, binding and epoch must still match.
 	if e = s.current(ctx, p, frozen.Snapshot, frozen.Input); e != nil {
 		s.finish(p, id, "FAILED", nil)
-		return out, ErrDenied
+		return out, fmt.Errorf("resume current: %w", e)
 	}
 	outcome, e := s.nativeUpdate(ctx, p, frozen.Snapshot, frozen.Input)
 	result := &WriteResult{Outcome: "FAILED", NewVersion: string(frozen.Input.ExpectedVersion)}
@@ -260,7 +261,7 @@ func (s *WriteService) nativeUpdate(ctx context.Context, p metadata.Principal, s
 	}
 	tx, e := pool.Begin(call)
 	if e != nil {
-		return "", ErrUnavailable
+		return "", fmt.Errorf("write pool: %w", e)
 	}
 	defer rollback(tx)
 	var login string
@@ -302,13 +303,6 @@ func (s *WriteService) current(ctx context.Context, p metadata.Principal, snap S
 		return e
 	}
 	defer rollback(tx)
-	now, e := s.Catalog.snapshot(ctx, tx, p, in.ResourceID, epoch)
-	if e != nil {
-		return e
-	}
-	if now.Epoch != snap.Epoch || now.Binding.BindingID != snap.Binding.BindingID || now.Binding.BindingVersion != snap.Binding.BindingVersion {
-		return ErrDenied
-	}
 	row, e := s.Credentials.row(ctx, tx, p, in.CredentialID)
 	if e != nil {
 		return ErrDenied
@@ -317,6 +311,13 @@ func (s *WriteService) current(ctx context.Context, p metadata.Principal, snap S
 		return e
 	}
 	if row.state != "ACTIVE" || row.ref.ResourceID != in.ResourceID {
+		return ErrDenied
+	}
+	now, e := s.Catalog.snapshotBound(ctx, tx, p, in.ResourceID, row.ref.ProfileID, row.ref.ProfileVersion, WriteOperation, WriteToolName, epoch)
+	if e != nil {
+		return e
+	}
+	if now.Epoch != snap.Epoch || now.Binding.BindingID != snap.Binding.BindingID || now.Binding.BindingVersion != snap.Binding.BindingVersion {
 		return ErrDenied
 	}
 	return nil

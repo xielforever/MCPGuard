@@ -73,6 +73,19 @@ func (s *CredentialService) issuer(ctx context.Context, tx pgx.Tx, org string) (
 	}
 	return i, nil
 }
+// profileOperation reports the single operation a granted profile allows.
+func (s *CredentialService) profileOperation(ctx context.Context, tx pgx.Tx, org, resourceID, profileID, profileVersion string) (string, error) {
+	var raw []byte
+	if e := tx.QueryRow(ctx, `SELECT definition FROM mcpguard_ra.profile_versions WHERE org_id=$1 AND resource_id=$2 AND profile_id=$3 AND version=$4`, org, resourceID, profileID, profileVersion).Scan(&raw); e != nil {
+		return "", ErrUnavailable
+	}
+	var profile v02.PermissionProfile
+	if v02.Decode("PermissionProfile", raw, &profile) != nil || len(profile.AllowedOperations) != 1 {
+		return "", ErrDenied
+	}
+	return profile.AllowedOperations[0], nil
+}
+
 func (s *CredentialService) selectGrant(ctx context.Context, tx pgx.Tx, p metadata.Principal, grantID string) (credentialSelection, error) {
 	var out credentialSelection
 	g, e := s.Access.readGrant(ctx, tx, p.OrgID, grantID)
@@ -94,7 +107,15 @@ func (s *CredentialService) selectGrant(ctx context.Context, tx pgx.Tx, p metada
 	if e = tx.QueryRow(ctx, "SELECT auth_epoch FROM mcpguard.authorization_heads WHERE org_id=$1", p.OrgID).Scan(&epoch); e != nil {
 		return out, ErrUnavailable
 	}
-	snap, e := s.Access.Catalog.snapshot(ctx, tx, p, g.ResourceID, epoch)
+	operation, e := s.profileOperation(ctx, tx, p.OrgID, g.ResourceID, g.ProfileID, g.ProfileVersion)
+	if e != nil {
+		return out, e
+	}
+	toolName := FixtureToolName
+	if operation == WriteOperation {
+		toolName = WriteToolName
+	}
+	snap, e := s.Access.Catalog.snapshotBound(ctx, tx, p, g.ResourceID, g.ProfileID, g.ProfileVersion, operation, toolName, epoch)
 	if e != nil {
 		return out, e
 	}

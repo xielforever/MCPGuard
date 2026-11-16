@@ -67,25 +67,42 @@ func newProvisionFixture(t *testing.T) *provisionFixture {
 	}
 	out := &provisionFixture{accessFixture: f, worker: w, private: private, config: v02.ProvisioningConfiguration{SchemaVersion: "0.2", Targets: []v02.ProvisioningTarget{}, ExistingAccounts: []v02.ExistingAccountRegistration{}}}
 	for i, p := range f.bundle.Profiles {
-		// Write profiles carry their own target and must not borrow a read scene slot.
-		if p.Name != "isolated-read" || i >= len(scene.PG) {
+		if p.Name != "isolated-read" && p.Name != "isolated-write" {
 			continue
 		}
-		r := f.bundle.Resources[i]
-		target := v02.ProvisioningTarget{OrgID: r.OrgID, ResourceID: r.ResourceID, ResourceVersion: r.Version, ProfileID: p.ProfileID, ProfileVersion: p.Version, TargetID: uuid.NewString(), EndpointConfigRef: r.EndpointConfigRef, TargetFingerprint: r.TargetFingerprint, Template: "PG_OWNER_SELECT_V1", Version: "1", Enabled: true}
+		resourceIndex := i
+		if p.Name == "isolated-write" {
+			resourceIndex = -1
+			for j, r := range f.bundle.Resources {
+				if r.ResourceID == p.ResourceID {
+					resourceIndex = j
+				}
+			}
+		}
+		if resourceIndex < 0 || resourceIndex >= len(scene.PG) {
+			continue
+		}
+		r := f.bundle.Resources[resourceIndex]
+		template := "PG_OWNER_SELECT_V1"
+		if p.Name == "isolated-write" {
+			template = "PG_OWNER_UPDATE_V1"
+		}
+		target := v02.ProvisioningTarget{OrgID: r.OrgID, ResourceID: r.ResourceID, ResourceVersion: r.Version, ProfileID: p.ProfileID, ProfileVersion: p.Version, TargetID: uuid.NewString(), EndpointConfigRef: r.EndpointConfigRef, TargetFingerprint: r.TargetFingerprint, Template: template, Version: "1", Enabled: true}
 		out.config.Targets = append(out.config.Targets, target)
-		if InstallPGProvider(f.ctx, scene.PG[i].DSN, "mcpguard_account_manager", []v02.ProvisioningTarget{target}) != nil {
+		if InstallPGProvider(f.ctx, scene.PG[resourceIndex].DSN, "mcpguard_account_manager", []v02.ProvisioningTarget{target}) != nil {
 			t.Fatal("native provider installation failed")
 		}
-		conn, e := pgx.Connect(f.ctx, scene.PG[i].DSN)
-		if e != nil {
-			t.Fatal("native admin unavailable")
+		if resourceIndex >= len(out.admins) {
+			conn, e := pgx.Connect(f.ctx, scene.PG[resourceIndex].DSN)
+			if e != nil {
+				t.Fatal("native admin unavailable")
+			}
+			t.Cleanup(func() { conn.Close(f.ctx) })
+			out.native = append(out.native, conn)
+			out.admins = append(out.admins, scene.PG[resourceIndex].DSN)
 		}
-		t.Cleanup(func() { conn.Close(f.ctx) })
-		out.native = append(out.native, conn)
-		out.admins = append(out.admins, scene.PG[i].DSN)
 		// Both targets have a human reviewer; the RA-04 base intentionally had only one.
-		if i > 0 {
+		if resourceIndex > 0 {
 			f.config.Reviewers = append(f.config.Reviewers, v02.AccessReviewer{OrgID: r.OrgID, ResourceID: r.ResourceID, PrincipalID: f.people["reviewer"].ID, CanApprove: true})
 		}
 	}

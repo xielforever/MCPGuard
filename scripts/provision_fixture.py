@@ -43,6 +43,18 @@ def prepare():
         base.dev.write_private(state/f'pg-provider-{index}.json',json.dumps(install))
         env=os.environ.copy()|{'MCPGUARD_PROVIDER_ADMIN_DSN':pg['dsn'],'MCPGUARD_PROVIDER_MANAGER_ROLE':'mcpguard_account_manager'}
         for _ in range(2):subprocess.run([str(base.BUILD/'mcpguard-provision'),'install-provider',str(state/f'pg-provider-{index}.json')],env=env,check=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    if os.environ.get('MCPGUARD_FIXTURE_WRITE')=='1':
+        write_profiles=[p for p in catalog['profiles'] if p.get('name')=='isolated-write']
+        for index,profile in enumerate(write_profiles,1):
+            resource=next(r for r in catalog['resources'] if r['resourceId']==profile['resourceId'])
+            pg=cfg['raPgAdmins'][index-1]
+            target={k:resource[k] for k in ('orgId','resourceId','endpointConfigRef','targetFingerprint')}
+            target|={'resourceVersion':resource['version'],'profileId':profile['profileId'],'profileVersion':profile['version'],'targetId':f'91000000-0000-4000-8000-{index:012d}','template':'PG_OWNER_UPDATE_V1','version':'1','enabled':True}
+            public['targets'].append(target)
+            install={'schemaVersion':'0.2','targets':[target],'existingAccounts':[]}
+            base.dev.write_private(state/f'pg-write-provider-{index}.json',json.dumps(install))
+            env=os.environ.copy()|{'MCPGUARD_PROVIDER_ADMIN_DSN':pg['dsn'],'MCPGUARD_PROVIDER_MANAGER_ROLE':'mcpguard_account_manager'}
+            for _ in range(2):subprocess.run([str(base.BUILD/'mcpguard-provision'),'install-provider',str(state/f'pg-write-provider-{index}.json')],env=env,check=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     base.dev.write_private(state/'provisioning.json',json.dumps(public));base.dev.write_private(state/'provider-private.json',json.dumps(private))
     for _ in range(2):subprocess.run([str(base.BUILD/'mcpguard-catalog'),'import-provisioning',str(state/'provisioning.json')],env=admin_env,check=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     cfg['raProvisionPhase']=True;base.dev.write_private(state/'env.json',json.dumps(cfg))

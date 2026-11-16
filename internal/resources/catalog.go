@@ -29,6 +29,9 @@ const FixtureToolName = "fixture.pg_read_item"
 const ReadOperation = "pg.item.read.v1"
 const WriteOperation = "pg.item.update.v1"
 
+// WriteToolName is the fixed public tool bound to the write profile.
+const WriteToolName = "pg.update_note"
+
 type Catalog struct {
 	Store         *metadata.Store
 	SchemaVersion int
@@ -255,6 +258,13 @@ func (c *Catalog) Get(ctx context.Context, p metadata.Principal, in v02.GetResou
 	return out, nil
 }
 func (c *Catalog) snapshot(ctx context.Context, tx pgx.Tx, p metadata.Principal, resourceID string, epoch int64) (Snapshot, error) {
+	return c.snapshotBound(ctx, tx, p, resourceID, "", "", ReadOperation, FixtureToolName, epoch)
+}
+
+// snapshotBound selects the binding of one profile. A person may hold both a
+// read and a write identity for the same resource; credential issuance and
+// resource reads must use the binding that belongs to their profile.
+func (c *Catalog) snapshotBound(ctx context.Context, tx pgx.Tx, p metadata.Principal, resourceID, profileID, profileVersion, operation, toolName string, epoch int64) (Snapshot, error) {
 	var snap Snapshot
 	var raw []byte
 	var revision string
@@ -275,7 +285,11 @@ func (c *Catalog) snapshot(ctx context.Context, tx pgx.Tx, p metadata.Principal,
 	}
 	// Look up the highest version BEFORE testing enabled. Never fall back to an
 	// older enabled binding after a newer version has been disabled.
-	e = tx.QueryRow(ctx, `SELECT definition,enabled FROM mcpguard_ra.identity_bindings WHERE org_id=$1 AND principal_id=$2 AND resource_id=$3 ORDER BY binding_version DESC LIMIT 1`, p.OrgID, p.ID, resourceID).Scan(&raw, &enabled)
+	if profileID == "" {
+		e = tx.QueryRow(ctx, `SELECT definition,enabled FROM mcpguard_ra.identity_bindings WHERE org_id=$1 AND principal_id=$2 AND resource_id=$3 ORDER BY binding_version DESC LIMIT 1`, p.OrgID, p.ID, resourceID).Scan(&raw, &enabled)
+	} else {
+		e = tx.QueryRow(ctx, `SELECT definition,enabled FROM mcpguard_ra.identity_bindings WHERE org_id=$1 AND principal_id=$2 AND resource_id=$3 AND profile_id=$4 AND profile_version=$5 ORDER BY binding_version DESC LIMIT 1`, p.OrgID, p.ID, resourceID, profileID, profileVersion).Scan(&raw, &enabled)
+	}
 	if errors.Is(e, pgx.ErrNoRows) {
 		return snap, ErrDenied
 	}
@@ -293,7 +307,7 @@ func (c *Catalog) snapshot(ctx context.Context, tx pgx.Tx, p metadata.Principal,
 	}
 	e = tx.QueryRow(ctx, `SELECT p.definition FROM mcpguard_ra.profile_versions p JOIN mcpguard_ra.tool_bindings t
  ON (t.org_id,t.resource_id,t.profile_id,t.profile_version)=(p.org_id,p.resource_id,p.profile_id,p.version)
- WHERE t.org_id=$1 AND t.resource_id=$2 AND t.resource_version=$3 AND t.profile_id=$4 AND t.profile_version=$5 AND t.tool_name=$6 AND t.operation_id=$7 AND t.tool_version=1`, p.OrgID, resourceID, snap.Resource.Version, snap.Binding.ProfileID, snap.Binding.ProfileVersion, FixtureToolName, ReadOperation).Scan(&raw)
+ WHERE t.org_id=$1 AND t.resource_id=$2 AND t.resource_version=$3 AND t.profile_id=$4 AND t.profile_version=$5 AND t.tool_name=$6 AND t.operation_id=$7 AND t.tool_version=1`, p.OrgID, resourceID, snap.Resource.Version, snap.Binding.ProfileID, snap.Binding.ProfileVersion, toolName, operation).Scan(&raw)
 	if errors.Is(e, pgx.ErrNoRows) {
 		return snap, ErrDenied
 	}
@@ -305,7 +319,7 @@ func (c *Catalog) snapshot(ctx context.Context, tx pgx.Tx, p metadata.Principal,
 	}
 	found := false
 	for _, op := range snap.Profile.AllowedOperations {
-		found = found || op == ReadOperation
+		found = found || op == operation
 	}
 	if !found {
 		return snap, ErrDenied

@@ -4,7 +4,7 @@
 -- and no other table privilege is granted.
 CREATE OR REPLACE FUNCTION mcpguard_provision.create_write_account(target uuid,account uuid,hash text,password text,expiry timestamptz)
 RETURNS oid LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,pg_temp SET password_encryption='scram-sha-256' AS $$
-DECLARE identity name:='mgu_'||replace(account::text,'-','');prior mcpguard_provision.accounts;created oid;
+DECLARE identity name:='mg_'||replace(account::text,'-','');prior mcpguard_provision.accounts;created oid;
 BEGIN
  IF target IS NULL OR account IS NULL OR hash IS NULL OR password IS NULL OR expiry IS NULL
  OR length(hash)<>43 OR password !~ '^[A-Za-z0-9_-]{43,128}$' OR expiry<=clock_timestamp() OR expiry>clock_timestamp()+interval '366 days'

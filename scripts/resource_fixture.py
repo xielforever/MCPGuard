@@ -117,6 +117,7 @@ def prepare():
     prepare_legacy_regression(cfg,state,runid)
     private={"endpoints":{},"secrets":{}}
     bundle={"schemaVersion":"0.2","resources":[],"heads":[],"profiles":[],"tools":[],"access":[],"bindings":[]}
+    write_items=[]
     pg_admins=[]
     for index,label in enumerate(("orders","customers"),1):
         name=f"mcpguard-ra-pg{index}-{runid}"
@@ -155,6 +156,13 @@ def prepare():
           "timeoutMs":3000,"maxRows":1,"maxResultBytes":16384})
         bundle["tools"].append({"orgId":dev.ORG,"resourceId":rid,"resourceVersion":"1","profileId":profile,"profileVersion":"1",
           "toolName":"fixture.pg_read_item","toolVersion":"1","operationId":"pg.item.read.v1"})
+        if os.environ.get('MCPGUARD_FIXTURE_WRITE')=='1':
+            write_profile=f"50000000-0000-4000-8000-{index+10:012d}"
+            write_items.append(({"orgId":dev.ORG,"resourceId":rid,"profileId":write_profile,"version":"1","name":"isolated-write",
+              "allowedOperations":["pg.item.update.v1"],"nativeEnforcement":"PG_OWNER_RLS_V1","approvalPolicyRef":"fixture-preprovisioned",
+              "timeoutMs":3000,"maxRows":1,"maxResultBytes":16384},
+              {"orgId":dev.ORG,"resourceId":rid,"resourceVersion":"1","profileId":write_profile,"profileVersion":"1",
+              "toolName":"pg.update_note","toolVersion":"1","operationId":"pg.item.update.v1"}))
         for u,user in enumerate(("alice","bob"),1):
             secret_ref=f"{label}.{user}"
             private["secrets"][secret_ref+"@1"]={"username":"ra_"+user,"password":passwords[user],"version":"1"}
@@ -163,6 +171,8 @@ def prepare():
               "resourceId":rid,"resourceVersion":"1","profileId":profile,"profileVersion":"1","bindingVersion":"1",
               "nativeIdentity":"ra_"+user,"secretRef":secret_ref,"secretVersion":"1","enabled":True})
         pg_admins.append({"container":name,"dsn":f"postgres://postgres:{password}@127.0.0.1:{port}/mcpguard_business?sslmode=disable"})
+    for profile,tool in write_items:
+        bundle["profiles"].append(profile);bundle["tools"].append(tool)
     # Visible but not executable resource for discovery/request distinction.
     hidden=dict(bundle["resources"][0]);hidden.update({"resourceId":"40000000-0000-4000-8000-000000000003","alias":"request-only","displayName":"Request only PG"})
     bundle["resources"].append(hidden)
@@ -215,7 +225,10 @@ def test():
                         break
                     except Exception:time.sleep(.1)
                 else:raise SystemExit("Isolated legacy HTTP backend not ready")
-            result=runner(["go","test","-race","-p","1","-count=1","-json","./..."],state,env,allow_failure=True)
+            args=["go","test","-race","-p","1","-count=1","-json"]
+            if os.environ.get("MCPGUARD_TEST_RUN"):args+=["-run",os.environ["MCPGUARD_TEST_RUN"]]
+            args.append("./...")
+            result=runner(args,state,env,allow_failure=True)
         finally:
             if daemon:
                 daemon.terminate()

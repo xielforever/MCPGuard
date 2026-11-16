@@ -138,6 +138,21 @@ def up():
         "MCPGUARD_MIGRATION_DSN": f"postgres://postgres:{cfg['admin_password']}@{addr}/mcpguard_meta?sslmode=disable",
         "MCPGUARD_TEST_BUSINESS_ADMIN_DSN": f"postgres://postgres:{cfg['admin_password']}@{addr}/mcpguard_business?sslmode=disable",
     })
+    # Optional dedicated metadata database so RA-12 write scenes never share
+    # provision targets or principals with earlier scenes.
+    if os.environ.get('MCPGUARD_FIXTURE_METADATA_DB'):
+        from urllib.parse import urlsplit, urlunsplit
+        db = 'mcpguard_meta_ra12_' + str(cfg.get('runId', 'scene'))
+        psql(cfg, 'postgres', f'DROP DATABASE IF EXISTS {db};')
+        psql(cfg, 'postgres', f'CREATE DATABASE {db};')
+        def _swap(dsn):
+            parts = urlsplit(dsn)
+            return urlunsplit((parts.scheme, parts.netloc, '/' + db, parts.query, parts.fragment))
+        for key in ('MCPGUARD_METADATA_DSN', 'MCPGUARD_MIGRATION_DSN'):
+            if cfg.get(key):
+                cfg[key] = _swap(cfg[key])
+        cfg['fixtureMetadataDb'] = db
+        write_private(STATE / 'env.json', json.dumps(cfg, indent=2) + '\n')
     # Save early so a failed build/bootstrap can be retried with the same secrets.
     write_private(STATE / "env.json", json.dumps(cfg, indent=2) + "\n")
     build()
@@ -153,7 +168,7 @@ def up():
         allowed = "false" if name == "visitor" else "true"
         sql += f"INSERT INTO mcpguard.principals(org_id,id,display_name,token_hash,expires_at,can_read,scope_id) VALUES('{ORG}','{ident}','{name}',decode('{digest}','hex'),clock_timestamp()+interval '24 hours',{allowed},'{scope}') ON CONFLICT(org_id,id) DO UPDATE SET token_hash=EXCLUDED.token_hash,expires_at=EXCLUDED.expires_at,enabled=true,can_read=EXCLUDED.can_read,scope_id=EXCLUDED.scope_id;\n"
     sql += "COMMIT;\n" + (ROOT / "scripts/fixtures/grants.sql").read_text()
-    psql(cfg, "mcpguard_meta", sql)
+    psql(cfg, cfg.get("fixtureMetadataDb") or "mcpguard_meta", sql)
     print("PostgreSQL 16.14 ready; migrations 1-4 verified; dev identities prepared. Secrets remain in the selected private fixture state.")
 
 

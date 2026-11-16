@@ -132,10 +132,6 @@ func (r *ReadService) claim(ctx context.Context, p metadata.Principal, in v02.Re
 		return Snapshot{}, "", fmt.Errorf("begin: %w", e)
 	}
 	defer rollback(tx)
-	snap, e := r.Catalog.snapshot(ctx, tx, p, in.ResourceID, epoch)
-	if e != nil {
-		return Snapshot{}, "", fmt.Errorf("snapshot: %w", e)
-	}
 	row, e := r.Credentials.row(ctx, tx, p, in.CredentialID)
 	if e != nil {
 		if errors.Is(e, ErrDenied) {
@@ -148,6 +144,10 @@ func (r *ReadService) claim(ctx context.Context, p metadata.Principal, in v02.Re
 	}
 	if row.state != "ACTIVE" || row.ref.ResourceID != in.ResourceID {
 		return Snapshot{}, "", ErrDenied
+	}
+	snap, e := r.Catalog.snapshotBound(ctx, tx, p, in.ResourceID, row.ref.ProfileID, row.ref.ProfileVersion, ReadOperation, FixtureToolName, epoch)
+	if e != nil {
+		return Snapshot{}, "", fmt.Errorf("snapshot: %w", e)
 	}
 	id := uuid.NewString()
 	plan, _ := json.Marshal(struct {
@@ -179,13 +179,6 @@ func (r *ReadService) current(ctx context.Context, p metadata.Principal, snap Sn
 		return e
 	}
 	defer rollback(tx)
-	now, e := r.Catalog.snapshot(ctx, tx, p, in.ResourceID, epoch)
-	if e != nil {
-		return e
-	}
-	if now.Epoch != snap.Epoch || now.Binding.BindingID != snap.Binding.BindingID || now.Binding.BindingVersion != snap.Binding.BindingVersion {
-		return ErrDenied
-	}
 	row, e := r.Credentials.row(ctx, tx, p, in.CredentialID)
 	if e != nil {
 		return ErrDenied
@@ -194,6 +187,13 @@ func (r *ReadService) current(ctx context.Context, p metadata.Principal, snap Sn
 		return e
 	}
 	if row.state != "ACTIVE" || row.ref.ResourceID != in.ResourceID {
+		return ErrDenied
+	}
+	now, e := r.Catalog.snapshotBound(ctx, tx, p, in.ResourceID, row.ref.ProfileID, row.ref.ProfileVersion, ReadOperation, FixtureToolName, epoch)
+	if e != nil {
+		return e
+	}
+	if now.Epoch != snap.Epoch || now.Binding.BindingID != snap.Binding.BindingID || now.Binding.BindingVersion != snap.Binding.BindingVersion {
 		return ErrDenied
 	}
 	return nil
