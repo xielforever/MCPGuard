@@ -99,3 +99,7 @@ RA-10 已补齐原生 HTTP 私有头 helper、有界同步 worker、可选 stdio
 ## 2026-11-16：RA-12 受控写与他人审批
 
 已实现 `pg.update_note` 受控写：写计划冻结、他人审批（申请人不可自批）、显式恢复派发、单次派发、乐观锁版本冲突、派发前后凭据与绑定复查、关联审计；写身份为独立 `mg_` 受限账号，仅持有条级 UPDATE 与 `owner_update` 行策略，工具默认不注册。契约升级 0.2.8（开通模板新增 `PG_OWNER_UPDATE_V1`），provider DDL 为 v3。标准场景 299 Go race 通过；隔离写场景 5 项端到端用例通过，见[验收](docs/validation/local-ra12-2026-11-16.md)。控制台审批页面、真实客户端与生产部署仍未验收。
+
+## 2026-11-16：RA-13 文件/授权/主体/资源级吊销与 epoch
+
+已实现运营方特权的 `mcpguard-catalog revoke`：按文件（凭据）、授权、主体、资源四级撤销，单事务内锁定并推进授权 epoch、级联终态化租约/未领取 ticket/context/grant、禁用绑定与资源头，并写入带影响计数的撤销审计。撤销提交后新领取与新派发失败，另一副本连接池也能观察到 epoch 与终态。标准场景 299 Go race 通过；吊销场景 5 项端到端用例通过，见[实现说明](docs/revocations-local.md)与[验收](docs/validation/local-ra13-2026-11-16.md)。在途停止与原生清理（RA-14）、客户端缓存清理与真实客户端（RA-18）、控制台撤销页（RA-16）未验收。

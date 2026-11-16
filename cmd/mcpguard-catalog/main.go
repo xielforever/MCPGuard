@@ -4,8 +4,12 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/xielforever/MCPGuard/internal/metadata"
 	"github.com/xielforever/MCPGuard/internal/resources"
 	"os"
 	"regexp"
@@ -25,7 +29,58 @@ func main() {
 		os.Exit(2)
 	}
 	var err error
+	output := ""
 	switch os.Args[1] {
+	case "revoke":
+		if len(os.Args) < 6 || len(os.Args) > 7 {
+			err = resources.ErrInput
+			break
+		}
+		kind, target, org, actorID := os.Args[2], os.Args[3], os.Args[4], os.Args[5]
+		if kind != "CREDENTIAL" && kind != "GRANT" && kind != "PRINCIPAL" && kind != "RESOURCE" {
+			err = resources.ErrInput
+			break
+		}
+		if !regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`).MatchString(target) || !regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`).MatchString(org) || !regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`).MatchString(actorID) {
+			err = resources.ErrInput
+			break
+		}
+		reason := ""
+		if len(os.Args) == 7 {
+			reason = os.Args[6]
+		}
+		encKey, e := base64.StdEncoding.DecodeString(os.Getenv("MCPGUARD_ENCRYPTION_KEY"))
+		if e != nil {
+			err = resources.ErrInput
+			break
+		}
+		planKey, e := base64.StdEncoding.DecodeString(os.Getenv("MCPGUARD_PLAN_KEY"))
+		if e != nil {
+			err = resources.ErrInput
+			break
+		}
+		vault, e := metadata.NewVault(encKey, planKey)
+		if e != nil {
+			err = resources.ErrInput
+			break
+		}
+		storeDSN := os.Getenv("MCPGUARD_METADATA_DSN")
+		if storeDSN == "" {
+			storeDSN = dsn
+		}
+		pool, e := pgxpool.New(ctx, storeDSN)
+		if e != nil {
+			err = resources.ErrUnavailable
+			break
+		}
+		defer pool.Close()
+		var result resources.RevocationResult
+		result, err = resources.NewRevocationService(pool, vault).Revoke(ctx, metadata.Principal{OrgID: org, ID: actorID}, kind, target, reason)
+		if err != nil {
+			break
+		}
+		raw, _ := json.Marshal(result)
+		output = string(raw)
 	case "import-credentials":
 		if len(os.Args) != 3 {
 			err = resources.ErrInput
@@ -221,6 +276,10 @@ func main() {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Catalog command failed; inspect the private administrative environment. No sensitive details printed.")
 		os.Exit(1)
+	}
+	if output != "" {
+		fmt.Println(output)
+		return
 	}
 	fmt.Println("Catalog administrative operation completed.")
 }
