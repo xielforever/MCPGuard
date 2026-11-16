@@ -40,6 +40,7 @@ type WriteService struct {
 	Catalog     *Catalog
 	Credentials *CredentialService
 	Manager     *ReadManager
+	Fence       *RestoreFence
 }
 
 func NewWriteService(c *Catalog, credentials *CredentialService, m *ReadManager) *WriteService {
@@ -306,6 +307,11 @@ func (s *WriteService) nativeUpdate(ctx context.Context, p metadata.Principal, s
 
 // current re-checks the credential and the binding snapshot before dispatch.
 func (s *WriteService) current(ctx context.Context, p metadata.Principal, snap Snapshot, in v02.UpdateNoteInput) error {
+	if s.Fence != nil {
+		if e := s.Fence.Check(ctx, p.OrgID, snap.Resource.EndpointConfigRef); e != nil {
+			return e
+		}
+	}
 	tx, epoch, e := s.Catalog.begin(ctx, p)
 	if e != nil {
 		return e

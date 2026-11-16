@@ -22,6 +22,7 @@ import (
 type RevocationService struct {
 	Pool  *pgxpool.Pool
 	Vault *metadata.Vault
+	Fence *RestoreFence
 }
 
 // RevocationResult reports the blast radius actually changed by one revocation.
@@ -84,6 +85,15 @@ func (s *RevocationService) Revoke(ctx context.Context, actor metadata.Principal
 	}
 	if e != nil {
 		return out, e
+	}
+	if s.Fence != nil {
+		generation, e := s.Fence.Advance(ctx, actor.OrgID)
+		if e != nil {
+			return out, ErrUnavailable
+		}
+		if _, e = tx.Exec(ctx, `INSERT INTO mcpguard_ra.recovery_fence(org_id,generation,verified_at,verified_by,updated_at) VALUES($1,$2,clock_timestamp(),$3,clock_timestamp()) ON CONFLICT(org_id) DO UPDATE SET generation=$2,verified_at=clock_timestamp(),verified_by=$3,updated_at=clock_timestamp()`, actor.OrgID, generation, actor.ID); e != nil {
+			return out, ErrUnavailable
+		}
 	}
 	if e = s.markInflight(ctx, tx, actor.OrgID, kind, targetID, &out); e != nil {
 		return out, ErrUnavailable

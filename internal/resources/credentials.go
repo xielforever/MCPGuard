@@ -19,9 +19,12 @@ import (
 )
 
 type CredentialService struct {
+	// Fence is optional; when configured it blocks previews/issuance while the
+	// native recovery generation is ahead of the metadata recovery point.
 	Access *AccessService
 	Keys   PackageKeyProvider
 	nonce  func() ([]byte, error)
+	Fence *RestoreFence
 }
 
 func NewCredentialService(c *Catalog, keys PackageKeyProvider) (*CredentialService, error) {
@@ -36,7 +39,7 @@ func NewCredentialService(c *Catalog, keys PackageKeyProvider) (*CredentialServi
 		nonce := make([]byte, v02.CredentialNonceBytes)
 		_, e := rand.Read(nonce)
 		return nonce, e
-	}}, nil
+	}, nil}, nil
 }
 
 type credentialSelection struct {
@@ -118,6 +121,11 @@ func (s *CredentialService) selectGrant(ctx context.Context, tx pgx.Tx, p metada
 	snap, e := s.Access.Catalog.snapshotBound(ctx, tx, p, g.ResourceID, g.ProfileID, g.ProfileVersion, operation, toolName, epoch)
 	if e != nil {
 		return out, e
+	}
+	if s.Fence != nil {
+		if e := s.Fence.Check(ctx, p.OrgID, snap.Resource.EndpointConfigRef); e != nil {
+			return out, e
+		}
 	}
 	if snap.Binding.AccountID == nil || *snap.Binding.AccountID != *g.AccountID || snap.Binding.BindingID != *g.BindingID || snap.Resource.Version != g.ResourceVersion || snap.Binding.ProfileID != g.ProfileID || snap.Binding.ProfileVersion != g.ProfileVersion {
 		return out, ErrDenied

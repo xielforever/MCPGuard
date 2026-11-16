@@ -47,7 +47,10 @@ func newRevokeFixture(t *testing.T) *revokeFixture {
 		t.Fatal("revocation runtime unavailable")
 	}
 	t.Cleanup(pool.Close)
-	return &revokeFixture{contextFixture: f, revocations: NewRevocationService(pool, f.s.Catalog.Store.Vault)}
+	service := NewRevocationService(pool, f.s.Catalog.Store.Vault)
+	service.Fence = NewRestoreFence(pool, &PGProvisioningProvider{Private: f.private})
+	f.service.Fence = service.Fence
+	return &revokeFixture{contextFixture: f, revocations: service}
 }
 
 // activatedCredential prepares, takes and activates Alice's credential on one
@@ -255,5 +258,45 @@ func TestRevocationCleanupStaysPendingUntilProven(t *testing.T) {
 	}
 	if state != "CLEANED" {
 		t.Fatalf("repeated revocation reset proven cleanup to %q", state)
+	}
+}
+
+// TestRevocationAdvancesRecoveryFence proves an operator revocation also moves
+// the native recovery fence, so restoring an older metadata backup is visible.
+func TestRevocationAdvancesRecoveryFence(t *testing.T) {
+	f := newRevokeFixture(t)
+	ticket, _ := f.activatedCredential(t, 0)
+	alice := f.people["alice"]
+	if _, e := f.revocations.Revoke(f.ctx, alice, "CREDENTIAL", ticket.CredentialID, "fence advance"); e != nil {
+		t.Fatal(e)
+	}
+	var generation int64
+	if e := f.admin.QueryRow(f.ctx, `SELECT generation FROM mcpguard_ra.recovery_fence WHERE org_id=$1`, alice.OrgID).Scan(&generation); e != nil {
+		t.Fatal("metadata recovery point missing: ", e)
+	}
+	if generation < 1 {
+		t.Fatalf("metadata recovery point=%d", generation)
+	}
+	native, e := f.revocations.Fence.NativeMax(f.ctx, alice.OrgID)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if native != generation {
+		t.Fatalf("native fence=%d metadata=%d", native, generation)
+	}
+}
+
+// TestRevocationRecoveryFenceBlocksOldPackage proves a stale metadata restore
+// cannot re-use an old package while the native recovery generation is ahead.
+func TestRevocationRecoveryFenceBlocksOldPackage(t *testing.T) {
+	f := newRevokeFixture(t)
+	ticket, _ := f.activatedCredential(t, 0)
+	alice := f.people["alice"]
+	if _, e := f.revocations.Fence.Advance(f.ctx, alice.OrgID); e != nil {
+		t.Fatal(e)
+	}
+	status, e := f.service.Status(f.ctx, alice, v02.CredentialIDInput{CredentialID: ticket.CredentialID})
+	if e != nil || status.State != "REVOKED" {
+		t.Fatalf("a stale metadata fence did not retire the old package: state=%q err=%v", status.State, e)
 	}
 }

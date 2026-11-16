@@ -26,6 +26,9 @@ var providerRecoveryDDL string
 //go:embed native_provider/003_owner_write.sql
 var providerWriteDDL string
 
+//go:embed native_provider/004_restore_fence.sql
+var providerFenceDDL string
+
 func strconvI(n int) string { return strconv.Itoa(n) }
 
 type ProviderPrivate struct {
@@ -308,7 +311,7 @@ func InstallPGProvider(ctx context.Context, dsn, manager string, targets []v02.P
 		}
 	}
 	var latest int
-	if e = tx.QueryRow(ctx, "SELECT max(version) FROM mcpguard_provision.schema_versions").Scan(&latest); e != nil || latest > 3 {
+	if e = tx.QueryRow(ctx, "SELECT max(version) FROM mcpguard_provision.schema_versions").Scan(&latest); e != nil || latest > 4 {
 		return ErrConflict
 	}
 	recoverySum := sha256.Sum256([]byte(providerRecoveryDDL))
@@ -341,6 +344,21 @@ func InstallPGProvider(ctx context.Context, dsn, manager string, targets []v02.P
 			return ErrConflict
 		}
 	}
+	fenceSum := sha256.Sum256([]byte(providerFenceDDL))
+	fenceChecksum := hex.EncodeToString(fenceSum[:])
+	if latest <= 3 {
+		if _, e = tx.Exec(ctx, providerFenceDDL); e != nil {
+			return e
+		}
+		if _, e = tx.Exec(ctx, "INSERT INTO mcpguard_provision.schema_versions VALUES(4,$1)", fenceChecksum); e != nil {
+			return e
+		}
+	} else {
+		var saved string
+		if tx.QueryRow(ctx, "SELECT checksum FROM mcpguard_provision.schema_versions WHERE version=4").Scan(&saved) != nil || saved != fenceChecksum {
+			return ErrConflict
+		}
+	}
 	for _, target := range targets {
 		if !valid("ProvisioningTarget", target) {
 			return ErrInput
@@ -360,6 +378,9 @@ func InstallPGProvider(ctx context.Context, dsn, manager string, targets []v02.P
 		return e
 	}
 	if _, e = tx.Exec(ctx, "GRANT EXECUTE ON FUNCTION mcpguard_provision.reconcile_account(uuid,uuid,text,timestamptz),mcpguard_provision.cleanup_account(uuid,uuid,text,timestamptz) TO "+role); e != nil {
+		return e
+	}
+	if _, e = tx.Exec(ctx, "GRANT EXECUTE ON FUNCTION mcpguard_provision.advance_fence(uuid),mcpguard_provision.fence_generation(uuid) TO "+role); e != nil {
 		return e
 	}
 	return tx.Commit(ctx)

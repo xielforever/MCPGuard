@@ -114,3 +114,7 @@
 ## 2026-11-16 后续状态：RA-14 本地完成
 
 撤销时在途写/读计划转 `OUTCOME_UNKNOWN`（保留完成事实、不重放）、原生池按 `auth_epoch` 淘汰、历史结果按 epoch 拒绝载荷，并新增原生账号清理台账：撤销只登记 PENDING，失败可重试，成功证据才 CLEANED。见[验收](validation/local-ra14-2026-11-16.md)。后端在途语句终止、控制台与真实客户端未验收。
+
+## 2026-11-16 后续状态：RA-15 本地完成
+
+issuer 轮换使旧批准与旧包失效；恢复 fence 跨存储实现：原生 PG 保存 per-org 恢复代次，元数据记录恢复点，原生更高即拒绝签发/领取/派发，`restore-check`/`restore-accept` 供运营方核验。provider DDL v4、元数据迁移 012。见[验收](validation/local-ra15-2026-11-16.md)。真实客户端、生产备份恢复演练未验收。

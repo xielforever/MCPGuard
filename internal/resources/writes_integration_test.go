@@ -32,7 +32,13 @@ func newWriteFixture(t *testing.T) (*contextFixture, *WriteService) {
 	}
 	manager := NewReadManager(catalog, &VaultSecretProvider{Catalog: catalog, Endpoints: f.private.Endpoints})
 	t.Cleanup(manager.Close)
-	return f, NewWriteService(catalog, credentials, manager)
+	write := NewWriteService(catalog, credentials, manager)
+	pool, e := pgxpool.New(f.ctx, os.Getenv("MCPGUARD_TEST_METADATA_ADMIN_DSN"))
+	if e == nil {
+		t.Cleanup(pool.Close)
+		write.Fence = NewRestoreFence(pool, &PGProvisioningProvider{Private: f.private})
+	}
+	return f, write
 }
 
 // requireWriteScene skips the write tests unless the RA-12 fixture prepared them.
@@ -385,5 +391,54 @@ func TestControlledWriteRejectedAfterIssuerRotation(t *testing.T) {
 	}
 	if version != 1 {
 		t.Fatalf("native row changed after a stale approval: version=%d", version)
+	}
+}
+
+// TestRecoveryFenceBlocksStaleMetadata proves a native fence ahead of the
+// metadata recovery point blocks an otherwise valid approval until an operator
+// accepts (re-verifies) the restored point.
+func TestControlledWriteRecoveryFenceBlocksStaleMetadata(t *testing.T) {
+	f, writes := newWriteFixture(t)
+	ticket := activateWrite(t, f, writes)
+	seedWriteItem(t, f, *ticket.ResourceID)
+	approver := writeApprover(t, f, writes, *ticket.ResourceID)
+	alice := f.people["alice"]
+	planned, e := writes.Plan(f.ctx, alice, writeInput(ticket, "stale metadata", "1"), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = writes.Approve(f.ctx, approver, planned.RequestID, true, ""); e != nil {
+		t.Fatal(e)
+	}
+	// The native side moves ahead without the metadata record: exactly what a
+	// metadata restore to an older backup looks like.
+	generation, e := writes.Fence.Advance(f.ctx, alice.OrgID)
+	if e != nil || generation < 1 {
+		t.Fatal("native fence advance failed: ", e)
+	}
+	if _, e := writes.Resume(f.ctx, alice, planned.RequestID); !errors.Is(e, ErrDenied) {
+		t.Fatal("stale metadata passed the recovery fence: ", e)
+	}
+	var version int
+	if e = f.native[0].QueryRow(f.ctx, "SELECT version FROM resource_demo.items WHERE item_id='item_demo_1'").Scan(&version); e != nil {
+		t.Fatal(e)
+	}
+	if version != 1 {
+		t.Fatalf("native row changed behind the fence: version=%d", version)
+	}
+	// The operator re-verifies and accepts the recovery point; new work resumes.
+	if e = writes.Fence.Record(f.ctx, alice.OrgID, generation, alice.ID); e != nil {
+		t.Fatal("accepting the recovery point failed: ", e)
+	}
+	second, e := writes.Plan(f.ctx, alice, writeInput(ticket, "after restore", "1"), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = writes.Approve(f.ctx, approver, second.RequestID, true, ""); e != nil {
+		t.Fatal(e)
+	}
+	done, e := writes.Resume(f.ctx, alice, second.RequestID)
+	if e != nil || done.State != "SUCCEEDED" {
+		t.Fatal("verified recovery point did not resume work: ", e)
 	}
 }

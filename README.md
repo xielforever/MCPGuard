@@ -107,3 +107,7 @@ RA-10 已补齐原生 HTTP 私有头 helper、有界同步 worker、可选 stdio
 ## 2026-11-16：RA-14 在途停止、池淘汰与清理状态
 
 已实现撤销时把在途写计划/读计划标记为 `OUTCOME_UNKNOWN`（不重放）、按 authorization epoch 淘汰原生连接池、撤销历史结果按 epoch 拒绝返回载荷，以及原生账号清理的 PENDING/FAILED/CLEANED 状态与可重试清理（失败不误报成功）。标准场景 299 Go race、写场景 6 项、吊销/清理场景 6 项用例通过，见[验收](docs/validation/local-ra14-2026-11-16.md)。真正终止原生后端语句、控制台与真实客户端未验收。
+
+## 2026-11-16：RA-15 密钥轮换与 recovery fence
+
+已实现 issuer 轮换后旧批准不可执行、旧包失效，以及跨存储的恢复 fence：原生业务 PG 保存 per-org 恢复代次，元数据只记录恢复点；原生代次高于元数据即视为回滚，签发/领取/写派发 fail closed，运营方 `restore-check`/`restore-accept` 重新核验后解除。provider DDL 升到 v4，元数据迁移 012。标准场景 299 Go race、写场景 9 项、吊销场景 8 项用例通过，见[验收](docs/validation/local-ra15-2026-11-16.md)。真实客户端与生产部署未验收。

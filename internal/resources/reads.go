@@ -33,6 +33,7 @@ type ReadService struct {
 	Catalog     *Catalog
 	Credentials *CredentialService
 	Manager     *ReadManager
+	Fence *RestoreFence
 }
 
 func NewReadService(c *Catalog, credentials *CredentialService, m *ReadManager) *ReadService {
@@ -148,6 +149,11 @@ func (r *ReadService) claim(ctx context.Context, p metadata.Principal, in v02.Re
 	snap, e := r.Catalog.snapshotBound(ctx, tx, p, in.ResourceID, row.ref.ProfileID, row.ref.ProfileVersion, ReadOperation, FixtureToolName, epoch)
 	if e != nil {
 		return Snapshot{}, "", fmt.Errorf("snapshot: %w", e)
+	}
+	if r.Fence != nil {
+		if e := r.Fence.Check(ctx, p.OrgID, snap.Resource.EndpointConfigRef); e != nil {
+			return Snapshot{}, "", e
+		}
 	}
 	id := uuid.NewString()
 	plan, _ := json.Marshal(struct {

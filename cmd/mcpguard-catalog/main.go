@@ -82,6 +82,54 @@ func main() {
 		}
 		raw, _ := json.Marshal(result)
 		output = string(raw)
+	case "restore-check", "restore-accept":
+		if len(os.Args) < 4 || len(os.Args) > 5 {
+			err = resources.ErrInput
+			break
+		}
+		org := os.Args[3]
+		if !regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`).MatchString(org) {
+			err = resources.ErrInput
+			break
+		}
+		private, e := resources.LoadProviderPrivate(os.Getenv("MCPGUARD_PROVIDER_CONFIG"))
+		if e != nil {
+			err = resources.ErrInput
+			break
+		}
+		pool, e := pgxpool.New(ctx, dsn)
+		if e != nil {
+			err = resources.ErrUnavailable
+			break
+		}
+		defer pool.Close()
+		fence := resources.NewRestoreFence(pool, &resources.PGProvisioningProvider{Private: private})
+		native, e := fence.NativeMax(ctx, org)
+		if e != nil {
+			err = e
+			break
+		}
+		expected, e := fence.Expected(ctx, org)
+		if e != nil {
+			err = e
+			break
+		}
+		if os.Args[2] == "restore-accept" {
+			if len(os.Args) != 5 || !regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`).MatchString(os.Args[4]) {
+				err = resources.ErrInput
+				break
+			}
+			if e := fence.Record(ctx, org, native, os.Args[4]); e != nil {
+				err = e
+				break
+			}
+			expected = native
+		}
+		raw, _ := json.Marshal(map[string]any{"orgId": org, "native": native, "expected": expected, "suspect": native > expected})
+		output = string(raw)
+		if os.Args[2] == "restore-check" && native > expected {
+			err = resources.ErrConflict
+		}
 	case "revocation-cleanup":
 		if len(os.Args) < 4 {
 			err = resources.ErrInput
@@ -118,6 +166,14 @@ func main() {
 		}
 		defer pool.Close()
 		service := resources.NewRevocationService(pool, vault)
+		if providerPath := os.Getenv("MCPGUARD_PROVIDER_CONFIG"); providerPath != "" {
+			private, e := resources.LoadProviderPrivate(providerPath)
+			if e != nil {
+				err = resources.ErrInput
+				break
+			}
+			service.Fence = resources.NewRestoreFence(pool, &resources.PGProvisioningProvider{Private: private})
+		}
 		switch mode {
 		case "status":
 			raw, e := revocationCleanupStatus(ctx, pool, org)
@@ -347,6 +403,9 @@ func main() {
 		}
 	}
 	if err != nil {
+		if output != "" {
+			fmt.Println(output)
+		}
 		fmt.Fprintln(os.Stderr, "Catalog command failed; inspect the private administrative environment. No sensitive details printed.")
 		os.Exit(1)
 	}
