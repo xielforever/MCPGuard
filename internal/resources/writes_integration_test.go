@@ -304,3 +304,49 @@ func TestControlledWriteInFlightRevocation(t *testing.T) {
 		t.Fatalf("historical write result was not redacted: state=%q result=%v err=%v", history.State, history.Result, e)
 	}
 }
+
+// TestControlledWritePendingApprovalStaleAfterRevocation proves an approved but
+// not yet dispatched plan cannot execute once the grant is revoked.
+func TestControlledWritePendingApprovalStaleAfterRevocation(t *testing.T) {
+	f, writes := newWriteFixture(t)
+	ticket := activateWrite(t, f, writes)
+	seedWriteItem(t, f, *ticket.ResourceID)
+	approver := writeApprover(t, f, writes, *ticket.ResourceID)
+	alice := f.people["alice"]
+	var grantID string
+	if e := f.admin.QueryRow(f.ctx, `SELECT grant_id::text FROM mcpguard_ra.credential_leases WHERE org_id=$1 AND credential_id=$2`, alice.OrgID, ticket.CredentialID).Scan(&grantID); e != nil {
+		t.Fatal(e)
+	}
+	planned, e := writes.Plan(f.ctx, alice, writeInput(ticket, "pending approval", "1"), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = writes.Approve(f.ctx, approver, planned.RequestID, true, ""); e != nil {
+		t.Fatal(e)
+	}
+	pool, e := pgxpool.New(f.ctx, os.Getenv("MCPGUARD_TEST_METADATA_ADMIN_DSN"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	t.Cleanup(pool.Close)
+	if _, e = NewRevocationService(pool, f.s.Catalog.Store.Vault).Revoke(f.ctx, alice, "GRANT", grantID, "revoked before dispatch"); e != nil {
+		t.Fatal(e)
+	}
+	if _, e := writes.Resume(f.ctx, alice, planned.RequestID); !errors.Is(e, ErrDenied) {
+		t.Fatal("an approved plan executed after revocation: ", e)
+	}
+	var version int
+	if e = f.native[0].QueryRow(f.ctx, "SELECT version FROM resource_demo.items WHERE item_id='item_demo_1'").Scan(&version); e != nil {
+		t.Fatal(e)
+	}
+	if version != 1 {
+		t.Fatalf("native row changed after a rejected dispatch: version=%d", version)
+	}
+	var state string
+	if e = f.admin.QueryRow(f.ctx, `SELECT state FROM mcpguard_ra.write_requests WHERE org_id=$1 AND request_id=$2`, alice.OrgID, planned.RequestID).Scan(&state); e != nil {
+		t.Fatal(e)
+	}
+	if state == "SUCCEEDED" || state == "EXECUTING" {
+		t.Fatalf("stale plan state=%q", state)
+	}
+}

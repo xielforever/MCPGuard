@@ -34,6 +34,17 @@ mcpguard-catalog revoke <KIND> <targetId> <orgId> <actorId> [reason]
 - 撤销先于新领取提交时，新领取必定失败（后提交者看到 epoch 与终态）；
 - 在途执行的实际停止、连接池淘汰与原生清理状态属于 RA-14，不在本阶段宣称完成。
 
+## 原生清理重试
+
+撤销只登记原生账号清理（PENDING），不宣称后端已清理。运营方用同一特权连接重试：
+
+```bash
+mcpguard-catalog revocation-cleanup status <orgId>
+mcpguard-catalog revocation-cleanup retry <orgId> <provider-private.json> [limit]
+```
+
+`retry` 通过作废前的 provision plan（若存在）调用提供方 Cleanup；缺失/不可读计划或提供方失败都会记 FAILED/attempts+1，保持可重试；只有 `CLEANED/ABSENT_SEALED/DISABLED` 回执才置 CLEANED。重复撤销不会把已 CLEANED 重置回 PENDING。
+
 ## 边界
 
 - 本地客户端缓存/旧 context 文件的服务端拒绝已验证；客户端侧彻底清除与真实客户端体验按 RA-18 验收。

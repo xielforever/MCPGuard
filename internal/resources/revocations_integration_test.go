@@ -13,6 +13,19 @@ import (
 	"github.com/xielforever/MCPGuard/internal/metadata"
 )
 
+type fakeCleanupProvider struct{ fail bool }
+
+func (f *fakeCleanupProvider) Reconcile(context.Context, v02.ProvisioningPlan, string) (NativeReceipt, error) {
+	return NativeReceipt{}, errors.New("not used")
+}
+
+func (f *fakeCleanupProvider) Cleanup(_ context.Context, plan v02.ProvisioningPlan, hash string) (NativeReceipt, error) {
+	if f.fail {
+		return NativeReceipt{}, errors.New("provider unavailable")
+	}
+	return NativeReceipt{Status: "CLEANED", TargetID: plan.TargetID, AccountID: plan.AccountID, PlanHash: hash}, nil
+}
+
 type revokeFixture struct {
 	*contextFixture
 	revocations *RevocationService
@@ -209,8 +222,8 @@ func TestRevocationCleanupStaysPendingUntilProven(t *testing.T) {
 	if pending != res.CleanupPending {
 		t.Fatalf("cleanup rows=%d report=%d", pending, res.CleanupPending)
 	}
-	failing := func(context.Context, string, string) error { return errors.New("provider unavailable") }
-	cleaned, failed, e := f.revocations.Cleanup(f.ctx, alice.OrgID, failing, 10)
+	provider := &fakeCleanupProvider{fail: true}
+	cleaned, failed, e := f.revocations.Cleanup(f.ctx, alice.OrgID, f.revocations.ProviderCleaner(provider), 10)
 	if e != nil || failed < 1 || cleaned != 0 {
 		t.Fatalf("failed cleanup run cleaned=%d failed=%d err=%v", cleaned, failed, e)
 	}
@@ -222,8 +235,8 @@ func TestRevocationCleanupStaysPendingUntilProven(t *testing.T) {
 	if state != "FAILED" || attempts < 1 {
 		t.Fatalf("failed cleanup is state=%q attempts=%d, want FAILED/retryable", state, attempts)
 	}
-	succeeding := func(context.Context, string, string) error { return nil }
-	cleaned, failed, e = f.revocations.Cleanup(f.ctx, alice.OrgID, succeeding, 10)
+	provider.fail = false
+	cleaned, failed, e = f.revocations.Cleanup(f.ctx, alice.OrgID, f.revocations.ProviderCleaner(provider), 10)
 	if e != nil || failed != 0 || cleaned < 1 {
 		t.Fatalf("retry result cleaned=%d failed=%d err=%v", cleaned, failed, e)
 	}

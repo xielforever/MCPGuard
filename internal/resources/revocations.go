@@ -2,11 +2,13 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	v02 "github.com/xielforever/MCPGuard/internal/contracts/v02"
 	"github.com/xielforever/MCPGuard/internal/metadata"
 )
 
@@ -296,6 +298,38 @@ func (s *RevocationService) enqueueCleanup(ctx context.Context, tx pgx.Tx, org, 
 	}
 	out.CleanupPending = int(tag.RowsAffected())
 	return nil
+}
+
+
+// ProviderCleaner removes one native account through the provisioning provider,
+// using the immutable plan recorded for the account's provisioning job. A
+// missing job or unreadable plan is an error, so the row stays retryable and is
+// never reported as cleaned.
+func (s *RevocationService) ProviderCleaner(provider NativeRecoveryProvider) AccountCleaner {
+	return func(ctx context.Context, org, accountID string) error {
+		var jobID, hash string
+		var cipher []byte
+		if e := s.Pool.QueryRow(ctx, `SELECT job_id::text,plan_hash,plan_ciphertext FROM mcpguard_ra.provisioning_jobs WHERE org_id=$1 AND account_id=$2 ORDER BY created_at DESC LIMIT 1`, org, accountID).Scan(&jobID, &hash, &cipher); e != nil {
+			return fmt.Errorf("no provisioning plan for account")
+		}
+		plain, e := s.Vault.Open(cipher, "provision-plan/"+org+"/"+jobID)
+		if e != nil || s.Vault.Hash(plain) != hash {
+			return fmt.Errorf("provisioning plan is unreadable")
+		}
+		var plan v02.ProvisioningPlan
+		if json.Unmarshal(plain, &plan) != nil || plan.OrgID != org || plan.AccountID != accountID {
+			return fmt.Errorf("provisioning plan does not match the account")
+		}
+		receipt, e := provider.Cleanup(ctx, plan, hash)
+		if e != nil {
+			return e
+		}
+		switch receipt.Status {
+		case "CLEANED", "ABSENT_SEALED", "DISABLED":
+			return nil
+		}
+		return fmt.Errorf("native cleanup status %s", receipt.Status)
+	}
 }
 
 // AccountCleaner removes one native account through the provisioning provider.

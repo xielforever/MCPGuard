@@ -1,4 +1,4 @@
-﻿// mcpguard-catalog performs explicit, administrative catalog migrations/imports.
+// mcpguard-catalog performs explicit, administrative catalog migrations/imports.
 // It never publishes business tools or prints native credentials.
 package main
 
@@ -13,6 +13,7 @@ import (
 	"github.com/xielforever/MCPGuard/internal/resources"
 	"os"
 	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -81,6 +82,78 @@ func main() {
 		}
 		raw, _ := json.Marshal(result)
 		output = string(raw)
+	case "revocation-cleanup":
+		if len(os.Args) < 4 {
+			err = resources.ErrInput
+			break
+		}
+		mode, org := os.Args[2], os.Args[3]
+		if !regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`).MatchString(org) {
+			err = resources.ErrInput
+			break
+		}
+		encKey, e := base64.StdEncoding.DecodeString(os.Getenv("MCPGUARD_ENCRYPTION_KEY"))
+		if e != nil {
+			err = resources.ErrInput
+			break
+		}
+		planKey, e := base64.StdEncoding.DecodeString(os.Getenv("MCPGUARD_PLAN_KEY"))
+		if e != nil {
+			err = resources.ErrInput
+			break
+		}
+		vault, e := metadata.NewVault(encKey, planKey)
+		if e != nil {
+			err = resources.ErrInput
+			break
+		}
+		storeDSN := os.Getenv("MCPGUARD_METADATA_DSN")
+		if storeDSN == "" {
+			storeDSN = dsn
+		}
+		pool, e := pgxpool.New(ctx, storeDSN)
+		if e != nil {
+			err = resources.ErrUnavailable
+			break
+		}
+		defer pool.Close()
+		service := resources.NewRevocationService(pool, vault)
+		switch mode {
+		case "status":
+			raw, e := revocationCleanupStatus(ctx, pool, org)
+			if e != nil {
+				err = e
+				break
+			}
+			output = raw
+		case "retry":
+			if len(os.Args) < 5 || len(os.Args) > 6 {
+				err = resources.ErrInput
+				break
+			}
+			limit := 20
+			if len(os.Args) == 6 {
+				limit, e = strconv.Atoi(os.Args[5])
+				if e != nil || limit <= 0 || limit > 100 {
+					err = resources.ErrInput
+					break
+				}
+			}
+			var private *resources.ProviderPrivate
+			private, err = resources.LoadProviderPrivate(os.Args[4])
+			if err != nil {
+				break
+			}
+			cleaned, failed, e := service.Cleanup(ctx, org, service.ProviderCleaner(&resources.PGProvisioningProvider{Private: private}), limit)
+			if e != nil {
+				err = e
+				break
+			}
+			raw, _ := json.Marshal(map[string]any{"orgId": org, "cleaned": cleaned, "failed": failed, "reported": "attempted"})
+			output = string(raw)
+		default:
+			err = resources.ErrInput
+		}
 	case "import-credentials":
 		if len(os.Args) != 3 {
 			err = resources.ErrInput
@@ -284,6 +357,40 @@ func main() {
 	fmt.Println("Catalog administrative operation completed.")
 }
 
-
-
-
+func revocationCleanupStatus(ctx context.Context, pool *pgxpool.Pool, org string) (string, error) {
+	rows, e := pool.Query(ctx, `SELECT account_id::text,state,attempts,coalesce(last_error,'') FROM mcpguard_ra.revocation_cleanup WHERE org_id=$1 ORDER BY updated_at`, org)
+	if e != nil {
+		return "", resources.ErrUnavailable
+	}
+	defer rows.Close()
+	type row struct {
+		AccountID string `json:"accountId"`
+		State     string `json:"state"`
+		Attempts  int    `json:"attempts"`
+		LastError string `json:"lastError,omitempty"`
+	}
+	out := struct {
+		OrgID   string `json:"orgId"`
+		Pending int    `json:"pending"`
+		Failed  int    `json:"failed"`
+		Cleaned int    `json:"cleaned"`
+		Rows    []row  `json:"rows"`
+	}{OrgID: org, Rows: []row{}}
+	for rows.Next() {
+		var r row
+		if rows.Scan(&r.AccountID, &r.State, &r.Attempts, &r.LastError) != nil {
+			return "", resources.ErrUnavailable
+		}
+		switch r.State {
+		case "PENDING":
+			out.Pending++
+		case "FAILED":
+			out.Failed++
+		case "CLEANED":
+			out.Cleaned++
+		}
+		out.Rows = append(out.Rows, r)
+	}
+	raw, _ := json.Marshal(out)
+	return string(raw), nil
+}
