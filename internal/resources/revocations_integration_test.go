@@ -1,14 +1,14 @@
 package resources
 
 import (
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"strings"
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -27,7 +27,8 @@ func (f *fakeCleanupProvider) Cleanup(_ context.Context, plan v02.ProvisioningPl
 	if f.fail {
 		return NativeReceipt{}, errors.New("provider unavailable")
 	}
-	return NativeReceipt{Status: "CLEANED", TargetID: plan.TargetID, AccountID: plan.AccountID, PlanHash: hash}, nil
+	zero := 0
+	return NativeReceipt{Status: "CLEANED", TargetID: plan.TargetID, AccountID: plan.AccountID, PlanHash: hash, ActiveSessions: &zero}, nil
 }
 
 type revokeFixture struct {

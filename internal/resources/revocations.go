@@ -27,13 +27,13 @@ type RevocationService struct {
 
 // RevocationResult reports the blast radius actually changed by one revocation.
 type RevocationResult struct {
-	Kind        string `json:"kind"`
-	TargetID    string `json:"targetId"`
-	SubjectID   string `json:"subjectId,omitempty"`
-	ResourceID  string `json:"resourceId,omitempty"`
-	Grants      int    `json:"grants"`
-	Credentials int    `json:"credentials"`
-	Tickets     int    `json:"tickets"`
+	Kind           string `json:"kind"`
+	TargetID       string `json:"targetId"`
+	SubjectID      string `json:"subjectId,omitempty"`
+	ResourceID     string `json:"resourceId,omitempty"`
+	Grants         int    `json:"grants"`
+	Credentials    int    `json:"credentials"`
+	Tickets        int    `json:"tickets"`
 	Contexts       int    `json:"contexts"`
 	WriteUnknown   int    `json:"writeUnknown"`
 	ReadUnknown    int    `json:"readUnknown"`
@@ -246,7 +246,6 @@ func (s *RevocationService) cancelTickets(ctx context.Context, tx pgx.Tx, org, p
 	return int(tag.RowsAffected())
 }
 
-
 // markInflight records uncertainty for plans that were already dispatched. The
 // gateway never replays them; the completed native fact is not rewritten.
 func (s *RevocationService) markInflight(ctx context.Context, tx pgx.Tx, org, kind, target string, out *RevocationResult) error {
@@ -264,17 +263,20 @@ func (s *RevocationService) markInflight(ctx context.Context, tx pgx.Tx, org, ki
 	default:
 		return ErrInput
 	}
-	tag, e := tx.Exec(ctx, `UPDATE mcpguard_ra.write_requests SET state='OUTCOME_UNKNOWN' WHERE org_id=$1 AND state='EXECUTING' AND `+wp, org, target)
+	tag, e := tx.Exec(ctx, `WITH affected AS (
+ UPDATE mcpguard_ra.write_requests SET state='OUTCOME_UNKNOWN' WHERE org_id=$1 AND state='EXECUTING' AND `+wp+`
+ RETURNING org_id,subject_id,request_id)
+ INSERT INTO mcpguard_ra.write_audit(org_id,subject_id,request_id,event_type)
+ SELECT org_id,subject_id,request_id,'OUTCOME_UNKNOWN' FROM affected`, org, target)
 	if e != nil {
 		return e
 	}
 	out.WriteUnknown = int(tag.RowsAffected())
-	if out.WriteUnknown > 0 {
-		if _, e = tx.Exec(ctx, `INSERT INTO mcpguard_ra.write_audit(org_id,subject_id,request_id,event_type) SELECT org_id,subject_id,request_id,'OUTCOME_UNKNOWN' FROM mcpguard_ra.write_requests WHERE org_id=$1 AND state='OUTCOME_UNKNOWN' AND `+wp, org, target); e != nil {
-			return e
-		}
-	}
-	tag, e = tx.Exec(ctx, `UPDATE mcpguard_ra.read_plans SET state='OUTCOME_UNKNOWN' WHERE org_id=$1 AND state='RUNNING' AND `+rp, org, target)
+	tag, e = tx.Exec(ctx, `WITH affected AS (
+ UPDATE mcpguard_ra.read_plans SET state='OUTCOME_UNKNOWN' WHERE org_id=$1 AND state='RUNNING' AND `+rp+`
+ RETURNING org_id,principal_id,plan_id)
+ INSERT INTO mcpguard_ra.read_audit(org_id,principal_id,plan_id,event_type)
+ SELECT org_id,principal_id,plan_id,'OUTCOME_UNKNOWN' FROM affected`, org, target)
 	if e != nil {
 		return e
 	}
@@ -289,19 +291,21 @@ func (s *RevocationService) enqueueCleanup(ctx context.Context, tx pgx.Tx, org, 
 	var filter string
 	switch kind {
 	case "CREDENTIAL":
-		filter = "binding_id IN (SELECT binding_id FROM mcpguard_ra.credential_leases WHERE org_id=$1 AND credential_id=$2)"
+		// A package is not the grant's native account. Other valid packages
+		// under the same grant retain their authority.
+		return nil
 	case "GRANT":
-		filter = "binding_id IN (SELECT binding_id FROM mcpguard_ra.credential_leases WHERE org_id=$1 AND grant_id=$2)"
+		filter = "EXISTS (SELECT FROM mcpguard_ra.provisioning_jobs j WHERE j.org_id=$1 AND j.account_id=a.account_id AND j.grant_id=$2)"
 	case "PRINCIPAL":
-		filter = "principal_id=$2"
+		filter = "a.subject_id=$2"
 	case "RESOURCE":
-		filter = "resource_id=$2"
+		filter = "a.resource_id=$2"
 	default:
 		return ErrInput
 	}
 	tag, e := tx.Exec(ctx, `INSERT INTO mcpguard_ra.revocation_cleanup(org_id,account_id,resource_id,state)
- SELECT $1,(b.definition->>'accountId')::uuid,b.resource_id,'PENDING' FROM mcpguard_ra.identity_bindings b
- WHERE b.org_id=$1 AND (b.definition->>'accountId') IS NOT NULL AND `+filter+`
+ SELECT $1,a.account_id,a.resource_id,'PENDING' FROM mcpguard_ra.account_claims a
+ WHERE a.org_id=$1 AND a.management_mode='PROVISIONED' AND `+filter+`
  ON CONFLICT (org_id,account_id) DO UPDATE SET state=CASE WHEN mcpguard_ra.revocation_cleanup.state='CLEANED' THEN 'CLEANED' ELSE 'PENDING' END,updated_at=clock_timestamp()`, org, target)
 	if e != nil {
 		return e
@@ -310,40 +314,51 @@ func (s *RevocationService) enqueueCleanup(ctx context.Context, tx pgx.Tx, org, 
 	return nil
 }
 
-
 // ProviderCleaner removes one native account through the provisioning provider,
 // using the immutable plan recorded for the account's provisioning job. A
 // missing job or unreadable plan is an error, so the row stays retryable and is
 // never reported as cleaned.
 func (s *RevocationService) ProviderCleaner(provider NativeRecoveryProvider) AccountCleaner {
-	return func(ctx context.Context, org, accountID string) error {
+	return func(ctx context.Context, org, accountID string) (CleanupReceipt, error) {
+		var proof CleanupReceipt
 		var jobID, hash string
 		var cipher []byte
 		if e := s.Pool.QueryRow(ctx, `SELECT job_id::text,plan_hash,plan_ciphertext FROM mcpguard_ra.provisioning_jobs WHERE org_id=$1 AND account_id=$2 ORDER BY created_at DESC LIMIT 1`, org, accountID).Scan(&jobID, &hash, &cipher); e != nil {
-			return fmt.Errorf("no provisioning plan for account")
+			return proof, fmt.Errorf("no provisioning plan for account")
 		}
 		plain, e := s.Vault.Open(cipher, "provision-plan/"+org+"/"+jobID)
 		if e != nil || s.Vault.Hash(plain) != hash {
-			return fmt.Errorf("provisioning plan is unreadable")
+			return proof, fmt.Errorf("provisioning plan is unreadable")
 		}
 		var plan v02.ProvisioningPlan
 		if json.Unmarshal(plain, &plan) != nil || plan.OrgID != org || plan.AccountID != accountID {
-			return fmt.Errorf("provisioning plan does not match the account")
+			return proof, fmt.Errorf("provisioning plan does not match the account")
 		}
 		receipt, e := provider.Cleanup(ctx, plan, hash)
 		if e != nil {
-			return e
+			return proof, e
 		}
-		switch receipt.Status {
-		case "CLEANED", "ABSENT_SEALED", "DISABLED":
-			return nil
+		if receipt.AccountID != accountID || receipt.TargetID != plan.TargetID || receipt.PlanHash != hash {
+			return proof, ErrDenied
 		}
-		return fmt.Errorf("native cleanup status %s", receipt.Status)
+		proof = CleanupReceipt{Status: receipt.Status, TargetID: receipt.TargetID, AccountID: receipt.AccountID, RoleOID: receipt.RoleOID, ActiveSessions: receipt.ActiveSessions}
+		if (receipt.Status == "CLEANED" || receipt.Status == "ABSENT_SEALED") && receipt.ActiveSessions != nil && *receipt.ActiveSessions == 0 {
+			return proof, nil
+		}
+		return proof, fmt.Errorf("native cleanup status %s", receipt.Status)
 	}
 }
 
+type CleanupReceipt struct {
+	Status         string  `json:"status"`
+	TargetID       string  `json:"targetId"`
+	AccountID      string  `json:"accountId"`
+	RoleOID        *string `json:"roleOid,omitempty"`
+	ActiveSessions *int    `json:"activeSessions,omitempty"`
+}
+
 // AccountCleaner removes one native account through the provisioning provider.
-type AccountCleaner func(ctx context.Context, org, accountID string) error
+type AccountCleaner func(ctx context.Context, org, accountID string) (CleanupReceipt, error)
 
 // Cleanup retries pending/failed native account cleanups. A failed attempt is
 // recorded and stays retryable; nothing is reported as cleaned without proof.
@@ -351,7 +366,7 @@ func (s *RevocationService) Cleanup(ctx context.Context, org string, cleaner Acc
 	if cleaner == nil || limit <= 0 || limit > 100 {
 		return 0, 0, ErrInput
 	}
-	rows, e := s.Pool.Query(ctx, `SELECT account_id::text FROM mcpguard_ra.revocation_cleanup WHERE org_id=$1 AND state IN ('PENDING','FAILED') ORDER BY updated_at LIMIT $2`, org, limit)
+	rows, e := s.Pool.Query(ctx, `SELECT account_id::text FROM mcpguard_ra.revocation_cleanup WHERE org_id=$1 AND (state<>'CLEANED' OR native_receipt IS NULL) ORDER BY updated_at LIMIT $2`, org, limit)
 	if e != nil {
 		return 0, 0, ErrUnavailable
 	}
@@ -365,19 +380,40 @@ func (s *RevocationService) Cleanup(ctx context.Context, org string, cleaner Acc
 		accounts = append(accounts, id)
 	}
 	rows.Close()
+	if rows.Err() != nil {
+		return 0, 0, ErrUnavailable
+	}
 	cleaned, failed := 0, 0
 	for _, accountID := range accounts {
-		_, _ = s.Pool.Exec(ctx, `UPDATE mcpguard_ra.revocation_cleanup SET attempts=attempts+1,updated_at=clock_timestamp() WHERE org_id=$1 AND account_id=$2`, org, accountID)
-		if err := cleaner(ctx, org, accountID); err != nil {
-			failed++
-			if _, e = s.Pool.Exec(ctx, `UPDATE mcpguard_ra.revocation_cleanup SET state='FAILED',last_error=$3,updated_at=clock_timestamp() WHERE org_id=$1 AND account_id=$2`, org, accountID, truncateError(err)); e != nil {
-				return cleaned, failed, ErrUnavailable
-			}
+		var attempt int
+		e = s.Pool.QueryRow(ctx, `UPDATE mcpguard_ra.revocation_cleanup SET attempts=attempts+1,updated_at=clock_timestamp()
+ WHERE org_id=$1 AND account_id=$2 AND (state<>'CLEANED' OR native_receipt IS NULL) RETURNING attempts`, org, accountID).Scan(&attempt)
+		if errors.Is(e, pgx.ErrNoRows) {
 			continue
 		}
-		cleaned++
-		if _, e = s.Pool.Exec(ctx, `UPDATE mcpguard_ra.revocation_cleanup SET state='CLEANED',last_error=NULL,updated_at=clock_timestamp() WHERE org_id=$1 AND account_id=$2`, org, accountID); e != nil {
+		if e != nil {
 			return cleaned, failed, ErrUnavailable
+		}
+		proof, err := cleaner(ctx, org, accountID)
+		var raw []byte
+		if proof.Status != "" {
+			raw, _ = json.Marshal(proof)
+		}
+		state, lastError := "CLEANED", any(nil)
+		if err != nil {
+			state, lastError = "FAILED", truncateError(err)
+		}
+		tag, e := s.Pool.Exec(ctx, `UPDATE mcpguard_ra.revocation_cleanup SET state=$4,last_error=$5,native_receipt=$6,updated_at=clock_timestamp()
+ WHERE org_id=$1 AND account_id=$2 AND attempts=$3`, org, accountID, attempt, state, lastError, raw)
+		if e != nil {
+			return cleaned, failed, ErrUnavailable
+		}
+		if tag.RowsAffected() == 1 {
+			if err == nil {
+				cleaned++
+			} else {
+				failed++
+			}
 		}
 	}
 	return cleaned, failed, nil

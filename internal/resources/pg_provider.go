@@ -31,6 +31,9 @@ var providerWriteDDL string
 //go:embed native_provider/004_restore_fence.sql
 var providerFenceDDL string
 
+//go:embed native_provider/005_cleanup_verification.sql
+var providerCleanupDDL string
+
 func strconvI(n int) string { return strconv.Itoa(n) }
 
 type ProviderPrivate struct {
@@ -265,7 +268,7 @@ func (p *PGProvisioningProvider) roleCheck(ctx context.Context, plan v02.Provisi
 
 var providerSchema = pgmigration.Set{
 	Schema:  "mcpguard_provision",
-	Scripts: []string{providerDDL, providerRecoveryDDL, providerWriteDDL, providerFenceDDL},
+	Scripts: []string{providerDDL, providerRecoveryDDL, providerWriteDDL, providerFenceDDL, providerCleanupDDL},
 }
 
 func checkProviderInstall(dsn, manager string, targets []v02.ProvisioningTarget) error {
@@ -337,7 +340,7 @@ func InstallPGProvider(ctx context.Context, dsn, manager string, targets []v02.P
 	if e != nil {
 		return e
 	}
-	if _, e = tx.Exec(ctx, "GRANT EXECUTE ON FUNCTION mcpguard_provision.reconcile_account(uuid,uuid,text,timestamptz),mcpguard_provision.cleanup_account(uuid,uuid,text,timestamptz) TO "+role); e != nil {
+	if _, e = tx.Exec(ctx, "GRANT EXECUTE ON FUNCTION mcpguard_provision.reconcile_account(uuid,uuid,text,timestamptz),mcpguard_provision.cleanup_account(uuid,uuid,text,timestamptz),mcpguard_provision.verify_account_cleanup(uuid,uuid,text,timestamptz) TO "+role); e != nil {
 		return e
 	}
 	if _, e = tx.Exec(ctx, "GRANT EXECUTE ON FUNCTION mcpguard_provision.advance_fence(uuid),mcpguard_provision.fence_generation(uuid) TO "+role); e != nil {

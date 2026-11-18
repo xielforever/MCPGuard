@@ -142,8 +142,7 @@ func (m *ReadManager) pool(ctx context.Context, p metadata.Principal, s Snapshot
 	return m.poolMode(ctx, p, s, "ro")
 }
 
-// writePool serves the single fixed write function. The account still has no
-// table-level write privilege; only the definer function may modify its row.
+// writePool serves the fixed update under the account's own-row RLS policy.
 func (m *ReadManager) writePool(ctx context.Context, p metadata.Principal, s Snapshot) (*pgxpool.Pool, error) {
 	return m.poolMode(ctx, p, s, "rw")
 }

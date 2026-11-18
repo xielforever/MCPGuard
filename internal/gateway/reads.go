@@ -50,12 +50,29 @@ func (g *Gateway) AttachReads(r *resources.ReadService) {
 		if v02.Decode("ReadItemInput", raw, &in) != nil {
 			return readError(resources.ErrInput).MCP(), nil
 		}
-		out, err := r.ReadItem(call, p, in)
+		proof, err := contextProof(req)
+		if err != nil || g.Contexts == nil {
+			return readError(resources.ErrDenied).MCP(), nil
+		}
+		out, err := r.ReadItemInContext(call, p, in, g.Contexts, proof)
 		if err != nil {
+			if out.Attempted {
+				u := failure("OUTCOME_UNKNOWN", "OUTCOME_UNKNOWN", "No native result is available for this attempt. Do not replay it automatically.")
+				u.ActionID, u.AttemptID, u.ExecutionID = &out.PlanID, &out.PlanID, &out.PlanID
+				u.RequestStatus, u.DispatchState, u.Error.RetryDisposition = "OUTCOME_UNKNOWN", "DISPATCH_UNKNOWN", "RECONCILE"
+				return u.MCP(), nil
+			}
 			return readError(err).MCP(), nil
 		}
-		return Result{Kind: "FINAL", RequestStatus: "SUCCEEDED", DispatchState: "DISPATCHED", SideEffectStatus: "NONE", Data: out, Metadata: observed()}.MCP(), nil
+		return Result{Kind: "FINAL", ActionID: &out.PlanID, AttemptID: &out.PlanID, ExecutionID: &out.PlanID, RequestStatus: "SUCCEEDED", DispatchState: "DISPATCHED", SideEffectStatus: "NONE", Data: out, Metadata: observed()}.MCP(), nil
 	})
+}
+
+func contextProof(req *mcp.CallToolRequest) (resources.ContextProof, error) {
+	if req.Extra == nil || len(req.Extra.Header.Values(resources.ContextHeader)) != 1 {
+		return resources.ContextProof{}, resources.ErrDenied
+	}
+	return resources.ParseContextProof(req.Extra.Header.Get(resources.ContextHeader))
 }
 
 func readError(err error) Result {

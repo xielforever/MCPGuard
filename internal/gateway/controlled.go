@@ -88,42 +88,50 @@ func (g *Gateway) AttachControlled(s *controlled.Service, console *controlled.Co
 		if g.Reader == nil && op == "RESUME" {
 			continue
 		}
-		operation := op
-		g.MCP.AddTool(&mcp.Tool{Name: "action." + strings.ToLower(op), Description: "Inspect, explicitly resume or cancel one of your own controlled actions. Approval is performed by another authorized person in the local console. Never automatically replay an unknown outcome.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"actionId": map[string]any{"type": "string", "format": "uuid"}}, "required": []string{"actionId"}, "additionalProperties": false}, OutputSchema: controlledActionSchema, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: op == "STATUS", IdempotentHint: op != "RESUME", DestructiveHint: &f, OpenWorldHint: &f}}, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			p, ok := principal(req.Extra)
+		g.registerActionControl(s, op)
+	}
+	g.registerActionHistory(s, &f)
+}
+
+func (g *Gateway) registerActionControl(s *controlled.Service, operation string) {
+	f := false
+	g.MCP.AddTool(&mcp.Tool{Name: "action." + strings.ToLower(operation), Description: "Inspect, explicitly resume or cancel one of your own controlled actions. Approval is performed by another authorized person in the local console. Never automatically replay an unknown outcome.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"actionId": map[string]any{"type": "string", "format": "uuid"}}, "required": []string{"actionId"}, "additionalProperties": false}, OutputSchema: controlledActionSchema, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: operation == "STATUS", IdempotentHint: operation != "RESUME", DestructiveHint: &f, OpenWorldHint: &f}}, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		p, ok := principal(req.Extra)
+		if !ok {
+			return nil, safeProtocolError("Authentication is required")
+		}
+		ctx, cancel := context.WithCancel(ctx)
+		defer cancel()
+		stop := context.AfterFunc(g.Root, cancel)
+		defer stop()
+		var e error
+		var v map[string]any
+		args, parse := controlled.Object(req.Params.Arguments)
+		if parse != nil || len(args) != 1 || req.Params.RequestState != "" || len(req.Params.InputResponses) > 0 {
+			e = controlled.ErrInput
+		} else {
+			id, ok := args["actionId"].(string)
 			if !ok {
-				return nil, safeProtocolError("Authentication is required")
-			}
-			ctx, cancel := context.WithCancel(ctx)
-			defer cancel()
-			stop := context.AfterFunc(g.Root, cancel)
-			defer stop()
-			var e error
-			var v map[string]any
-			args, parse := controlled.Object(req.Params.Arguments)
-			if parse != nil || len(args) != 1 || req.Params.RequestState != "" || len(req.Params.InputResponses) > 0 {
 				e = controlled.ErrInput
 			} else {
-				id, ok := args["actionId"].(string)
-				if !ok {
-					e = controlled.ErrInput
-				} else {
-					select {
-					case g.slots <- struct{}{}:
-						defer func() { <-g.slots }()
-						v, e = s.Control(ctx, p, id, operation)
-					default:
-						e = errors.New("gateway busy")
-					}
+				select {
+				case g.slots <- struct{}{}:
+					defer func() { <-g.slots }()
+					v, e = g.controlAction(ctx, s, p, req, id, operation)
+				default:
+					e = errors.New("gateway busy")
 				}
 			}
-			if e != nil {
-				return managedResult(map[string]any{"kind": "CONTROL_ERROR", "operation": operation, "requestId": uuid.NewString(), "error": managedError(e)}, true), nil
-			}
-			return managedResult(v, false), nil
-		})
-	}
-	g.MCP.AddTool(&mcp.Tool{Name: "history.list", Description: "List your own actions in creation order, including original PostgreSQL reads. Optional opaque cursor after and limit 1..100. No identity selectors.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"after": map[string]any{"type": "string", "maxLength": 256}, "limit": map[string]any{"type": "integer", "minimum": 1, "maximum": 100}}, "additionalProperties": false}, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: &f, OpenWorldHint: &f}}, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		}
+		if e != nil {
+			return managedResult(map[string]any{"kind": "CONTROL_ERROR", "operation": operation, "requestId": uuid.NewString(), "error": managedError(e)}, true), nil
+		}
+		return managedResult(v, false), nil
+	})
+}
+
+func (g *Gateway) registerActionHistory(s *controlled.Service, f *bool) {
+	g.MCP.AddTool(&mcp.Tool{Name: "history.list", Description: "List your own actions in creation order, including original PostgreSQL reads. Optional opaque cursor after and limit 1..100. No identity selectors.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"after": map[string]any{"type": "string", "maxLength": 256}, "limit": map[string]any{"type": "integer", "minimum": 1, "maximum": 100}}, "additionalProperties": false}, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: f, OpenWorldHint: f}}, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		p, ok := principal(req.Extra)
 		if !ok {
 			return nil, safeProtocolError("Authentication is required")
@@ -164,7 +172,7 @@ func (g *Gateway) AttachControlled(s *controlled.Service, console *controlled.Co
 		}
 		return managedResult(v, false), nil
 	})
-	g.MCP.AddTool(&mcp.Tool{Name: "history.get_result", Description: "Read the encrypted stored result of one of your own actions. No backend operation is repeated.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"actionId": map[string]any{"type": "string", "format": "uuid"}}, "required": []string{"actionId"}, "additionalProperties": false}, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: &f, OpenWorldHint: &f}}, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	g.MCP.AddTool(&mcp.Tool{Name: "history.get_result", Description: "Read the encrypted stored result of one of your own actions. No backend operation is repeated.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"actionId": map[string]any{"type": "string", "format": "uuid"}}, "required": []string{"actionId"}, "additionalProperties": false}, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: f, OpenWorldHint: f}}, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		p, ok := principal(req.Extra)
 		if !ok {
 			return nil, safeProtocolError("Authentication is required")
@@ -173,6 +181,26 @@ func (g *Gateway) AttachControlled(s *controlled.Service, console *controlled.Co
 		id, _ := args["actionId"].(string)
 		if e != nil || len(args) != 1 || req.Params.RequestState != "" || len(req.Params.InputResponses) > 0 {
 			return healthToolError("Invalid result arguments."), nil
+		}
+		if g.Writes != nil {
+			if _, err := uuid.Parse(id); err != nil {
+				return healthToolError("Invalid result arguments."), nil
+			}
+			owned, err := g.Writes.OwnsAction(ctx, p, id)
+			if err != nil {
+				return healthToolError(managedError(err).SafeMessage), nil
+			}
+			if owned {
+				proof, err := contextProof(req)
+				out, statusErr := g.Writes.Status(ctx, p, id)
+				if err != nil || statusErr != nil || out.Result == nil || g.Contexts == nil {
+					return healthToolError(managedError(controlled.ErrDenied).SafeMessage), nil
+				}
+				if _, err = g.Contexts.CheckActivation(ctx, p, proof, out.ResourceID, out.CredentialID); err != nil {
+					return healthToolError(managedError(controlled.ErrDenied).SafeMessage), nil
+				}
+				return managedResult(map[string]any{"actionId": id, "result": writeExecutionResult(out)}, false), nil
+			}
 		}
 		v, e := s.Result(ctx, p, id)
 		if e != nil {

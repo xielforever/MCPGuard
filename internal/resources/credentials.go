@@ -213,6 +213,9 @@ func (s *CredentialService) refresh(ctx context.Context, tx pgx.Tx, p metadata.P
 	if errors.Is(e, ErrDenied) || errors.Is(e, ErrConflict) || e == nil && !selectionMatches(r, current) {
 		return s.transition(ctx, tx, p, r, "REVOKED", "")
 	}
+	if e == nil && s.Fence != nil {
+		return s.Fence.Check(ctx, p.OrgID, current.snapshot.Resource.EndpointConfigRef)
+	}
 	return e
 }
 func (s *CredentialService) Status(ctx context.Context, p metadata.Principal, in v02.CredentialIDInput) (v02.CredentialStatus, error) {
