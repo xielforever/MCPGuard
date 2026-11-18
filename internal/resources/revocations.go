@@ -87,12 +87,8 @@ func (s *RevocationService) Revoke(ctx context.Context, actor metadata.Principal
 		return out, e
 	}
 	if s.Fence != nil {
-		generation, e := s.Fence.Advance(ctx, actor.OrgID)
-		if e != nil {
-			return out, ErrUnavailable
-		}
-		if _, e = tx.Exec(ctx, `INSERT INTO mcpguard_ra.recovery_fence(org_id,generation,verified_at,verified_by,updated_at) VALUES($1,$2,clock_timestamp(),$3,clock_timestamp()) ON CONFLICT(org_id) DO UPDATE SET generation=$2,verified_at=clock_timestamp(),verified_by=$3,updated_at=clock_timestamp()`, actor.OrgID, generation, actor.ID); e != nil {
-			return out, ErrUnavailable
+		if e = s.Fence.advanceAfterRevocation(ctx, tx, actor.OrgID, actor.ID); e != nil {
+			return out, e
 		}
 	}
 	if e = s.markInflight(ctx, tx, actor.OrgID, kind, targetID, &out); e != nil {
@@ -321,10 +317,19 @@ func (s *RevocationService) enqueueCleanup(ctx context.Context, tx pgx.Tx, org, 
 func (s *RevocationService) ProviderCleaner(provider NativeRecoveryProvider) AccountCleaner {
 	return func(ctx context.Context, org, accountID string) (CleanupReceipt, error) {
 		var proof CleanupReceipt
-		var jobID, hash string
+		var jobID, hash, state string
 		var cipher []byte
-		if e := s.Pool.QueryRow(ctx, `SELECT job_id::text,plan_hash,plan_ciphertext FROM mcpguard_ra.provisioning_jobs WHERE org_id=$1 AND account_id=$2 ORDER BY created_at DESC LIMIT 1`, org, accountID).Scan(&jobID, &hash, &cipher); e != nil {
+		if e := s.Pool.QueryRow(ctx, `SELECT j.job_id::text,j.plan_hash,j.plan_ciphertext,h.state
+ FROM mcpguard_ra.provisioning_jobs j JOIN mcpguard_ra.access_grant_heads h USING(org_id,grant_id)
+ WHERE j.org_id=$1 AND j.account_id=$2 ORDER BY j.created_at DESC LIMIT 1`, org, accountID).Scan(&jobID, &hash, &cipher, &state); e != nil {
 			return proof, fmt.Errorf("no provisioning plan for account")
+		}
+		// Older deployments could enqueue a native account for a file-only
+		// revocation. A retry must still respect the current grant.
+		switch state {
+		case "REVOKED", "EXPIRED", "PROVISIONING_FAILED":
+		default:
+			return proof, fmt.Errorf("native account still has a live grant")
 		}
 		plain, e := s.Vault.Open(cipher, "provision-plan/"+org+"/"+jobID)
 		if e != nil || s.Vault.Hash(plain) != hash {

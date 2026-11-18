@@ -123,9 +123,9 @@ func main() {
 			}
 			expected = native
 		}
-		raw, _ := json.Marshal(map[string]any{"orgId": org, "native": native, "expected": expected, "suspect": native > expected})
+		raw, _ := json.Marshal(map[string]any{"orgId": org, "native": native, "expected": expected, "suspect": native != expected})
 		output = string(raw)
-		if native > expected {
+		if native != expected {
 			err = resources.ErrConflict
 		}
 	case "revocation-cleanup":

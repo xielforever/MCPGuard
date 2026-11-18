@@ -499,12 +499,23 @@ class Scenario:
             reviewer = self.login('visitor')
             applied = self.operator(SELF_SERVICE + 'revocations', reviewer,
                                     {'kind': 'GRANT', 'targetId': revoked['grantId'], 'reason': 'Reconcile the recorded fixture revocation'})['revocation']
-            self.check(applied['grants'] == 1, 'operator reapplies the single recorded missing revocation before reopening access')
+            self.check(applied['grants'] == 1, 'operator reapplies the single recorded missing revocation')
+            admin_env = self.env | {'MCPGUARD_MIGRATION_DSN': admin}
+            pending = self.invoke('mcpguard-catalog', ['restore-check', self.org], admin_env, expected=1)
+            self.check(json.loads(pending.stdout) == fence, 'ordinary revocation leaves the old recovery point fenced')
+            with self.codex(url_only='alice', cached_header=header) as client:
+                denied = self.read(client, access, error=True)
+                self.check(denied['dispatchState'] == 'NOT_DISPATCHED', 'replayed revocation alone does not reopen dispatch')
+            accepted = self.invoke('mcpguard-catalog', ['restore-accept', self.org, self.dev.IDS['visitor']], admin_env)
+            confirmed = json.loads(accepted.stdout)
+            self.check(not confirmed['suspect'] and confirmed['expected'] == fence['native'],
+                       'administrative acceptance records the reconciled native generation')
             with self.codex() as client:
                 self.read(client, access)
                 self.tool(client, 'credential.prepare_download', {'grantId': revoked['grantId'], 'requestKey': str(uuid4())}, True)
         self.report['restoreFence'] = fence | {'source': 'pg_dump/pg_restore', 'readDenied': True, 'issueDenied': True,
                                                'activateDenied': True, 'reconciledGrantId': revoked['grantId'],
+                                               'ordinaryRevocationStayedFenced': True, 'acceptedGeneration': confirmed['expected'],
                                                'unaffectedReadRecovered': True, 'revokedGrantStayedDenied': True}
 
     def run(self):

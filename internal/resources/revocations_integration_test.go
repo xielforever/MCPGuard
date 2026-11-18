@@ -17,18 +17,52 @@ import (
 	"github.com/xielforever/MCPGuard/internal/metadata"
 )
 
-type fakeCleanupProvider struct{ fail bool }
+type fakeCleanupProvider struct {
+	fail  bool
+	calls int
+}
 
 func (f *fakeCleanupProvider) Reconcile(context.Context, v02.ProvisioningPlan, string) (NativeReceipt, error) {
 	return NativeReceipt{}, errors.New("not used")
 }
 
 func (f *fakeCleanupProvider) Cleanup(_ context.Context, plan v02.ProvisioningPlan, hash string) (NativeReceipt, error) {
+	f.calls++
 	if f.fail {
 		return NativeReceipt{}, errors.New("provider unavailable")
 	}
 	zero := 0
 	return NativeReceipt{Status: "CLEANED", TargetID: plan.TargetID, AccountID: plan.AccountID, PlanHash: hash, ActiveSessions: &zero}, nil
+}
+
+func TestRevocationHistoricalCleanupPreservesLiveGrant(t *testing.T) {
+	f := newRevokeFixture(t)
+	ticket, grantID := f.activatedCredential(t, 0)
+	alice := f.people["alice"]
+	if _, e := f.revocations.Revoke(f.ctx, alice, "CREDENTIAL", ticket.CredentialID, "one retired file"); e != nil {
+		t.Fatal(e)
+	}
+	// A receipt-less v12 cleanup could have been queued for that file alone.
+	var accountID string
+	if e := f.admin.QueryRow(f.ctx, `INSERT INTO mcpguard_ra.revocation_cleanup(org_id,account_id,resource_id,state)
+ SELECT j.org_id,j.account_id,a.resource_id,'CLEANED' FROM mcpguard_ra.provisioning_jobs j
+ JOIN mcpguard_ra.account_claims a USING(org_id,account_id) WHERE j.org_id=$1 AND j.grant_id=$2
+ RETURNING account_id::text`, alice.OrgID, grantID).Scan(&accountID); e != nil {
+		t.Fatal(e)
+	}
+	provider := &fakeCleanupProvider{}
+	cleaner := f.revocations.ProviderCleaner(provider)
+	cleaned, failed, e := f.revocations.Cleanup(f.ctx, alice.OrgID, cleaner, 10)
+	if e != nil || cleaned != 0 || failed != 1 || provider.calls != 0 {
+		t.Fatalf("historical cleanup touched a live account: cleaned=%d failed=%d calls=%d err=%v", cleaned, failed, provider.calls, e)
+	}
+	if _, e = f.revocations.Revoke(f.ctx, alice, "GRANT", grantID, "retire the native account"); e != nil {
+		t.Fatal(e)
+	}
+	cleaned, failed, e = f.revocations.Cleanup(f.ctx, alice.OrgID, cleaner, 10)
+	if e != nil || cleaned != 1 || failed != 0 || provider.calls != 1 {
+		t.Fatalf("authorized cleanup did not resume: cleaned=%d failed=%d calls=%d err=%v", cleaned, failed, provider.calls, e)
+	}
 }
 
 type revokeFixture struct {
@@ -295,9 +329,12 @@ func TestRevocationAdvancesRecoveryFence(t *testing.T) {
 // cannot re-use an old package while the native recovery generation is ahead.
 func TestRevocationRecoveryFenceBlocksOldPackage(t *testing.T) {
 	f := newRevokeFixture(t)
-	ticket, _ := f.activatedCredential(t, 0)
+	_, missingGrant := f.activatedCredential(t, 0)
+	ticket, _ := f.activatedCredential(t, 1)
 	alice := f.people["alice"]
-	if _, e := f.revocations.Fence.Advance(f.ctx, alice.OrgID); e != nil {
+	// Only a different native database advances. A local counter matching the
+	// metadata must not hide that the organization-wide recovery point is stale.
+	if _, e := f.native[0].Exec(f.ctx, `SELECT mcpguard_provision.advance_fence($1)`, alice.OrgID); e != nil {
 		t.Fatal(e)
 	}
 	status, e := f.service.Status(f.ctx, alice, v02.CredentialIDInput{CredentialID: ticket.CredentialID})
@@ -307,6 +344,23 @@ func TestRevocationRecoveryFenceBlocksOldPackage(t *testing.T) {
 	var recorded string
 	if e = f.admin.QueryRow(f.ctx, `SELECT state FROM mcpguard_ra.credential_leases WHERE org_id=$1 AND credential_id=$2`, alice.OrgID, ticket.CredentialID).Scan(&recorded); e != nil || recorded != "ACTIVE" {
 		t.Fatalf("the recovery fence changed the recorded lease before reconciliation: state=%q err=%v", recorded, e)
+	}
+	res, e := f.revocations.Revoke(f.ctx, alice, "GRANT", missingGrant, "record known prior revocation")
+	if e != nil || res.Grants != 1 {
+		t.Fatalf("could not record a restriction behind the fence: grants=%d err=%v", res.Grants, e)
+	}
+	if _, e = f.service.Status(f.ctx, alice, v02.CredentialIDInput{CredentialID: ticket.CredentialID}); !errors.Is(e, errRecoveryPointUnverified) {
+		t.Fatalf("a regular revocation cleared the recovery fence: %v", e)
+	}
+	native, e := f.revocations.Fence.NativeMax(f.ctx, alice.OrgID)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = f.revocations.Fence.Record(f.ctx, alice.OrgID, native, alice.ID); e != nil {
+		t.Fatal(e)
+	}
+	if state := f.credentialState(t, ticket.CredentialID); state != "ACTIVE" {
+		t.Fatalf("verified recovery did not restore the unrelated lease: %s", state)
 	}
 }
 
