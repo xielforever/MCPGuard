@@ -24,7 +24,7 @@ type CredentialService struct {
 	Access *AccessService
 	Keys   PackageKeyProvider
 	nonce  func() ([]byte, error)
-	Fence *RestoreFence
+	Fence  *RestoreFence
 }
 
 func NewCredentialService(c *Catalog, keys PackageKeyProvider) (*CredentialService, error) {
@@ -76,6 +76,7 @@ func (s *CredentialService) issuer(ctx context.Context, tx pgx.Tx, org string) (
 	}
 	return i, nil
 }
+
 // profileOperation reports the single operation a granted profile allows.
 func (s *CredentialService) profileOperation(ctx context.Context, tx pgx.Tx, org, resourceID, profileID, profileVersion string) (string, error) {
 	var raw []byte
@@ -360,6 +361,18 @@ func (s *CredentialService) encryptPreparation(ctx context.Context, p metadata.P
 	if e != nil {
 		return nil, ErrUnavailable
 	}
+	issued, _, e := normalizedTime(prep.ref.IssuedAt)
+	if e != nil {
+		return nil, ErrUnavailable
+	}
+	// A short wall-clock rollback can put the prepared issue time in the
+	// future. Wait outside the authorization transaction so revocation can
+	// proceed and the final transaction still validates current authority.
+	wait, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+	if e = waitForDatabaseTime(wait, s.Access.Catalog.Store.Pool, issued); e != nil {
+		return nil, ErrUnavailable
+	}
 	return blob, nil
 }
 func (s *CredentialService) finishIssue(ctx context.Context, p metadata.Principal, in v02.IssueCredentialInput, prep *credentialPreparation, blob []byte) (v02.CredentialStatus, error) {
@@ -409,6 +422,9 @@ func (s *CredentialService) issueWithin(ctx context.Context, tx pgx.Tx, p metada
 	check := &credentialRow{ref: ref, keyID: prep.selection.issuer.KeyID, fingerprint: prep.selection.issuer.KeyFingerprint, issuerVersion: prep.selection.issuer.Version, policyVersion: prep.selection.policy.Version}
 	if !selectionMatches(check, current) || !expiry.After(now) {
 		return out, ErrDenied
+	}
+	if issued.After(now) {
+		return out, ErrUnavailable
 	}
 	_, e = tx.Exec(ctx, `INSERT INTO mcpguard_ra.credential_leases(org_id,lease_id,credential_id,subject_id,grant_id,grant_version,resource_id,resource_version,profile_id,profile_version,binding_id,binding_version,issuer_version,policy_version,issued_at,expires_at,state,revision) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'ACTIVE',1)`, p.OrgID, ref.LeaseID, ref.CredentialID, p.ID, ref.GrantID, ref.GrantVersion, ref.ResourceID, ref.ResourceVersion, ref.ProfileID, ref.ProfileVersion, ref.BindingID, ref.BindingVersion, current.issuer.Version, current.policy.Version, issued, expiry)
 	if e != nil {

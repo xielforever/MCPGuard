@@ -23,6 +23,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/xielforever/MCPGuard/internal/nativepg"
 )
 
 type NativeConfig struct {
@@ -93,7 +94,7 @@ func OpenAdapters(ctx context.Context, path string) (*Adapters, error) {
 		}
 		if e = a.checkWriter(ctx); e != nil {
 			a.Close()
-			return nil, errors.New("writer role must have only SELECT and note/version UPDATE")
+			return nil, errors.New("legacy writer requires an isolated demo database and a role with only SELECT and note/version UPDATE")
 		}
 	}
 	return a, nil
@@ -119,6 +120,9 @@ func (a *Adapters) Available(resource string) bool {
 	return false
 }
 func (a *Adapters) checkWriter(ctx context.Context) error {
+	if err := nativepg.CheckDemoDatabase(ctx, a.writer); err != nil {
+		return err
+	}
 	var ok bool
 	e := a.writer.QueryRow(ctx, `SELECT NOT (r.rolsuper OR r.rolcreatedb OR r.rolcreaterole OR has_schema_privilege(current_user,'demo','CREATE')) AND NOT has_table_privilege(current_user,'demo.items','INSERT,DELETE,TRUNCATE,REFERENCES,TRIGGER') AND has_table_privilege(current_user,'demo.items','SELECT') AND has_column_privilege(current_user,'demo.items','note','UPDATE') AND has_column_privilege(current_user,'demo.items','version','UPDATE') AND NOT has_column_privilege(current_user,'demo.items','scope_id','UPDATE') AND NOT has_column_privilege(current_user,'demo.items','item_id','UPDATE') AND current_setting('transaction_read_only')='off' FROM pg_roles r WHERE r.rolname=current_user`).Scan(&ok)
 	if e != nil {
@@ -159,10 +163,13 @@ func (a *Adapters) Execute(ctx context.Context, t Tool, scope string, args map[s
 			return out
 		}
 		defer conn.Release()
+		if e = nativepg.CheckDemoDatabase(ctx, conn); e != nil {
+			return out
+		}
 		var version string
 		out.Dispatch = "DISPATCH_UNKNOWN"
 		out.SideEffect = "UNKNOWN"
-		e = conn.QueryRow(ctx, `UPDATE demo.items SET note=$3,version=version+1 WHERE scope_id=$1 AND item_id=$2 AND version=$4::bigint AND version<999999999999999999 RETURNING version::text`, scope, args["itemId"], args["note"], args["expectedVersion"]).Scan(&version)
+		e = conn.QueryRow(ctx, `UPDATE demo.items SET note=$3,version=version+1 WHERE scope_id=$1 AND item_id=$2 AND version=$4::bigint AND version<999999999999999999 AND `+nativepg.DemoDatabasePredicate+` RETURNING version::text`, scope, args["itemId"], args["note"], args["expectedVersion"]).Scan(&version)
 		var pe *pgconn.PgError
 		if errors.Is(e, pgx.ErrNoRows) {
 			return Outcome{Dispatch: "DISPATCHED", SideEffect: "NONE", Code: "PRECONDITION_FAILED"}

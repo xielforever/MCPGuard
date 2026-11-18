@@ -411,7 +411,7 @@ func TestNativeProvisioningIntegration(t *testing.T) {
 			out := f.approved(t, "alice", 0)
 			if mode == "expiry_passed" { // New bounded request, not an illegal edit of an approved snapshot.
 				input := f.input()
-				input.RequestedExpiry = time.Now().UTC().Add(2 * time.Second).Format(time.RFC3339Nano)
+				input.RequestedExpiry = f.now(t).UTC().Add(2 * time.Second).Format(time.RFC3339Nano)
 				r, e := f.s.Request(f.ctx, f.people["alice"], input)
 				if e != nil {
 					t.Fatal(e)
@@ -431,7 +431,7 @@ func TestNativeProvisioningIntegration(t *testing.T) {
 					f.config.Targets[0].Version = "2"
 					f.apply(t)
 				case "expiry_passed":
-					time.Sleep(2100 * time.Millisecond)
+					f.awaitDeadline(t, out.Grant.ExpiresAt)
 				case "critical_audit_failed":
 					// Per-organization fault: preserve all other workflows and the failure audit.
 					sql := `CREATE FUNCTION mcpguard_ra.test_activation_audit_` + strings.ReplaceAll(out.Request.OrgID, "-", "") + `() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.org_id='` + out.Request.OrgID + `' AND NEW.event_type='NATIVE_VERIFIED_GRANT_ACTIVE' THEN RAISE EXCEPTION 'injected activation audit failure';END IF;RETURN NEW;END $$;`

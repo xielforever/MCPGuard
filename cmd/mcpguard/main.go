@@ -1,7 +1,8 @@
-﻿package main
+package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -30,13 +31,24 @@ func main() {
 func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	if len(os.Args) == 2 && os.Args[1] == "migrate" {
+	if len(os.Args) >= 2 && os.Args[1] == "migrate" {
+		dryRun := len(os.Args) == 3 && os.Args[2] == "--dry-run"
+		if len(os.Args) != 2 && !dryRun {
+			return errors.New("usage: mcpguard migrate [--dry-run]")
+		}
 		dsn := os.Getenv("MCPGUARD_MIGRATION_DSN")
 		if dsn == "" {
 			return errors.New("MCPGUARD_MIGRATION_DSN is required")
 		}
 		c, cancel := context.WithTimeout(ctx, 20*time.Second)
 		defer cancel()
+		if dryRun {
+			plan, err := metadata.PlanMigration(c, dsn)
+			if err != nil {
+				return errors.New("metadata migration preflight failed; check access and migration history")
+			}
+			return json.NewEncoder(os.Stdout).Encode(plan)
+		}
 		if e := metadata.Migrate(c, dsn); e != nil {
 			return errors.New("metadata migration failed; inspect the database with the migration role")
 		}
@@ -44,7 +56,7 @@ func run() error {
 		return nil
 	}
 	if len(os.Args) != 1 {
-		return errors.New("usage: mcpguard [migrate]; configuration uses MCPGUARD_* environment variables")
+		return errors.New("usage: mcpguard [migrate [--dry-run]]; configuration uses MCPGUARD_* environment variables")
 	}
 	cfg, e := runtimeconfig.Load()
 	if e != nil {
@@ -61,11 +73,14 @@ func run() error {
 		return errors.New("metadata startup check failed; migrate first and use the runtime role")
 	}
 	defer s.Close()
-	r, e := nativepg.Open(boot, cfg.BusinessDSN)
-	if e != nil {
-		return errors.New("native PG startup check failed; use the SELECT-only role and demo fixture")
+	var r *nativepg.Reader
+	if cfg.LegacyDemo {
+		r, e = nativepg.Open(boot, cfg.BusinessDSN)
+		if e != nil {
+			return errors.New("legacy PG startup check failed; use an isolated demo database and SELECT-only role, or disable legacy demo")
+		}
+		defer r.Close()
 	}
-	defer r.Close()
 	g := gateway.New(ctx, s, r)
 	defer g.Close()
 	if cfg.ResourceCatalog {
@@ -94,9 +109,13 @@ func run() error {
 	}
 	console.Notifications = notifier
 	g.AttachControlled(control, console, notifier)
-	fence, fenceErr := restoreFence(boot)
-	if fenceErr != nil {
-		return fenceErr
+	var fence *resources.RestoreFence
+	if cfg.ResourceAccess {
+		var err error
+		fence, err = restoreFence(boot)
+		if err != nil {
+			return err
+		}
 	}
 	if cfg.ResourceAccess {
 		access, err := resources.NewAccessService(g.Resources)
@@ -165,7 +184,7 @@ func run() error {
 					if err != nil {
 						return errors.New("native secret provider is not ready for planned reads")
 					}
-					manager := resources.NewReadManager(catalog, provider)
+					manager := resources.NewRuntimeReadManager(catalog, provider)
 					defer manager.Close()
 					reads := resources.NewReadService(catalog, credentials, manager)
 					reads.Fence = fence

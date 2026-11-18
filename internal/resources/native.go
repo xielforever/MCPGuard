@@ -101,16 +101,32 @@ func (f *FileSecrets) Resolve(ctx context.Context, endpointRef, secretRef, versi
 // ReadManager is the RA-03 foundation. No production MCP read route invokes it
 // before the grant and encrypted-package stages are implemented.
 type ReadManager struct {
-	Catalog  *Catalog
-	provider SecretProvider
-	mu       sync.Mutex
-	pools    map[string]*pgxpool.Pool
-	closed   bool
+	Catalog        *Catalog
+	provider       SecretProvider
+	accountSecrets SecretProvider
+	mu             sync.Mutex
+	pools          map[string]*pgxpool.Pool
+	closed         bool
 }
 
 func NewReadManager(c *Catalog, p SecretProvider) *ReadManager {
 	return &ReadManager{Catalog: c, provider: p, pools: map[string]*pgxpool.Pool{}}
 }
+
+func NewRuntimeReadManager(c *Catalog, private *FileSecrets) *ReadManager {
+	m := NewReadManager(c, private)
+	m.accountSecrets = &VaultSecretProvider{Catalog: c, Endpoints: private.endpoints}
+	return m
+}
+
+func (m *ReadManager) resolve(ctx context.Context, s Snapshot) (Endpoint, NativeSecret, error) {
+	provider := m.provider
+	if s.Binding.AccountID != nil && m.accountSecrets != nil {
+		provider = m.accountSecrets
+	}
+	return provider.Resolve(ctx, s.Resource.EndpointConfigRef, s.Binding.SecretRef, s.Binding.SecretVersion)
+}
+
 func (m *ReadManager) PoolCount() int { m.mu.Lock(); defer m.mu.Unlock(); return len(m.pools) }
 func (m *ReadManager) Close() {
 	m.mu.Lock()
@@ -133,7 +149,7 @@ func (m *ReadManager) writePool(ctx context.Context, p metadata.Principal, s Sna
 }
 
 func (m *ReadManager) poolMode(ctx context.Context, p metadata.Principal, s Snapshot, mode string) (*pgxpool.Pool, error) {
-	endpoint, secret, e := m.provider.Resolve(ctx, s.Resource.EndpointConfigRef, s.Binding.SecretRef, s.Binding.SecretVersion)
+	endpoint, secret, e := m.resolve(ctx, s)
 	if e != nil {
 		return nil, fmt.Errorf("pool resolve: %w", e)
 	}
@@ -232,7 +248,7 @@ func (m *ReadManager) nativeRead(ctx context.Context, p metadata.Principal, s Sn
 	if tx.QueryRow(ctx, roleCheck).Scan(&login, &effective, &database, &safe) != nil {
 		return nil, ErrUnavailable
 	}
-	endpoint, _, e := m.provider.Resolve(ctx, s.Resource.EndpointConfigRef, s.Binding.SecretRef, s.Binding.SecretVersion)
+	endpoint, _, e := m.resolve(ctx, s)
 	if e != nil || !safe || login != s.Binding.NativeIdentity || effective != login || database != endpoint.Database {
 		return nil, ErrDenied
 	}

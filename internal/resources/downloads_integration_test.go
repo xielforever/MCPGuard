@@ -14,7 +14,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
-	"time"
 )
 
 type downloadFixture struct {
@@ -278,11 +277,11 @@ func TestPrivateDownloadsIntegration(t *testing.T) {
 		f := newDownloadFixture(t)
 		ticket, _ := f.prepare(t, "alice", 0)
 		enrollment, _ := NewDownloadService(f.service, 60, 10)
-		_, token, e := enrollment.EnrollDelivery(f.ctx, f.people["alice"], 1)
+		authorization, token, e := enrollment.EnrollDelivery(f.ctx, f.people["alice"], 1)
 		if e != nil {
 			t.Fatal(e)
 		}
-		time.Sleep(1100 * time.Millisecond)
+		f.awaitDeadline(t, authorization.ExpiresAt)
 		if e = f.download.Deliver(f.ctx, f.people["alice"], token, v02.DownloadIDInput{DownloadID: ticket.DownloadID}, discardDownload); !errors.Is(e, ErrDenied) {
 			t.Fatal("expired private authorization used")
 		}
@@ -294,7 +293,7 @@ func TestPrivateDownloadsIntegration(t *testing.T) {
 		f := newDownloadFixture(t)
 		f.download.TicketTTL = 1
 		ticket, out := f.prepare(t, "alice", 0)
-		time.Sleep(1100 * time.Millisecond)
+		f.awaitDeadline(t, ticket.ExpiresAt)
 		if e := f.deliver("alice", ticket.DownloadID, discardDownload); !errors.Is(e, ErrConflict) {
 			t.Fatal("expired ticket used")
 		}

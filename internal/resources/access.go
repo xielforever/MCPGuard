@@ -69,11 +69,35 @@ func commit(ctx context.Context, tx pgx.Tx) error {
 	}
 	return nil
 }
-func databaseTime(ctx context.Context, tx pgx.Tx) (time.Time, error) {
+
+type databaseClock interface {
+	QueryRow(context.Context, string, ...any) pgx.Row
+}
+
+func databaseTime(ctx context.Context, db databaseClock) (time.Time, error) {
 	var now time.Time
-	e := tx.QueryRow(ctx, "SELECT clock_timestamp()").Scan(&now)
+	e := db.QueryRow(ctx, "SELECT clock_timestamp()").Scan(&now)
 	return now, e
 }
+
+// Recheck the wall clock after every wait since the timer measures elapsed time.
+func waitForDatabaseTime(ctx context.Context, db databaseClock, target time.Time) error {
+	for {
+		now, err := databaseTime(ctx, db)
+		if err != nil {
+			return err
+		}
+		if !now.Before(target) {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(target.Sub(now)):
+		}
+	}
+}
+
 func normalizedTime(raw string) (time.Time, string, error) {
 	v, e := time.Parse(time.RFC3339Nano, raw)
 	if e != nil {

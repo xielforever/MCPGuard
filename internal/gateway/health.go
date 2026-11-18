@@ -41,7 +41,7 @@ var healthSchema = json.RawMessage(`{
         "redis":{"$ref":"#/$defs/dependency"},
         "demoHttp":{"$ref":"#/$defs/dependency"}
       },
-      "required":["metadata","businessPostgres"],
+      "required":["metadata"],
       "additionalProperties":false
     },
     "checkedAt":{"type":"string","format":"date-time"},
@@ -66,7 +66,7 @@ func (g *Gateway) registerHealthTool() {
 	f := false
 	g.MCP.AddTool(&mcp.Tool{
 		Name:         "gateway.health",
-		Description:  "Check gateway process liveness and runtime dependency readiness separately. ready requires both metadata and business PostgreSQL checks to pass within two seconds. This reports service readiness; business permissions are checked separately by each tool. No arguments.",
+		Description:  "Check gateway process liveness and configured runtime dependency readiness. Checks share a two-second deadline. Business permissions are checked separately by each tool. No arguments.",
 		InputSchema:  map[string]any{"type": "object", "properties": map[string]any{}, "additionalProperties": false},
 		OutputSchema: healthSchema,
 		Annotations:  &mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: &f, OpenWorldHint: &f},
@@ -169,7 +169,10 @@ func (g *Gateway) callHealth(ctx context.Context, req *mcp.CallToolRequest) (*mc
 	} else if err != nil {
 		return healthToolError("Identity verification is unavailable; authenticated health checks could not be run."), nil
 	}
-	probes := map[string]func(context.Context) error{"metadata": g.Store.CheckReady, "businessPostgres": g.Reader.CheckReady}
+	probes := map[string]func(context.Context) error{"metadata": g.Store.CheckReady}
+	if g.Reader != nil {
+		probes["businessPostgres"] = g.Reader.CheckReady
+	}
 	if g.Controlled != nil {
 		if n, ok := g.Controlled.Native.(interface {
 			Available(string) bool

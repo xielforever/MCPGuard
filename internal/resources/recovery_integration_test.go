@@ -436,7 +436,7 @@ func TestProvisionRecoveryIntegration(t *testing.T) {
 				input := f.input()
 				input.ResourceID = f.bundle.Resources[index].ResourceID
 				input.ProfileID = f.bundle.Profiles[index].ProfileID
-				input.RequestedExpiry = time.Now().UTC().Add(2 * time.Second).Format(time.RFC3339Nano)
+				input.RequestedExpiry = f.now(t).UTC().Add(2 * time.Second).Format(time.RFC3339Nano)
 				r, e := f.s.Request(f.ctx, f.people["alice"], input)
 				if e != nil {
 					t.Fatal(e)
@@ -462,7 +462,7 @@ func TestProvisionRecoveryIntegration(t *testing.T) {
 			case "subject_disabled":
 				_, e = f.admin.Exec(f.ctx, "UPDATE mcpguard.principals SET enabled=false WHERE org_id=$1 AND id=$2", out.Request.OrgID, out.Grant.SubjectID)
 			case "expired":
-				time.Sleep(2100 * time.Millisecond)
+				f.awaitDeadline(t, out.Grant.ExpiresAt)
 			}
 			if e != nil {
 				t.Fatal(e)
