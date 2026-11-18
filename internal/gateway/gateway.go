@@ -1,4 +1,4 @@
-﻿package gateway
+package gateway
 
 import (
 	"bytes"
@@ -53,8 +53,10 @@ type Gateway struct {
 func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
 	g := &Gateway{Store: s, Reader: r, Root: root, slots: make(chan struct{}, 16)}
 	g.MCP = mcp.NewServer(&mcp.Implementation{Name: "MCPGuard", Version: "0.1.0-read-slice"}, &mcp.ServerOptions{SupportedProtocolVersions: []string{Profile}, Capabilities: &mcp.ServerCapabilities{Tools: &mcp.ToolCapabilities{}}})
-	f := false
-	g.MCP.AddTool(&mcp.Tool{Name: "pg.get_demo_item", Description: "Read one demo item in your authorized scope. Scope is injected by the gateway.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"itemId": map[string]any{"type": "string", "pattern": itemPattern.String(), "maxLength": 42}}, "required": []string{"itemId"}, "additionalProperties": false}, OutputSchema: resultSchema, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: &f, OpenWorldHint: &f}}, g.call)
+	if r != nil {
+		f := false
+		g.MCP.AddTool(&mcp.Tool{Name: "pg.get_demo_item", Description: "Read one demo item in your authorized scope. Scope is injected by the gateway.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"itemId": map[string]any{"type": "string", "pattern": itemPattern.String(), "maxLength": 42}}, "required": []string{"itemId"}, "additionalProperties": false}, OutputSchema: resultSchema, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: &f, OpenWorldHint: &f}}, g.call)
+	}
 	g.registerAuditTool()
 	g.registerHealthTool()
 	g.MCP.AddReceivingMiddleware(func(next mcp.MethodHandler) mcp.MethodHandler {
@@ -77,11 +79,7 @@ func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
 				return nil, e
 			}
 			if g.Controlled != nil {
-				visible, err := g.Controlled.Visible(c, cur)
-				if err != nil {
-					return nil, safeProtocolError("Tool authorization is unavailable")
-				}
-				allowed := map[string]bool{"audit.list": true, "gateway.health": true, "action.status": true, "action.resume": true, "action.cancel": true, "history.list": true, "history.get_result": true, "pg.get_demo_item": cur.CanRead}
+				allowed := map[string]bool{"audit.list": true, "gateway.health": true, "action.status": true, "action.resume": true, "action.cancel": true, "history.list": true, "history.get_result": true}
 				if g.Resources != nil {
 					allowed["resource.list"] = true
 					allowed["resource.get"] = true
@@ -100,14 +98,16 @@ func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
 				if g.Reads != nil {
 					allowed["pg.get_item"] = true
 				}
-				if cur.CanRead {
+				if cur.CanRead && g.Reader != nil {
 					var enabled bool
 					if err := g.Store.Pool.QueryRow(c, `SELECT coalesce((SELECT enabled FROM mcpguard.control_resources WHERE org_id=$1 AND name='demo.pg'),true)`, cur.OrgID).Scan(&enabled); err != nil {
 						return nil, safeProtocolError("Resource authorization is unavailable")
 					}
 					allowed["pg.get_demo_item"] = enabled
-				}
-				if cur.CanRead {
+					visible, err := g.Controlled.Visible(c, cur)
+					if err != nil {
+						return nil, safeProtocolError("Tool authorization is unavailable")
+					}
 					for _, name := range visible {
 						allowed[name] = true
 					}
@@ -455,4 +455,3 @@ func (g *Gateway) Close() {
 		_ = session.Close()
 	}
 }
-

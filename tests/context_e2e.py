@@ -13,10 +13,39 @@ def check(value,label):
     CHECKS.append(label)
 def key():return str(uuid.uuid4())
 def scalar(sql):return wire.dev.docker('exec','-i',CFG['container'],'psql','-X','-A','-t','-v','ON_ERROR_STOP=1','-U','postgres','-d','mcpguard_meta',input=sql,capture_output=True,text=True).stdout.strip()
+
+def verify_read_rollout(alice, pending, rpc):
+    for index, ticket in enumerate(pending):
+        pg = CFG['raPgAdmins'][index]
+        resource = str(uuid.UUID(ticket['resourceId']))
+        identity = scalar(f"SELECT native_identity FROM mcpguard_ra.native_accounts WHERE resource_id='{resource}' AND subject_id='{wire.dev.IDS['alice']}';")
+        check(len(identity) == 35 and identity == 'mg_' + uuid.UUID(hex=identity.removeprefix('mg_')).hex,
+              'provisioned resource has a dedicated native account')
+        note = f'RA-17 read rollout {index + 1}'
+        wire.dev.psql(pg, 'mcpguard_business', f"INSERT INTO resource_demo.items VALUES ('{identity}','item_demo_1','{note}',1);")
+        args = {'resourceId': resource, 'credentialId': ticket['credentialId'], 'itemId': 'item_demo_1'}
+        result = rpc(alice, 'pg.get_item', args)['structuredContent']
+        check(result['requestStatus'] == 'SUCCEEDED' and result['sideEffectStatus'] == 'NONE',
+              'protected read completes without a native write')
+        data = result['data']
+        check(data['nativeIdentity'] == identity and data['items'][0]['note'] == note,
+              'credential selects the intended PostgreSQL database and account')
+        plan = str(uuid.UUID(data['planId']))
+        check(scalar(f"SELECT count(*) FROM mcpguard_ra.read_audit WHERE plan_id='{plan}';") == '2',
+              'read intent and result have correlated audit evidence')
+        denied = rpc(wire.HTTPMCP(alice.port, 'bob'), 'pg.get_item', args)['structuredContent']
+        check(denied['dispatchState'] == 'NOT_DISPATCHED' and denied['error']['code'] == 'ACCESS_DENIED',
+              'another user cannot dispatch with the activated credential')
+
 def main():
     port=wire.dev.free_port();origin=f'http://127.0.0.1:{port}'
     env=wire.dev.runtime_env(CFG)|{'MCPGUARD_LISTEN':f'127.0.0.1:{port}','MCPGUARD_RESOURCE_CATALOG':'enabled','MCPGUARD_RESOURCE_ACCESS':'enabled','MCPGUARD_RESOURCE_CREDENTIALS':'enabled','MCPGUARD_CREDENTIAL_KEYS':str(STATE/'package-keys.json'),'MCPGUARD_RESOURCE_DOWNLOADS':'enabled','MCPGUARD_DELIVERY_DSN':CFG['deliveryDsn'],'MCPGUARD_DOWNLOAD_TTL_SECONDS':'60','MCPGUARD_DOWNLOAD_MAX_READY':'20','MCPGUARD_RESOURCE_CONTEXTS':'enabled','MCPGUARD_CONTEXT_DSN':CFG['contextDsn'],'MCPGUARD_CONTEXT_TTL_SECONDS':'120','MCPGUARD_CONTEXT_LIFETIME_SECONDS':'300','MCPGUARD_CONTEXT_MAX_ACTIVATIONS':'10','MCPGUARD_SYNC_PAGE_LIMIT':'2'}
     env.pop('MCPGUARD_NATIVE_CONFIG',None)
+    read_rollout = os.getenv('MCPGUARD_TEST_READ_ROLLOUT') == '1'
+    if read_rollout:
+        env.update(MCPGUARD_LEGACY_DEMO='disabled', MCPGUARD_RESOURCE_READS='enabled',
+                   MCPGUARD_READ_SECRETS=str(STATE/'ra-secrets.json'))
+        env.pop('MCPGUARD_BUSINESS_DSN', None)
     clean={k:v for k,v in os.environ.items() if not k.startswith('MCPGUARD_')}
     trusted=clean|{k:CFG[k] for k in ('MCPGUARD_ENCRYPTION_KEY','MCPGUARD_PLAN_KEY')}|{'MCPGUARD_METADATA_DSN':CFG['credentialDsn'],'MCPGUARD_CREDENTIAL_KEYS':str(STATE/'package-keys.json')}
     worker=trusted|{'MCPGUARD_METADATA_DSN':CFG['provisionerDsn'],'MCPGUARD_PROVIDER_CONFIG':str(STATE/'provider-private.json')}
@@ -62,7 +91,12 @@ def main():
         for name,label in (('alice','alice'),('bob','bob'),('alice','alice-other')):
             result=good(name,label,'init',['-page-size','1','-max-pages','1','-renew-before-seconds','20']);check(result['context']['ownerId']==one['client']['ownerId'] if name=='alice' else result['context']['ownerId']==two['client']['ownerId'],'Context owner comes from authenticated enrollment')
         alice=wire.HTTPMCP(port,'alice');alice.headers['X-MCPGuard-Credential-Context']=proof('alice');bob=wire.HTTPMCP(port,'bob');bob.headers['X-MCPGuard-Credential-Context']=proof('bob')
-        names={t['name'] for t in alice.call('tools/list')['tools']};check(not {'context.activate','credential.claim','credential.decrypt','pg.get_item'}&names,'private Context and formal new-resource execution remain outside model tool catalog')
+        names={t['name'] for t in alice.call('tools/list')['tools']}
+        check(not {'context.activate','credential.claim','credential.decrypt'}&names,'private Context tools remain outside the model tool catalog')
+        check(('pg.get_item' in names) == read_rollout, 'protected read is explicitly enabled')
+        if read_rollout:
+            check(not {'pg.get_demo_item', 'pg.update_demo_note', 'pg.update_note', 'action.resume'} & names,
+                  'read rollout excludes legacy dispatch and controlled writes')
         code,h,body=wire.http(port,'/console/login',body={'username':'visitor','password':CFG['console_secrets']['visitor']},headers={'Origin':origin});check(code==200,'independent human reviewer login');cookie=next(v for k,v in h.items() if k.lower()=='set-cookie').split(';',1)[0];csrf=json.loads(body)['csrf']
         pending=[]
         for index in (1,2):
@@ -86,6 +120,8 @@ def main():
         code,_,_=private('alice','/api/v2/credential-downloads?limit=3',method='GET');check(code==400,'client cannot exceed server queue page bound')
         saved=good('alice','alice','sync');check(saved['pages']==1 and saved['tasks']==1 and saved['more'],'one sync invocation honors one-page profile bound')
         saved=good('alice','alice','sync');check(len([a for a in saved['activations'] if a['state']=='ACTIVE'])==2,'one Context activates two resource identities')
+        if read_rollout:
+            verify_read_rollout(alice, pending, rpc)
         again=good('alice','alice','sync');check(again['tasks']==0 and again['saved']==0,'immutable receipts exclude completed downloads')
         check(inventory()==initial_inventory,'bounded sync creates no additional accounts jobs or grants');record_files('alice')
         packet=json.loads(file_for('alice',pending[0]['credentialId']).read_text());payload={'credentialId':pending[0]['credentialId'],'resourceId':pending[0]['resourceId'],'credentialPackage':packet,'requestKey':key()}
@@ -141,6 +177,6 @@ def main():
         check('CONTEXT_CREATED' in audit and 'TASK_REPLACED' in audit and 'CREDENTIAL_RENEWED' in audit,'typed audit records Context renewal task reconciliation and private package renewal')
         receipts=[{'resourceId':t['resourceId'],'credentialId':t['credentialId'],'leaseId':t['leaseId']} for t in pending]
     finally:stop()
-    report={'phase':'RA-09','passed':len(CHECKS),'checks':CHECKS,'receipts':receipts,'nativeInventory':initial_inventory,'boundedLocalComponent':True,'realDesktopNativeClient':False,'formalNewResourceReadTool':False,'sameOSUserArbitraryFileAccessIsolationClaimed':False,'existingServiceChanged':False}
+    report={'phase':'RA-17' if read_rollout else 'RA-09','passed':len(CHECKS),'checks':CHECKS,'receipts':receipts,'nativeInventory':initial_inventory,'boundedLocalComponent':True,'realDesktopNativeClient':False,'formalNewResourceReadTool':read_rollout,'sameOSUserArbitraryFileAccessIsolationClaimed':False,'existingServiceChanged':False}
     wire.dev.write_private(STATE/'context-e2e-results.json',json.dumps(report,indent=2)+'\n');print('RA-09 local Context verification passed: '+str(len(CHECKS)))
 if __name__=='__main__':main()

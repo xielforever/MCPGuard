@@ -21,7 +21,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "usage: mcpguard-catalog migrate | import <catalog.json> | import-access <access.json> | import-provisioning <provisioning.json> | import-credentials <credentials.json> | grant-runtime <role> | grant-access-runtime <role> | grant-provision-runtime <role> | grant-credential-runtime <role> | grant-credential-status-runtime <role>")
+		fmt.Fprintln(os.Stderr, "usage: mcpguard-catalog migrate [--dry-run] | import <catalog.json> | import-access <access.json> | import-provisioning <provisioning.json> | import-credentials <credentials.json> | grant-runtime <role> | grant-access-runtime <role> | grant-provision-runtime <role> | grant-credential-runtime <role> | grant-credential-status-runtime <role>")
 		os.Exit(2)
 	}
 	dsn := os.Getenv("MCPGUARD_MIGRATION_DSN")
@@ -83,12 +83,14 @@ func main() {
 		raw, _ := json.Marshal(result)
 		output = string(raw)
 	case "restore-check", "restore-accept":
-		if len(os.Args) < 4 || len(os.Args) > 5 {
+		accept := os.Args[1] == "restore-accept"
+		if (accept && len(os.Args) != 4) || (!accept && len(os.Args) != 3) {
 			err = resources.ErrInput
 			break
 		}
-		org := os.Args[3]
-		if !regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`).MatchString(org) {
+		idPattern := regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+		org := os.Args[2]
+		if !idPattern.MatchString(org) || (accept && !idPattern.MatchString(os.Args[3])) {
 			err = resources.ErrInput
 			break
 		}
@@ -114,12 +116,8 @@ func main() {
 			err = e
 			break
 		}
-		if os.Args[2] == "restore-accept" {
-			if len(os.Args) != 5 || !regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`).MatchString(os.Args[4]) {
-				err = resources.ErrInput
-				break
-			}
-			if e := fence.Record(ctx, org, native, os.Args[4]); e != nil {
+		if accept {
+			if e := fence.Record(ctx, org, native, os.Args[3]); e != nil {
 				err = e
 				break
 			}
@@ -127,7 +125,7 @@ func main() {
 		}
 		raw, _ := json.Marshal(map[string]any{"orgId": org, "native": native, "expected": expected, "suspect": native > expected})
 		output = string(raw)
-		if os.Args[2] == "restore-check" && native > expected {
+		if native > expected {
 			err = resources.ErrConflict
 		}
 	case "revocation-cleanup":
@@ -285,10 +283,20 @@ func main() {
 			_, err = c.Exec(ctx, "GRANT SELECT,INSERT ON mcpguard_ra.write_requests,mcpguard_ra.write_audit TO "+role+";GRANT UPDATE(state,decided_by,decided_at,decision_reason,result_ciphertext) ON mcpguard_ra.write_requests TO "+role)
 		}
 	case "migrate":
-		if len(os.Args) != 2 {
-			err = resources.ErrInput
-		} else {
+		switch {
+		case len(os.Args) == 2:
 			err = resources.Migrate(ctx, dsn)
+		case len(os.Args) == 3 && os.Args[2] == "--dry-run":
+			plan, planErr := resources.PlanMigration(ctx, dsn)
+			if planErr == nil {
+				planErr = json.NewEncoder(os.Stdout).Encode(plan)
+				if planErr == nil {
+					return
+				}
+			}
+			err = planErr
+		default:
+			err = resources.ErrInput
 		}
 	case "import":
 		if len(os.Args) != 3 {

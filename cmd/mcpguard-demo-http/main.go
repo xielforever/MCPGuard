@@ -21,6 +21,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/xielforever/MCPGuard/internal/controlled"
+	"github.com/xielforever/MCPGuard/internal/nativepg"
 )
 
 type config struct{ Listen, Token, DSN string }
@@ -69,7 +70,7 @@ func run() error {
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		c, d := context.WithTimeout(r.Context(), time.Second)
 		defer d()
-		if e := pool.Ping(c); e != nil {
+		if e := nativepg.CheckDemoDatabase(c, pool); e != nil {
 			http.Error(w, "not ready", 503)
 			return
 		}
@@ -77,7 +78,7 @@ func run() error {
 	})
 	mux.HandleFunc("GET /demo/offices/office-demo", func(w http.ResponseWriter, r *http.Request) {
 		var display string
-		e := pool.QueryRow(r.Context(), `SELECT display_name FROM demo.offices WHERE scope_id=$1 AND office_id='office-demo'`, r.Header.Get("X-MCPGuard-Scope")).Scan(&display)
+		e := pool.QueryRow(r.Context(), `SELECT display_name FROM demo.offices WHERE scope_id=$1 AND office_id='office-demo' AND `+nativepg.DemoDatabasePredicate, r.Header.Get("X-MCPGuard-Scope")).Scan(&display)
 		if e != nil {
 			http.Error(w, "unavailable", 404)
 			return
@@ -103,7 +104,7 @@ func run() error {
 		}
 		defer tx.Rollback(context.Background())
 		qty := int(args["quantity"].(float64))
-		tag, e := tx.Exec(r.Context(), `UPDATE demo.stock SET available=available-$3 WHERE scope_id=$1 AND item_id=$2 AND available>=$3`, scope, args["itemId"], qty)
+		tag, e := tx.Exec(r.Context(), `UPDATE demo.stock SET available=available-$3 WHERE scope_id=$1 AND item_id=$2 AND available>=$3 AND `+nativepg.DemoDatabasePredicate, scope, args["itemId"], qty)
 		if e != nil || tag.RowsAffected() != 1 {
 			http.Error(w, "precondition failed", 409)
 			return

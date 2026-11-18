@@ -1,4 +1,4 @@
-﻿package resources
+package resources
 
 import (
 	"bytes"
@@ -7,8 +7,10 @@ import (
 	_ "embed"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"github.com/jackc/pgx/v5"
 	v02 "github.com/xielforever/MCPGuard/internal/contracts/v02"
+	"github.com/xielforever/MCPGuard/internal/pgmigration"
 	"net"
 	"net/url"
 	"os"
@@ -260,8 +262,13 @@ func (p *PGProvisioningProvider) roleCheck(ctx context.Context, plan v02.Provisi
 		return "", "", ErrDenied
 	}
 }
-// InstallPGProvider is explicitly administrative and is never called at startup.
-func InstallPGProvider(ctx context.Context, dsn, manager string, targets []v02.ProvisioningTarget) error {
+
+var providerSchema = pgmigration.Set{
+	Schema:  "mcpguard_provision",
+	Scripts: []string{providerDDL, providerRecoveryDDL, providerWriteDDL, providerFenceDDL},
+}
+
+func checkProviderInstall(dsn, manager string, targets []v02.ProvisioningTarget) error {
 	if !regexp.MustCompile(`^[a-z][a-z0-9_]{0,62}$`).MatchString(manager) {
 		return ErrInput
 	}
@@ -274,9 +281,27 @@ func InstallPGProvider(ctx context.Context, dsn, manager string, targets []v02.P
 		return ErrDenied
 	}
 	for _, target := range targets {
+		if !valid("ProvisioningTarget", target) {
+			return ErrInput
+		}
 		if target.TargetFingerprint != ep.Fingerprint() {
 			return ErrDenied
 		}
+	}
+	return nil
+}
+
+func PlanPGProvider(ctx context.Context, dsn, manager string, targets []v02.ProvisioningTarget) (pgmigration.Plan, error) {
+	if err := checkProviderInstall(dsn, manager, targets); err != nil {
+		return pgmigration.Plan{}, err
+	}
+	return providerSchema.DryRun(ctx, dsn)
+}
+
+// InstallPGProvider is explicitly administrative and is never called at startup.
+func InstallPGProvider(ctx context.Context, dsn, manager string, targets []v02.ProvisioningTarget) error {
+	if err := checkProviderInstall(dsn, manager, targets); err != nil {
+		return err
 	}
 	c, e := pgx.Connect(ctx, dsn)
 	if e != nil {
@@ -291,78 +316,13 @@ func InstallPGProvider(ctx context.Context, dsn, manager string, targets []v02.P
 	if _, e = tx.Exec(ctx, "SELECT pg_advisory_xact_lock(529401)"); e != nil {
 		return e
 	}
-	var present bool
-	if e = tx.QueryRow(ctx, "SELECT to_regclass('mcpguard_provision.schema_versions') IS NOT NULL").Scan(&present); e != nil {
+	if e = providerSchema.Apply(ctx, tx); e != nil {
+		if errors.Is(e, pgmigration.ErrHistory) {
+			return ErrConflict
+		}
 		return e
 	}
-	sum := sha256.Sum256([]byte(providerDDL))
-	checksum := hex.EncodeToString(sum[:])
-	if present {
-		var saved string
-		if tx.QueryRow(ctx, "SELECT checksum FROM mcpguard_provision.schema_versions WHERE version=1").Scan(&saved) != nil || saved != checksum {
-			return ErrConflict
-		}
-	} else {
-		if _, e = tx.Exec(ctx, providerDDL); e != nil {
-			return e
-		}
-		if _, e = tx.Exec(ctx, "INSERT INTO mcpguard_provision.schema_versions VALUES(1,$1)", checksum); e != nil {
-			return e
-		}
-	}
-	var latest int
-	if e = tx.QueryRow(ctx, "SELECT max(version) FROM mcpguard_provision.schema_versions").Scan(&latest); e != nil || latest > 4 {
-		return ErrConflict
-	}
-	recoverySum := sha256.Sum256([]byte(providerRecoveryDDL))
-	recoveryChecksum := hex.EncodeToString(recoverySum[:])
-	if latest == 1 {
-		if _, e = tx.Exec(ctx, providerRecoveryDDL); e != nil {
-			return e
-		}
-		if _, e = tx.Exec(ctx, "INSERT INTO mcpguard_provision.schema_versions VALUES(2,$1)", recoveryChecksum); e != nil {
-			return e
-		}
-	} else {
-		var saved string
-		if tx.QueryRow(ctx, "SELECT checksum FROM mcpguard_provision.schema_versions WHERE version=2").Scan(&saved) != nil || saved != recoveryChecksum {
-			return ErrConflict
-		}
-	}
-	writeSum := sha256.Sum256([]byte(providerWriteDDL))
-	writeChecksum := hex.EncodeToString(writeSum[:])
-	if latest <= 2 {
-		if _, e = tx.Exec(ctx, providerWriteDDL); e != nil {
-			return e
-		}
-		if _, e = tx.Exec(ctx, "INSERT INTO mcpguard_provision.schema_versions VALUES(3,$1)", writeChecksum); e != nil {
-			return e
-		}
-	} else {
-		var saved string
-		if tx.QueryRow(ctx, "SELECT checksum FROM mcpguard_provision.schema_versions WHERE version=3").Scan(&saved) != nil || saved != writeChecksum {
-			return ErrConflict
-		}
-	}
-	fenceSum := sha256.Sum256([]byte(providerFenceDDL))
-	fenceChecksum := hex.EncodeToString(fenceSum[:])
-	if latest <= 3 {
-		if _, e = tx.Exec(ctx, providerFenceDDL); e != nil {
-			return e
-		}
-		if _, e = tx.Exec(ctx, "INSERT INTO mcpguard_provision.schema_versions VALUES(4,$1)", fenceChecksum); e != nil {
-			return e
-		}
-	} else {
-		var saved string
-		if tx.QueryRow(ctx, "SELECT checksum FROM mcpguard_provision.schema_versions WHERE version=4").Scan(&saved) != nil || saved != fenceChecksum {
-			return ErrConflict
-		}
-	}
 	for _, target := range targets {
-		if !valid("ProvisioningTarget", target) {
-			return ErrInput
-		}
 		raw, _ := json.Marshal(target)
 		if _, e = tx.Exec(ctx, "INSERT INTO mcpguard_provision.targets VALUES($1,$2) ON CONFLICT DO NOTHING", target.TargetID, raw); e != nil {
 			return e
@@ -385,5 +345,3 @@ func InstallPGProvider(ctx context.Context, dsn, manager string, targets []v02.P
 	}
 	return tx.Commit(ctx)
 }
-
-

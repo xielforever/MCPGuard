@@ -41,7 +41,7 @@ func (g *Gateway) AttachControlled(s *controlled.Service, console *controlled.Co
 	g.Notifier = n
 	f, t := false, true
 	for _, tool := range s.Tools {
-		if tool.Name == "pg.get_demo_item" {
+		if g.Reader == nil || tool.Name == "pg.get_demo_item" {
 			continue
 		}
 		name := tool.Name
@@ -85,6 +85,9 @@ func (g *Gateway) AttachControlled(s *controlled.Service, console *controlled.Co
 		})
 	}
 	for _, op := range []string{"STATUS", "RESUME", "CANCEL"} {
+		if g.Reader == nil && op == "RESUME" {
+			continue
+		}
 		operation := op
 		g.MCP.AddTool(&mcp.Tool{Name: "action." + strings.ToLower(op), Description: "Inspect, explicitly resume or cancel one of your own controlled actions. Approval is performed by another authorized person in the local console. Never automatically replay an unknown outcome.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"actionId": map[string]any{"type": "string", "format": "uuid"}}, "required": []string{"actionId"}, "additionalProperties": false}, OutputSchema: controlledActionSchema, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: op == "STATUS", IdempotentHint: op != "RESUME", DestructiveHint: &f, OpenWorldHint: &f}}, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			p, ok := principal(req.Extra)

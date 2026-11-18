@@ -13,6 +13,7 @@ func (r *Reader) CheckReady(ctx context.Context) error {
 		AND NOT (r.rolsuper OR r.rolcreatedb OR r.rolcreaterole)
 		AND has_table_privilege(current_user,'demo.items','SELECT')
 		AND NOT has_table_privilege(current_user,'demo.items','INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
+		AND `+DemoDatabasePredicate+`
 		FROM pg_roles r WHERE r.rolname=current_user`).Scan(&ready)
 	if err != nil {
 		return err

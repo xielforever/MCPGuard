@@ -92,7 +92,7 @@ def prepare_legacy_regression(cfg,state,runid):
     cfg["raRedis"]=redis
     cfg["MCPGUARD_NATIVE_CONFIG"]=str(state/"native.json")
 
-def prepare():
+def prepare(before_catalog=None):
     build()
     runid=uuid.uuid4().hex[:10]
     state=Path("/tmp")/("mcpguard-ra01-03-"+runid)
@@ -115,6 +115,8 @@ def prepare():
     dev.up()
     cfg=dev.load()
     prepare_legacy_regression(cfg,state,runid)
+    if before_catalog is not None:
+        before_catalog(state, cfg)
     private={"endpoints":{},"secrets":{}}
     bundle={"schemaVersion":"0.2","resources":[],"heads":[],"profiles":[],"tools":[],"access":[],"bindings":[]}
     write_items=[]

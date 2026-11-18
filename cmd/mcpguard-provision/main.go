@@ -18,7 +18,8 @@ func run() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	if len(os.Args) >= 2 && os.Args[1] == "install-provider" {
-		if len(os.Args) != 3 {
+		dryRun := len(os.Args) == 4 && os.Args[3] == "--dry-run"
+		if len(os.Args) != 3 && !dryRun {
 			return resources.ErrInput
 		}
 		raw, e := os.ReadFile(os.Args[2])
@@ -29,7 +30,15 @@ func run() error {
 		if v02.Decode("ProvisioningConfiguration", raw, &config) != nil {
 			return resources.ErrInput
 		}
-		return resources.InstallPGProvider(ctx, os.Getenv("MCPGUARD_PROVIDER_ADMIN_DSN"), os.Getenv("MCPGUARD_PROVIDER_MANAGER_ROLE"), config.Targets)
+		dsn, manager := os.Getenv("MCPGUARD_PROVIDER_ADMIN_DSN"), os.Getenv("MCPGUARD_PROVIDER_MANAGER_ROLE")
+		if dryRun {
+			plan, err := resources.PlanPGProvider(ctx, dsn, manager, config.Targets)
+			if err != nil {
+				return err
+			}
+			return json.NewEncoder(os.Stdout).Encode(plan)
+		}
+		return resources.InstallPGProvider(ctx, dsn, manager, config.Targets)
 	}
 	if len(os.Args) != 2 && len(os.Args) != 4 {
 		return resources.ErrInput

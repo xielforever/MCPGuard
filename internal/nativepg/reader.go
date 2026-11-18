@@ -13,7 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const ReadSQL = `SELECT item_id,note,version::text FROM demo.items WHERE scope_id=$1 AND item_id=$2 LIMIT 1`
+const ReadSQL = `SELECT item_id,note,version::text FROM demo.items WHERE scope_id=$1 AND item_id=$2 AND ` + DemoDatabasePredicate + ` LIMIT 1`
 
 type Reader struct{ Pool *pgxpool.Pool }
 type Item struct {
@@ -50,6 +50,10 @@ func Open(ctx context.Context, dsn string) (*Reader, error) {
 	if e != nil {
 		return nil, e
 	}
+	if e = CheckDemoDatabase(ctx, p); e != nil {
+		p.Close()
+		return nil, e
+	}
 	var unsafe bool
 	e = p.QueryRow(ctx, `SELECT r.rolsuper OR r.rolcreatedb OR r.rolcreaterole OR has_table_privilege(current_user,'demo.items','INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') FROM pg_roles r WHERE rolname=current_user`).Scan(&unsafe)
 	if e == nil && unsafe {
@@ -80,6 +84,10 @@ func (r *Reader) Read(ctx context.Context, scope, itemID string) Outcome {
 		_ = tx.Rollback(c)
 	}()
 	if e = ctx.Err(); e != nil {
+		out.Err = e
+		return out
+	}
+	if e = CheckDemoDatabase(ctx, tx); e != nil {
 		out.Err = e
 		return out
 	}
