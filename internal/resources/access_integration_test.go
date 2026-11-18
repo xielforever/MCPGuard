@@ -28,6 +28,28 @@ type accessFixture struct {
 	bundle v02.CatalogBundle
 }
 
+func (f *accessFixture) now(t *testing.T) time.Time {
+	t.Helper()
+	now, err := databaseTime(f.ctx, f.admin)
+	if err != nil {
+		t.Fatal("read fixture database time: ", err)
+	}
+	return now
+}
+
+func (f *accessFixture) awaitDeadline(t *testing.T, timestamp string) {
+	t.Helper()
+	deadline, _, err := normalizedTime(timestamp)
+	if err != nil {
+		t.Fatal("parse fixture deadline: ", err)
+	}
+	ctx, cancel := context.WithTimeout(f.ctx, 8*time.Second)
+	defer cancel()
+	if err := waitForDatabaseTime(ctx, f.admin, deadline); err != nil {
+		t.Fatal("database did not reach fixture deadline: ", err)
+	}
+}
+
 func newAccessFixture(t *testing.T, reviewSeconds int) *accessFixture {
 	t.Helper()
 	path := os.Getenv("MCPGUARD_RA_CONFIG")
@@ -425,7 +447,11 @@ func TestAccessWorkflowIntegration(t *testing.T) {
 	t.Run("review_deadline_and_grant_expiry_persist", func(t *testing.T) {
 		f := newAccessFixture(t, 1)
 		r := f.request(t, "alice")
-		time.Sleep(1100 * time.Millisecond)
+		var deadline time.Time
+		if err := f.admin.QueryRow(f.ctx, "SELECT request_deadline FROM mcpguard_ra.access_requests WHERE org_id=$1 AND request_id=$2", r.OrgID, r.RequestID).Scan(&deadline); err != nil {
+			t.Fatal("read persisted review deadline: ", err)
+		}
+		f.awaitDeadline(t, deadline.Format(time.RFC3339Nano))
 		out, e := f.s.Status(f.ctx, f.people["alice"], r.RequestID)
 		if e != nil || out.Request.State != "EXPIRED" {
 			t.Fatal("review deadline not terminal")
@@ -433,13 +459,13 @@ func TestAccessWorkflowIntegration(t *testing.T) {
 		f = newAccessFixture(t, 3600)
 		r = f.request(t, "alice")
 		in := approveInput(r)
-		soon := time.Now().UTC().Add(1500 * time.Millisecond).Format(time.RFC3339Nano)
+		soon := f.now(t).UTC().Add(1500 * time.Millisecond).Format(time.RFC3339Nano)
 		in.ApprovedExpiry = &soon
 		approved, e := f.s.Decide(f.ctx, f.people["reviewer"], r.RequestID, in)
 		if e != nil {
 			t.Fatal(e)
 		}
-		time.Sleep(1600 * time.Millisecond)
+		f.awaitDeadline(t, approved.Grant.ExpiresAt)
 		g, e := f.s.Grant(f.ctx, f.people["alice"], approved.Grant.GrantID)
 		if e != nil || g.State != "EXPIRED" || g.Revision != "2" {
 			t.Fatal("provisioning grant expiry not terminal")

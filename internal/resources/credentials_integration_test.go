@@ -246,13 +246,53 @@ func TestCredentialPackagesIntegration(t *testing.T) {
 		if expiry.After(grantExpiry) {
 			t.Fatal("lease outlives grant")
 		}
-		time.Sleep(1100 * time.Millisecond)
+		f.awaitDeadline(t, status.ExpiresAt)
 		closed, e := f.service.Status(f.ctx, f.people["alice"], v02.CredentialIDInput{CredentialID: status.CredentialID})
 		if e != nil || closed.State != "EXPIRED" || closed.Revision != "2" {
 			t.Fatal("expired lease did not converge")
 		}
 		if _, e = f.service.Validate(f.ctx, f.people["alice"], out.Grant.ResourceID, status.CredentialID, f.blob(t, status.CredentialID)); !errors.Is(e, ErrCredential) {
 			t.Fatal("expired package accepted")
+		}
+	})
+	t.Run("prepared_issue_time_waits_for_database_without_changing_reference", func(t *testing.T) {
+		f := newCredentialFixture(t)
+		p := f.people["alice"]
+		out := f.approved(t, "alice", 0)
+		f.run(t, out, "VERIFIED")
+		in := v02.IssueCredentialInput{GrantID: out.Grant.GrantID, RequestKey: uuid.NewString()}
+		prep, prior, err := f.service.prepareIssue(f.ctx, p, in)
+		if err != nil || prep == nil || prior != nil {
+			t.Fatal("prepare isolated credential: ", err)
+		}
+		// A future prepared timestamp models a database clock moving back
+		// between reservation and persist without changing any system clocks.
+		issued := f.now(t).UTC().Add(150 * time.Millisecond)
+		prep.ref.IssuedAt = issued.Format(time.RFC3339Nano)
+		blob, err := f.service.encryptPreparation(f.ctx, p, prep)
+		if err != nil || f.now(t).Before(issued) {
+			t.Fatal("prepared credential did not wait for its issue time: ", err)
+		}
+		status, err := f.service.finishIssue(f.ctx, p, in, prep, blob)
+		if err != nil || status.CredentialID != prep.ref.CredentialID || status.ExpiresAt != prep.ref.ExpiresAt {
+			t.Fatal("finish changed the prepared credential: ", err)
+		}
+		if _, err := f.service.Validate(f.ctx, p, out.Grant.ResourceID, status.CredentialID, blob); err != nil {
+			t.Fatal("prepared reference could not be verified: ", err)
+		}
+		in.RequestKey = uuid.NewString()
+		prep, prior, err = f.service.prepareIssue(f.ctx, p, in)
+		if err != nil || prep == nil || prior != nil {
+			t.Fatal("prepare second isolated credential: ", err)
+		}
+		prep.ref.IssuedAt = f.now(t).UTC().Add(10 * time.Second).Format(time.RFC3339Nano)
+		ctx, cancel := context.WithTimeout(f.ctx, 100*time.Millisecond)
+		defer cancel()
+		if blob, err := f.service.encryptPreparation(ctx, p, prep); !errors.Is(err, ErrUnavailable) || blob != nil {
+			t.Fatal("issue continued before the database reached the prepared time")
+		}
+		if f.count(t, "credential_leases") != 1 || f.count(t, "credential_packages") != 1 || f.count(t, "credential_nonce_reservations") != 2 {
+			t.Fatal("timed-out issue persisted a new credential or released its nonce")
 		}
 	})
 	for _, mode := range []string{"grant_revoked", "resource_disabled", "access_removed", "binding_disabled", "issuer_epoch_changed", "policy_disabled", "subject_disabled", "subject_expired", "token_replaced"} {

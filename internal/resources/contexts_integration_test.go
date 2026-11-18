@@ -206,7 +206,11 @@ func TestCredentialContextsIntegration(t *testing.T) {
 	t.Run("context_renewal_preserves_identity_and_absolute_bound", func(t *testing.T) {
 		f := newContextFixture(t)
 		before := f.views["alice"]
-		time.Sleep(10 * time.Millisecond)
+		var issued time.Time
+		if err := f.admin.QueryRow(f.ctx, "SELECT issued_at FROM mcpguard_ra.credential_contexts WHERE org_id=$1 AND context_id=$2", before.OrgID, before.ContextID).Scan(&issued); err != nil {
+			t.Fatal("read context issuance time: ", err)
+		}
+		f.awaitDeadline(t, issued.Add(time.Microsecond).Format(time.RFC3339Nano))
 		in := v02.ContextRenewInput{ExpectedRevision: before.Revision, RequestKey: uuid.NewString()}
 		renewed, e := f.contexts.Renew(f.ctx, f.people["alice"], f.proofs["alice"], in, false)
 		if e != nil || renewed.ContextID != before.ContextID || renewed.AbsoluteExpiresAt != before.AbsoluteExpiresAt || renewed.Revision != "2" {
@@ -242,7 +246,7 @@ func TestCredentialContextsIntegration(t *testing.T) {
 		if len(f.contextStatus(t, "alice").Activations) != 0 {
 			t.Fatal("new context inherited activation")
 		}
-		time.Sleep(1100 * time.Millisecond)
+		f.awaitDeadline(t, short.Context.ExpiresAt)
 		if e = f.contexts.VerifyDelivery(f.ctx, f.people["alice"], proof, f.clientTokens["alice"]); e != nil {
 			t.Fatal("owner cannot authenticate safe terminal Context inspection")
 		}
@@ -342,7 +346,7 @@ func TestCredentialContextsIntegration(t *testing.T) {
 		f.apply(t)
 		ticket, _ := f.prepareContext(t, "alice", 0)
 		f.activate(t, "alice", ticket, f.take(t, "alice", ticket))
-		time.Sleep(1100 * time.Millisecond)
+		f.awaitDeadline(t, ticket.CredentialExpiresAt)
 		if _, e := f.contexts.CheckActivation(f.ctx, f.people["alice"], f.proofs["alice"], *ticket.ResourceID, ticket.CredentialID); !errors.Is(e, ErrDenied) {
 			t.Fatal("expired file remained active")
 		}
