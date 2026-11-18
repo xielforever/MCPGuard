@@ -301,8 +301,12 @@ func TestRevocationRecoveryFenceBlocksOldPackage(t *testing.T) {
 		t.Fatal(e)
 	}
 	status, e := f.service.Status(f.ctx, alice, v02.CredentialIDInput{CredentialID: ticket.CredentialID})
-	if e != nil || status.State != "REVOKED" {
-		t.Fatalf("a stale metadata fence did not retire the old package: state=%q err=%v", status.State, e)
+	if !errors.Is(e, ErrDenied) || status.State == "ACTIVE" {
+		t.Fatalf("a stale metadata fence exposed a usable package: state=%q err=%v", status.State, e)
+	}
+	var recorded string
+	if e = f.admin.QueryRow(f.ctx, `SELECT state FROM mcpguard_ra.credential_leases WHERE org_id=$1 AND credential_id=$2`, alice.OrgID, ticket.CredentialID).Scan(&recorded); e != nil || recorded != "ACTIVE" {
+		t.Fatalf("the recovery fence changed the recorded lease before reconciliation: state=%q err=%v", recorded, e)
 	}
 }
 

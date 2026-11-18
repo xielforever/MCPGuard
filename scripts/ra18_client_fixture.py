@@ -492,6 +492,8 @@ class Scenario:
             status, _, _ = self.wire.http(self.port, f"/api/v2/credential-contexts/{ctx['contextId']}/activations",
                                           self.cfg['alice_token'], request, {CONTEXT_HEADER: header})
             self.check(status == 403, 'restored metadata cannot activate the earlier encrypted file')
+            frozen = self.query(f"SELECT state FROM mcpguard_ra.credential_leases WHERE credential_id='{access['credentialId']}'", database=database)
+            self.check(frozen == 'ACTIVE', 'recovery protection blocks access without rewriting an unaffected recorded lease')
             disabled = self.query(f"SELECT NOT rolcanlogin FROM pg_roles WHERE oid={revoked['roleOid']} AND rolname='{revoked['identity']}'", pg=0)
             self.check(disabled == 't' and self.version(revoked) == '2', 'native account and row still match the original revocation evidence')
             reviewer = self.login('visitor')

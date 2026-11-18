@@ -3,10 +3,13 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+var errRecoveryPointUnverified = fmt.Errorf("native recovery point requires reconciliation: %w", ErrDenied)
 
 // RestoreFence compares the recovery generation recorded in metadata with the
 // generation kept by the native provider. The native copy is never restored
@@ -78,7 +81,7 @@ func (f *RestoreFence) Check(ctx context.Context, org, endpointRef string) error
 		return e
 	}
 	if native > expected {
-		return ErrDenied
+		return errRecoveryPointUnverified
 	}
 	return nil
 }
