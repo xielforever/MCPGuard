@@ -9,11 +9,12 @@ import (
 
 // NativeReceipt never contains an endpoint, password or new CREATE authority.
 type NativeReceipt struct {
-	Status    string  `json:"status"`
-	TargetID  string  `json:"targetId"`
-	AccountID string  `json:"accountId"`
-	PlanHash  string  `json:"planHash"`
-	RoleOID   *string `json:"roleOid,omitempty"`
+	Status         string  `json:"status"`
+	TargetID       string  `json:"targetId"`
+	AccountID      string  `json:"accountId"`
+	PlanHash       string  `json:"planHash"`
+	RoleOID        *string `json:"roleOid,omitempty"`
+	ActiveSessions *int    `json:"activeSessions,omitempty"`
 }
 type NativeRecoveryProvider interface {
 	Reconcile(context.Context, v02.ProvisioningPlan, string) (NativeReceipt, error)
@@ -46,16 +47,30 @@ func (p *PGProvisioningProvider) nativeOutcome(ctx context.Context, plan v02.Pro
 		statement = "SELECT mcpguard_provision.cleanup_account($1,$2,$3,$4)"
 	}
 	var raw []byte
-	if e = c.QueryRow(ctx, statement, plan.TargetID, plan.AccountID, hash, expiry).Scan(&raw); e != nil {
-		return out, ErrUnavailable
+	query := func(statement string) (NativeReceipt, error) {
+		if e := c.QueryRow(ctx, statement, plan.TargetID, plan.AccountID, hash, expiry).Scan(&raw); e != nil {
+			return NativeReceipt{}, ErrUnavailable
+		}
+		var receipt NativeReceipt
+		decoder := json.NewDecoder(bytes.NewReader(raw))
+		decoder.DisallowUnknownFields()
+		if decoder.Decode(&receipt) != nil || receipt.TargetID != plan.TargetID || receipt.AccountID != plan.AccountID || receipt.PlanHash != hash {
+			return NativeReceipt{}, ErrDenied
+		}
+		return receipt, nil
 	}
-	decoder := json.NewDecoder(bytes.NewReader(raw))
-	decoder.DisallowUnknownFields()
-	if decoder.Decode(&out) != nil || out.TargetID != plan.TargetID || out.AccountID != plan.AccountID || out.PlanHash != hash {
-		return NativeReceipt{}, ErrDenied
+	out, e = query(statement)
+	if e != nil {
+		return out, e
+	}
+	if cleanup && (out.Status == "CLEANED" || out.Status == "ABSENT_SEALED") {
+		out, e = query("SELECT mcpguard_provision.verify_account_cleanup($1,$2,$3,$4)")
+		if e != nil {
+			return out, e
+		}
 	}
 	switch out.Status {
-	case "OWNED", "DISABLED", "ABSENT_SEALED", "CONFLICT", "CLEANED":
+	case "OWNED", "DISABLED", "ABSENT_SEALED", "CONFLICT", "CLEANED", "SESSIONS_REMAIN":
 	default:
 		return NativeReceipt{}, ErrDenied
 	}

@@ -1,13 +1,13 @@
 package resources
 
 import (
+	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
-	"encoding/json"
-	"errors"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -414,6 +414,13 @@ func TestControlledWriteRecoveryFenceBlocksStaleMetadata(t *testing.T) {
 	if _, e = writes.Approve(f.ctx, approver, planned.RequestID, true, ""); e != nil {
 		t.Fatal(e)
 	}
+	unclaimed, e := writes.Plan(f.ctx, alice, writeInput(ticket, "unclaimed before restore", "1"), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = writes.Approve(f.ctx, approver, unclaimed.RequestID, true, ""); e != nil {
+		t.Fatal(e)
+	}
 	// The native side moves ahead without the metadata record: exactly what a
 	// metadata restore to an older backup looks like.
 	generation, e := writes.Fence.Advance(f.ctx, alice.OrgID)
@@ -433,6 +440,9 @@ func TestControlledWriteRecoveryFenceBlocksStaleMetadata(t *testing.T) {
 	// The operator re-verifies and accepts the recovery point; new work resumes.
 	if e = writes.Fence.Record(f.ctx, alice.OrgID, generation, alice.ID); e != nil {
 		t.Fatal("accepting the recovery point failed: ", e)
+	}
+	if _, e = writes.Resume(f.ctx, alice, unclaimed.RequestID); !errors.Is(e, ErrDenied) {
+		t.Fatal("an unclaimed approval from the restored snapshot was accepted: ", e)
 	}
 	second, e := writes.Plan(f.ctx, alice, writeInput(ticket, "after restore", "1"), uuid.NewString())
 	if e != nil {

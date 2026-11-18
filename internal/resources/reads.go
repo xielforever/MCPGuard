@@ -24,6 +24,7 @@ type ReadResult struct {
 	NativeIdentity  string         `json:"nativeIdentity"`
 	Found           bool           `json:"found"`
 	Items           []v02.ReadItem `json:"items"`
+	Attempted       bool           `json:"-"`
 }
 
 // ReadService is the RA-11 entry point. A read is bound to an ACTIVE credential
@@ -33,7 +34,7 @@ type ReadService struct {
 	Catalog     *Catalog
 	Credentials *CredentialService
 	Manager     *ReadManager
-	Fence *RestoreFence
+	Fence       *RestoreFence
 }
 
 func NewReadService(c *Catalog, credentials *CredentialService, m *ReadManager) *ReadService {
@@ -70,9 +71,27 @@ func (r *ReadService) AuthorizeRead(ctx context.Context, p metadata.Principal, c
 }
 
 func (r *ReadService) ReadItem(ctx context.Context, p metadata.Principal, in v02.ReadItemInput) (ReadResult, error) {
+	return r.readItem(ctx, p, in, nil, ContextProof{})
+}
+
+// ReadItemInContext is the public MCP path. The host proof and activation are
+// checked again before dispatch and before releasing a native result.
+func (r *ReadService) ReadItemInContext(ctx context.Context, p metadata.Principal, in v02.ReadItemInput, contexts *ContextService, proof ContextProof) (ReadResult, error) {
+	if contexts == nil {
+		return ReadResult{}, ErrDenied
+	}
+	return r.readItem(ctx, p, in, contexts, proof)
+}
+
+func (r *ReadService) readItem(ctx context.Context, p metadata.Principal, in v02.ReadItemInput, contexts *ContextService, proof ContextProof) (ReadResult, error) {
 	out := ReadResult{SchemaVersion: "0.2", Items: []v02.ReadItem{}}
 	if !valid("ReadItemInput", in) {
 		return out, ErrInput
+	}
+	if contexts != nil {
+		if _, e := contexts.CheckActivation(ctx, p, proof, in.ResourceID, in.CredentialID); e != nil {
+			return out, e
+		}
 	}
 	snap, planID, e := r.claim(ctx, p, in)
 	if e != nil {
@@ -98,7 +117,16 @@ func (r *ReadService) ReadItem(ctx context.Context, p metadata.Principal, in v02
 		r.finish(p, planID, "FAILED", nil)
 		return out, e
 	}
-	items, e := r.Manager.nativeRead(call, p, snap, in.ItemID)
+	if contexts != nil {
+		if _, e = contexts.CheckActivation(call, p, proof, in.ResourceID, in.CredentialID); e != nil {
+			r.finish(p, planID, "FAILED", nil)
+			return out, e
+		}
+	}
+	native, stop := watchDispatch(call, r.Catalog.Store.Pool, p.OrgID, planID, false)
+	out.Attempted = true
+	items, e := r.Manager.nativeRead(native, p, snap, in.ItemID)
+	stop()
 	if e != nil {
 		state := "FAILED"
 		if errors.Is(e, ErrUnavailable) {
@@ -113,15 +141,21 @@ func (r *ReadService) ReadItem(ctx context.Context, p metadata.Principal, in v02
 		r.finish(p, planID, "FAILED", nil)
 		return out, e
 	}
+	if contexts != nil {
+		if _, e = contexts.CheckActivation(ctx, p, proof, in.ResourceID, in.CredentialID); e != nil {
+			r.finish(p, planID, "FAILED", nil)
+			return out, e
+		}
+	}
 	out.Found = len(items) > 0
 	out.Items = items
 	raw, _ := json.Marshal(out)
 	if len(raw) > snap.Profile.MaxResultBytes {
 		r.finish(p, planID, "FAILED", nil)
-		return ReadResult{}, ErrUnavailable
+		return out, ErrUnavailable
 	}
 	if e = r.finish(p, planID, "SUCCEEDED", raw); e != nil {
-		return ReadResult{}, ErrUnavailable
+		return ReadResult{PlanID: planID, Attempted: true}, ErrUnavailable
 	}
 	return out, nil
 }

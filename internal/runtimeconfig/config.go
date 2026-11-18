@@ -160,5 +160,11 @@ func (c *Config) loadResources() error {
 		}
 		c.ResourceReads = true
 	}
+	if value := os.Getenv("MCPGUARD_RESOURCE_WRITES"); value != "" {
+		if value != "enabled" || !c.ResourceReads {
+			return errors.New("MCPGUARD_RESOURCE_WRITES=enabled requires planned resource reads")
+		}
+		c.ResourceWrites = true
+	}
 	return nil
 }

@@ -98,6 +98,9 @@ func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
 				if g.Reads != nil {
 					allowed["pg.get_item"] = true
 				}
+				if g.Writes != nil {
+					allowed["pg.update_note"] = true
+				}
 				if cur.CanRead && g.Reader != nil {
 					var enabled bool
 					if err := g.Store.Pool.QueryRow(c, `SELECT coalesce((SELECT enabled FROM mcpguard.control_resources WHERE org_id=$1 AND name='demo.pg'),true)`, cur.OrgID).Scan(&enabled); err != nil {

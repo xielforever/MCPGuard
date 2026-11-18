@@ -210,6 +210,11 @@ func (s *CredentialService) refresh(ctx context.Context, tx pgx.Tx, p metadata.P
 		return s.transition(ctx, tx, p, r, "EXPIRED", "")
 	}
 	current, e := s.selectGrant(ctx, tx, p, r.ref.GrantID)
+	if errors.Is(e, errRecoveryPointUnverified) {
+		// The restored lease cannot be used until reconciliation. Preserve
+		// its recorded state so a verified, unaffected grant can recover.
+		return e
+	}
 	if errors.Is(e, ErrDenied) || errors.Is(e, ErrConflict) || e == nil && !selectionMatches(r, current) {
 		return s.transition(ctx, tx, p, r, "REVOKED", "")
 	}

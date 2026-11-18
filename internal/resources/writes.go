@@ -26,6 +26,10 @@ type WriteStatus struct {
 	ExpectedVersion v02.Version  `json:"expectedVersion"`
 	DecidedBy       *string      `json:"decidedBy"`
 	Result          *WriteResult `json:"result"`
+	CreatedAt       time.Time    `json:"-"`
+	ExpiresAt       time.Time    `json:"-"`
+	PlanHash        string       `json:"-"`
+	HasResult       bool         `json:"-"`
 }
 
 type WriteResult struct {
@@ -67,7 +71,6 @@ type writeRow struct {
 
 const writeColumns = `subject_id::text,resource_id::text,credential_id::text,item_id,expected_version,native_identity,secret_version,binding_id::text,binding_version::text,resource_version::text,credential_revision,auth_epoch,state,plan_ciphertext,decided_by::text`
 
-
 // Plan freezes one write and records it as DEFERRED for another person.
 func (s *WriteService) Plan(ctx context.Context, p metadata.Principal, in v02.UpdateNoteInput, requestKey string) (WriteStatus, error) {
 	out := WriteStatus{SchemaVersion: "0.2"}
@@ -89,6 +92,11 @@ func (s *WriteService) Plan(ctx context.Context, p metadata.Principal, in v02.Up
 	snap, e := s.Catalog.snapshotBound(ctx, tx, p, in.ResourceID, row.ref.ProfileID, row.ref.ProfileVersion, WriteOperation, WriteToolName, epoch)
 	if e != nil {
 		return out, fmt.Errorf("plan snapshot: %w", e)
+	}
+	if s.Fence != nil {
+		if e = s.Fence.Check(ctx, p.OrgID, snap.Resource.EndpointConfigRef); e != nil {
+			return out, e
+		}
 	}
 	id := uuid.NewString()
 	plan, _ := json.Marshal(struct {
@@ -189,7 +197,29 @@ func (s *WriteService) Cancel(ctx context.Context, p metadata.Principal, id stri
 // claim an approved plan; the native call happens after the plan and the
 // current credential state are checked again.
 func (s *WriteService) Resume(ctx context.Context, p metadata.Principal, id string) (WriteStatus, error) {
+	return s.resume(ctx, p, id, nil, ContextProof{})
+}
+
+// ResumeInContext requires a live activation for the frozen plan's owner,
+// resource and package before consuming the one-time dispatch qualification.
+func (s *WriteService) ResumeInContext(ctx context.Context, p metadata.Principal, id string, contexts *ContextService, proof ContextProof) (WriteStatus, error) {
+	if contexts == nil {
+		return WriteStatus{}, ErrDenied
+	}
+	return s.resume(ctx, p, id, contexts, proof)
+}
+
+func (s *WriteService) resume(ctx context.Context, p metadata.Principal, id string, contexts *ContextService, proof ContextProof) (WriteStatus, error) {
 	out := WriteStatus{SchemaVersion: "0.2"}
+	if contexts != nil {
+		row, e := s.row(ctx, p, id)
+		if e != nil || row.SubjectID != p.ID {
+			return out, ErrDenied
+		}
+		if _, e = contexts.CheckActivation(ctx, p, proof, row.ResourceID, row.CredentialID); e != nil {
+			return out, e
+		}
+	}
 	tx, e := s.Catalog.Store.Pool.Begin(ctx)
 	if e != nil {
 		return out, ErrUnavailable
@@ -228,10 +258,20 @@ func (s *WriteService) Resume(ctx context.Context, p metadata.Principal, id stri
 		s.finish(p, id, "FAILED", nil)
 		return out, fmt.Errorf("resume current: %w", e)
 	}
-	outcome, e := s.nativeUpdate(ctx, p, frozen.Snapshot, frozen.Input)
+	if contexts != nil {
+		if _, e = contexts.CheckActivation(ctx, p, proof, frozen.Input.ResourceID, frozen.Input.CredentialID); e != nil {
+			s.finish(p, id, "FAILED", nil)
+			return out, e
+		}
+	}
+	native, stop := watchDispatch(ctx, s.Catalog.Store.Pool, p.OrgID, id, true)
+	outcome, e := s.nativeUpdate(native, p, frozen.Snapshot, frozen.Input)
+	stop()
 	result := &WriteResult{Outcome: "FAILED", NewVersion: string(frozen.Input.ExpectedVersion)}
 	state := "FAILED"
 	switch {
+	case errors.Is(e, errCommitOutcomeUnknown):
+		state, result = "OUTCOME_UNKNOWN", nil
 	case e != nil:
 		state = "FAILED"
 	case outcome == "UPDATED":
@@ -247,16 +287,16 @@ func (s *WriteService) Resume(ctx context.Context, p metadata.Principal, id stri
 		state = "FAILED"
 		result.Outcome = "NOT_FOUND"
 	}
-	raw, _ := json.Marshal(result)
-	if err := s.finish(p, id, state, raw); err != nil {
+	var raw []byte
+	if result != nil {
+		raw, _ = json.Marshal(result)
+	}
+	if err := s.finish(p, id, state, raw); err != nil && !errors.Is(err, ErrConflict) {
 		return out, ErrUnavailable
 	}
 	final, e2 := s.Status(ctx, p, id)
 	if e2 != nil {
 		return out, fmt.Errorf("resume status: %w", e2)
-	}
-	if state != "SUCCEEDED" {
-		return final, nil
 	}
 	return final, nil
 }
@@ -273,9 +313,14 @@ func (s *WriteService) nativeUpdate(ctx context.Context, p metadata.Principal, s
 		return "", fmt.Errorf("write pool: %w", e)
 	}
 	defer rollback(tx)
-	var login string
-	if tx.QueryRow(call, "SELECT session_user::text").Scan(&login) != nil || login != snap.Binding.NativeIdentity {
-		return "", fmt.Errorf("native session (login=%s): %w", login, ErrDenied)
+	endpoint, _, e := s.Manager.resolve(call, snap)
+	var login, effective, db, oid, recordedOID string
+	var safe bool
+	if e != nil || snap.Binding.AccountID == nil ||
+		tx.QueryRow(call, writeRoleCheck, time.Now().UTC()).Scan(&login, &effective, &db, &oid, &safe) != nil ||
+		!safe || login != snap.Binding.NativeIdentity || effective != login || db != endpoint.Database ||
+		s.Catalog.Store.Pool.QueryRow(call, "SELECT role_oid::text FROM mcpguard_ra.native_observations WHERE org_id=$1 AND account_id=$2 ORDER BY observed_at LIMIT 1", p.OrgID, *snap.Binding.AccountID).Scan(&recordedOID) != nil || oid != recordedOID {
+		return "", ErrDenied
 	}
 	expected, e := strconv.ParseInt(string(in.ExpectedVersion), 10, 64)
 	if e != nil {
@@ -299,8 +344,11 @@ func (s *WriteService) nativeUpdate(ctx context.Context, p metadata.Principal, s
 			outcome = "NOT_FOUND"
 		}
 	}
-	if e = commit(call, tx); e != nil {
-		return "", ErrUnavailable
+	if e = tx.Commit(call); e != nil {
+		if errors.Is(e, pgx.ErrTxCommitRollback) {
+			return "", e
+		}
+		return "", errCommitOutcomeUnknown
 	}
 	return outcome, nil
 }
@@ -346,43 +394,47 @@ func (s *WriteService) row(ctx context.Context, p metadata.Principal, id string)
 	return &r, nil
 }
 
+func (s *WriteService) OwnsAction(ctx context.Context, p metadata.Principal, id string) (bool, error) {
+	var owned bool
+	e := s.Catalog.Store.Pool.QueryRow(ctx, `SELECT EXISTS(SELECT FROM mcpguard_ra.write_requests WHERE org_id=$1 AND subject_id=$2 AND request_id=$3)`, p.OrgID, p.ID, id).Scan(&owned)
+	if e != nil {
+		return false, ErrUnavailable
+	}
+	return owned, nil
+}
+
 // Status is visible to the requester and to reviewers of the resource.
 func (s *WriteService) Status(ctx context.Context, p metadata.Principal, id string) (WriteStatus, error) {
 	out := WriteStatus{SchemaVersion: "0.2"}
-	r, e := s.row(ctx, p, id)
+	// The state stays visible, but a result recorded under an older authorization
+	// epoch is redacted in the same snapshot that reads the state.
+	var expected int64
+	var cipher []byte
+	e := s.Catalog.Store.Pool.QueryRow(ctx, `SELECT w.state,w.resource_id::text,w.credential_id::text,w.item_id,w.expected_version,w.decided_by::text,
+ w.created_at,l.expires_at,w.plan_hash,w.result_ciphertext IS NOT NULL,
+ CASE WHEN h.auth_epoch=w.auth_epoch AND w.subject_id=$3 THEN w.result_ciphertext END
+ FROM mcpguard_ra.write_requests w JOIN mcpguard_ra.credential_leases l USING(org_id,credential_id)
+ JOIN mcpguard.authorization_heads h USING(org_id)
+ WHERE w.org_id=$1 AND w.request_id=$2 AND (w.subject_id=$3 OR EXISTS(
+   SELECT FROM mcpguard_ra.access_reviewers a WHERE a.org_id=w.org_id AND a.resource_id=w.resource_id AND a.principal_id=$3 AND a.can_approve))
+ AND EXISTS(SELECT FROM mcpguard.principals p WHERE p.org_id=w.org_id AND p.id=$3 AND p.token_hash=$4 AND p.enabled AND p.expires_at>clock_timestamp())`,
+		p.OrgID, id, p.ID, p.TokenHash).Scan(&out.State, &out.ResourceID, &out.CredentialID, &out.ItemID, &expected, &out.DecidedBy,
+		&out.CreatedAt, &out.ExpiresAt, &out.PlanHash, &out.HasResult, &cipher)
+	if errors.Is(e, pgx.ErrNoRows) {
+		return out, ErrDenied
+	}
 	if e != nil {
-		return out, e
-	}
-	if r.SubjectID != p.ID {
-		var allowed bool
-		if s.Catalog.Store.Pool.QueryRow(ctx, `SELECT EXISTS(SELECT FROM mcpguard_ra.access_reviewers WHERE org_id=$1 AND resource_id=$2 AND principal_id=$3 AND can_approve)`, p.OrgID, r.ResourceID, p.ID).Scan(&allowed) != nil || !allowed {
-			return out, ErrDenied
-		}
-	}
-	var currentEpoch int64
-	if e := s.Catalog.Store.Pool.QueryRow(ctx, `SELECT auth_epoch FROM mcpguard.authorization_heads WHERE org_id=$1`, p.OrgID).Scan(&currentEpoch); e != nil {
 		return out, ErrUnavailable
 	}
-	// The state stays visible, but a result recorded under an older authorization
-	// epoch is historical data and is not served after a revocation changed it.
-	redactResult := currentEpoch != r.AuthEpoch
 	out.RequestID = id
-	out.State = r.State
-	out.ResourceID = r.ResourceID
-	out.CredentialID = r.CredentialID
-	out.ItemID = r.ItemID
-	out.ExpectedVersion = v02.Version(strconv.FormatInt(r.ExpectedVersion, 10))
-	out.DecidedBy = r.DecidedBy
-	if !redactResult && (r.State == "SUCCEEDED" || r.State == "FAILED") {
-		var cipher []byte
-		if s.Catalog.Store.Pool.QueryRow(ctx, `SELECT result_ciphertext FROM mcpguard_ra.write_requests WHERE org_id=$1 AND request_id=$2`, p.OrgID, id).Scan(&cipher) == nil && len(cipher) > 0 {
-			if plain, err := s.Catalog.Store.Vault.Open(cipher, writeAAD(p, id)); err == nil {
-				var result WriteResult
-				if json.Unmarshal(plain, &result) == nil {
-					out.Result = &result
-				}
-			}
+	out.ExpectedVersion = v02.Version(strconv.FormatInt(expected, 10))
+	if len(cipher) > 0 {
+		plain, err := s.Catalog.Store.Vault.Open(cipher, writeAAD(p, id))
+		var result WriteResult
+		if err != nil || json.Unmarshal(plain, &result) != nil {
+			return WriteStatus{SchemaVersion: "0.2"}, ErrUnavailable
 		}
+		out.Result = &result
 	}
 	return out, nil
 }
@@ -399,8 +451,12 @@ func (s *WriteService) finish(p metadata.Principal, id, state string, result []b
 	if result != nil {
 		cipher = s.Catalog.Store.Vault.Seal(result, writeAAD(p, id))
 	}
-	if _, e = tx.Exec(ctx, `UPDATE mcpguard_ra.write_requests SET state=$3,result_ciphertext=$4 WHERE org_id=$1 AND request_id=$2 AND state='EXECUTING'`, p.OrgID, id, state, cipher); e != nil {
+	tag, e := tx.Exec(ctx, `UPDATE mcpguard_ra.write_requests SET state=$3,result_ciphertext=$4 WHERE org_id=$1 AND request_id=$2 AND state='EXECUTING'`, p.OrgID, id, state, cipher)
+	if e != nil {
 		return ErrUnavailable
+	}
+	if tag.RowsAffected() != 1 {
+		return ErrConflict
 	}
 	if e = writeAudit(ctx, tx, p, id, state); e != nil {
 		return ErrUnavailable
@@ -430,4 +486,3 @@ func (s *WriteService) Result(ctx context.Context, p metadata.Principal, id stri
 }
 
 var _ = errors.Is
-

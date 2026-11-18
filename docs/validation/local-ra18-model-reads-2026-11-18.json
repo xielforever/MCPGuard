@@ -1,0 +1,34 @@
+{
+  "sourceSnapshot": "cac8b27e9cfe7f62a6fab53926beae2f896959df",
+  "clientProduct": "Windows Codex CLI",
+  "clientVersion": "0.169.0-alpha.11.1",
+  "mode": "exec --json --ephemeral",
+  "calls": [
+    {
+      "entry": "http",
+      "fixture": "7882a5f859",
+      "server": "mcpguard_ra18",
+      "tool": "pg.get_item",
+      "nativeReads": 1,
+      "planId": "59a8ce81-abee-4083-b512-bfb221f92642",
+      "resourceId": "40000000-0000-4000-8000-000000000002",
+      "itemId": "item_demo_1",
+      "modelTurnCompleted": true,
+      "requestStatus": "SUCCEEDED",
+      "exitCode": 0
+    },
+    {
+      "entry": "stdio",
+      "fixture": "5dc970de49",
+      "server": "mcpguard_ra18",
+      "tool": "pg.get_item",
+      "nativeReads": 1,
+      "planId": "da1a9f9d-37e6-4ea8-b3a5-d717085471e0",
+      "resourceId": "40000000-0000-4000-8000-000000000002",
+      "itemId": "item_demo_1",
+      "modelTurnCompleted": true,
+      "requestStatus": "SUCCEEDED",
+      "exitCode": 0
+    }
+  ]
+}

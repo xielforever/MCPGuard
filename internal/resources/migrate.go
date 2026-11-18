@@ -11,7 +11,7 @@ import (
 
 //go:embed migrations/*.sql
 var migrations embed.FS
-var migrationFiles = []string{"001_catalog.sql", "002_access_workflow.sql", "003_native_provisioning.sql", "004_provision_recovery.sql", "005_credential_packages.sql", "006_private_downloads.sql", "007_credential_contexts.sql", "008_planned_reads.sql", "009_controlled_writes.sql", "010_revocation.sql", "011_revocation_cleanup.sql", "012_recovery_fence.sql"}
+var migrationFiles = []string{"001_catalog.sql", "002_access_workflow.sql", "003_native_provisioning.sql", "004_provision_recovery.sql", "005_credential_packages.sql", "006_private_downloads.sql", "007_credential_contexts.sql", "008_planned_reads.sql", "009_controlled_writes.sql", "010_revocation.sql", "011_revocation_cleanup.sql", "012_recovery_fence.sql", "013_cleanup_receipts.sql"}
 
 var catalogSchema = func() pgmigration.Set {
 	scripts := make([]string, 0, len(migrationFiles))

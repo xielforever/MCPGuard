@@ -1,0 +1,21 @@
+{
+  "sourceSnapshot": "cac8b27e9cfe7f62a6fab53926beae2f896959df",
+  "date": "2026-11-18",
+  "goRace": {
+    "exitCode": 0,
+    "uniquePassedTests": 319,
+    "uncoveredTests": [],
+    "fixtureRuns": [
+      {"stage": "standard", "fixture": "45988c6a88", "passedTests": 300},
+      {"stage": "write", "fixture": "ff79b0cc3a", "passedTests": 10},
+      {"stage": "revocation", "fixture": "a72c93866a", "passedTests": 9}
+    ]
+  },
+  "migration": {
+    "fixture": "ccc0414dc2",
+    "exitCode": 0,
+    "migrationAndRollbackChecks": 22,
+    "readRolloutChecks": 116
+  },
+  "v02GeneratedContractsVerified": 5
+}

@@ -33,6 +33,9 @@ def verify_read_rollout(alice, pending, rpc):
         plan = str(uuid.UUID(data['planId']))
         check(scalar(f"SELECT count(*) FROM mcpguard_ra.read_audit WHERE plan_id='{plan}';") == '2',
               'read intent and result have correlated audit evidence')
+        bare = rpc(wire.HTTPMCP(alice.port, 'alice'), 'pg.get_item', args)['structuredContent']
+        check(bare['dispatchState'] == 'NOT_DISPATCHED' and bare['error']['code'] == 'ACCESS_DENIED',
+              'even the owner needs a private Context activation to dispatch')
         denied = rpc(wire.HTTPMCP(alice.port, 'bob'), 'pg.get_item', args)['structuredContent']
         check(denied['dispatchState'] == 'NOT_DISPATCHED' and denied['error']['code'] == 'ACCESS_DENIED',
               'another user cannot dispatch with the activated credential')

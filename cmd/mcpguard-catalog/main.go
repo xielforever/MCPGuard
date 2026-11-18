@@ -123,9 +123,9 @@ func main() {
 			}
 			expected = native
 		}
-		raw, _ := json.Marshal(map[string]any{"orgId": org, "native": native, "expected": expected, "suspect": native > expected})
+		raw, _ := json.Marshal(map[string]any{"orgId": org, "native": native, "expected": expected, "suspect": native != expected})
 		output = string(raw)
-		if native > expected {
+		if native != expected {
 			err = resources.ErrConflict
 		}
 	case "revocation-cleanup":
@@ -425,16 +425,17 @@ func main() {
 }
 
 func revocationCleanupStatus(ctx context.Context, pool *pgxpool.Pool, org string) (string, error) {
-	rows, e := pool.Query(ctx, `SELECT account_id::text,state,attempts,coalesce(last_error,'') FROM mcpguard_ra.revocation_cleanup WHERE org_id=$1 ORDER BY updated_at`, org)
+	rows, e := pool.Query(ctx, `SELECT account_id::text,state,attempts,coalesce(last_error,''),native_receipt FROM mcpguard_ra.revocation_cleanup WHERE org_id=$1 ORDER BY updated_at`, org)
 	if e != nil {
 		return "", resources.ErrUnavailable
 	}
 	defer rows.Close()
 	type row struct {
-		AccountID string `json:"accountId"`
-		State     string `json:"state"`
-		Attempts  int    `json:"attempts"`
-		LastError string `json:"lastError,omitempty"`
+		AccountID     string          `json:"accountId"`
+		State         string          `json:"state"`
+		Attempts      int             `json:"attempts"`
+		LastError     string          `json:"lastError,omitempty"`
+		NativeReceipt json.RawMessage `json:"nativeReceipt,omitempty"`
 	}
 	out := struct {
 		OrgID   string `json:"orgId"`
@@ -445,7 +446,7 @@ func revocationCleanupStatus(ctx context.Context, pool *pgxpool.Pool, org string
 	}{OrgID: org, Rows: []row{}}
 	for rows.Next() {
 		var r row
-		if rows.Scan(&r.AccountID, &r.State, &r.Attempts, &r.LastError) != nil {
+		if rows.Scan(&r.AccountID, &r.State, &r.Attempts, &r.LastError, &r.NativeReceipt) != nil {
 			return "", resources.ErrUnavailable
 		}
 		switch r.State {
@@ -457,6 +458,9 @@ func revocationCleanupStatus(ctx context.Context, pool *pgxpool.Pool, org string
 			out.Cleaned++
 		}
 		out.Rows = append(out.Rows, r)
+	}
+	if rows.Err() != nil {
+		return "", resources.ErrUnavailable
 	}
 	raw, _ := json.Marshal(out)
 	return string(raw), nil

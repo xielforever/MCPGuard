@@ -128,7 +128,7 @@ def before_catalog(state, cfg):
     metadata_plan = json.loads(invoke(state, 'mcpguard', ['migrate', '--dry-run'], env).stdout)
     check(metadata_plan['currentVersion'] == 4 and metadata_plan['pendingVersions'] == [], 'legacy migration preflight verifies versions 1–4')
     catalog_plan = json.loads(invoke(state, 'mcpguard-catalog', ['migrate', '--dry-run'], env).stdout)
-    check(catalog_plan['currentVersion'] == 0 and catalog_plan['pendingVersions'] == list(range(1, 13)), 'catalog preflight lists twelve pending changes on the legacy database')
+    check(catalog_plan['currentVersion'] == 0 and catalog_plan['pendingVersions'] == list(range(1, 14)), 'catalog preflight lists the pending changes on the legacy database')
     invoke(state, 'mcpguard-catalog', ['migrate'], env, expected=1)
     check(query(cfg, 'mcpguard_meta', "SELECT to_regnamespace('mcpguard_ra') IS NULL;") == 't'
           and ledger(cfg, action) == baseline, 'preflight and rejected apply preserve schema and legacy ledger')
@@ -167,20 +167,20 @@ def provider_upgrade(state, cfg):
                                      'MCPGUARD_PROVIDER_MANAGER_ROLE': 'mcpguard_account_manager'}
     args = ['install-provider', str(provider)]
     plan = json.loads(invoke(state, 'mcpguard-provision', args + ['--dry-run'], env).stdout)
-    check(plan['currentVersion'] == 3 and plan['pendingVersions'] == [4], 'native provider preflight recognizes installed v3 and historical CRLF checksums')
+    check(plan['currentVersion'] == 3 and plan['pendingVersions'] == [4, 5], 'native provider preflight recognizes installed v3 and historical CRLF checksums')
     check(query(pg, database, "SELECT to_regclass('mcpguard_provision.fence_state') IS NULL;") == 't',
           'native preflight does not create the recovery fence')
     env['MCPGUARD_PROVIDER_ADMIN_DSN'] = dsn
     for _ in range(2):
         invoke(state, 'mcpguard-provision', args, env)
     plan = json.loads(invoke(state, 'mcpguard-provision', args + ['--dry-run'], env).stdout)
-    check(plan['currentVersion'] == 4 and plan['pendingVersions'] == []
+    check(plan['currentVersion'] == 5 and plan['pendingVersions'] == []
           and before == query(pg, database, 'SELECT checksum FROM mcpguard_provision.schema_versions WHERE version<=3 ORDER BY version;'),
           'native upgrade is idempotent and preserves all installed checksums')
     query(pg, database, "UPDATE mcpguard_provision.schema_versions SET checksum='bad' WHERE version=3;")
     invoke(state, 'mcpguard-provision', args + ['--dry-run'], env, expected=1)
     invoke(state, 'mcpguard-provision', args, env, expected=1)
-    check(query(pg, database, 'SELECT max(version) FROM mcpguard_provision.schema_versions;') == '4',
+    check(query(pg, database, 'SELECT max(version) FROM mcpguard_provision.schema_versions;') == '5',
           'native preflight and apply both reject a changed checksum')
 
 
@@ -280,7 +280,7 @@ def main(regression):
     before = json.loads((state / 'ra17-baseline.json').read_text())
     env = base.dev.runtime_env(cfg) | {'MCPGUARD_MIGRATION_DSN': cfg['MCPGUARD_MIGRATION_DSN']}
     plan = json.loads(invoke(state, 'mcpguard-catalog', ['migrate', '--dry-run'], env).stdout)
-    check(plan['currentVersion'] == 12 and plan['pendingVersions'] == [], 'incremental catalog migration reaches v12 and reruns cleanly')
+    check(plan['currentVersion'] == 13 and plan['pendingVersions'] == [], 'incremental catalog migration reaches v13 and reruns cleanly')
     check(ledger(cfg, before['action']) == before['ledger'] and demo_digest(cfg) == before['demo'], 'catalog migration preserves seeded legacy data and ledger byte for byte')
     provider_upgrade(state, cfg)
 
