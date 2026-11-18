@@ -1,0 +1,214 @@
+{
+  "sourceSnapshot": "c65bb85bfbc0b28e1af6643588f38420afa6447f",
+  "baseSnapshot": "a47ed084a8712bbd1c0345788c18092bfd3b199a",
+  "nativeClients": [
+    {
+      "entry": "http",
+      "fixture": "4817c8bcca",
+      "clientVersion": "codex-cli 0.169.0-alpha.11.1",
+      "mcpProtocol": "2025-11-25",
+      "passed": 125,
+      "inFlight": {
+        "actionId": "0efbaca9-7ad7-4aec-903d-7f2cca55414c",
+        "nativePid": 317,
+        "accountId": "64f9c4fa-7972-449b-b8cb-a8952a7e3215",
+        "roleOid": 16465,
+        "pgResult": "QUERY_CANCELED_BY_REQUEST",
+        "rowVersionBefore": "2",
+        "rowVersionAfter": "2",
+        "ledger": [
+          "PLANNED",
+          "APPROVED",
+          "DISPATCH_INTENT",
+          "OUTCOME_UNKNOWN"
+        ],
+        "actionState": "OUTCOME_UNKNOWN",
+        "revocationEpoch": "44",
+        "approvedActionDeniedBeforeDispatch": "501e7dd2-741e-4992-af00-1f295d17643a"
+      },
+      "cleanup": [
+        {
+          "accountId": "64f9c4fa-7972-449b-b8cb-a8952a7e3215",
+          "state": "FAILED",
+          "attempts": 1,
+          "lastError": "resource dependency unavailable"
+        },
+        {
+          "accountId": "64f9c4fa-7972-449b-b8cb-a8952a7e3215",
+          "state": "FAILED",
+          "attempts": 2,
+          "lastError": "native cleanup status SESSIONS_REMAIN",
+          "nativeReceipt": {
+            "status": "SESSIONS_REMAIN",
+            "roleOid": "16465",
+            "targetId": "91000000-0000-4000-8000-000000000001",
+            "accountId": "64f9c4fa-7972-449b-b8cb-a8952a7e3215",
+            "activeSessions": 2
+          }
+        },
+        {
+          "accountId": "64f9c4fa-7972-449b-b8cb-a8952a7e3215",
+          "state": "CLEANED",
+          "attempts": 3,
+          "nativeReceipt": {
+            "status": "CLEANED",
+            "roleOid": "16465",
+            "targetId": "91000000-0000-4000-8000-000000000001",
+            "accountId": "64f9c4fa-7972-449b-b8cb-a8952a7e3215",
+            "activeSessions": 0
+          }
+        }
+      ],
+      "restoreFence": {
+        "expected": 1,
+        "native": 2,
+        "orgId": "10000000-0000-4000-8000-000000000001",
+        "suspect": true,
+        "source": "pg_dump/pg_restore",
+        "readDenied": true,
+        "issueDenied": true,
+        "activateDenied": true,
+        "reconciledGrantId": "d39f9e31-dbb7-4bb8-b081-c3800647cf26",
+        "ordinaryRevocationStayedFenced": true,
+        "acceptedGeneration": 2,
+        "unaffectedReadRecovered": true,
+        "revokedGrantStayedDenied": true
+      },
+      "windowsModelRead": {
+        "entry": "http",
+        "attempted": true,
+        "exitCode": 0,
+        "nativeReads": 1,
+        "toolStatuses": [
+          "completed"
+        ],
+        "modelTurnCompleted": true,
+        "sourceSnapshot": "c65bb85bfbc0b28e1af6643588f38420afa6447f",
+        "status": "PASS"
+      }
+    },
+    {
+      "entry": "stdio",
+      "fixture": "839bcdb83e",
+      "clientVersion": "codex-cli 0.169.0-alpha.11.1",
+      "mcpProtocol": "2025-11-25",
+      "passed": 120,
+      "inFlight": {
+        "actionId": "92755b25-b174-4e9b-aeef-e8a8268d4d4e",
+        "nativePid": 401,
+        "accountId": "81977bb2-5bb6-4c0c-941e-068d5710135d",
+        "roleOid": 16465,
+        "pgResult": "QUERY_CANCELED_BY_REQUEST",
+        "rowVersionBefore": "2",
+        "rowVersionAfter": "2",
+        "ledger": [
+          "PLANNED",
+          "APPROVED",
+          "DISPATCH_INTENT",
+          "OUTCOME_UNKNOWN"
+        ],
+        "actionState": "OUTCOME_UNKNOWN",
+        "revocationEpoch": "44",
+        "approvedActionDeniedBeforeDispatch": "4d06a365-fbb7-4961-9135-5d65ba5b8051"
+      },
+      "cleanup": [
+        {
+          "accountId": "81977bb2-5bb6-4c0c-941e-068d5710135d",
+          "state": "FAILED",
+          "attempts": 1,
+          "lastError": "resource dependency unavailable"
+        },
+        {
+          "accountId": "81977bb2-5bb6-4c0c-941e-068d5710135d",
+          "state": "FAILED",
+          "attempts": 2,
+          "lastError": "native cleanup status SESSIONS_REMAIN",
+          "nativeReceipt": {
+            "status": "SESSIONS_REMAIN",
+            "roleOid": "16465",
+            "targetId": "91000000-0000-4000-8000-000000000001",
+            "accountId": "81977bb2-5bb6-4c0c-941e-068d5710135d",
+            "activeSessions": 2
+          }
+        },
+        {
+          "accountId": "81977bb2-5bb6-4c0c-941e-068d5710135d",
+          "state": "CLEANED",
+          "attempts": 3,
+          "nativeReceipt": {
+            "status": "CLEANED",
+            "roleOid": "16465",
+            "targetId": "91000000-0000-4000-8000-000000000001",
+            "accountId": "81977bb2-5bb6-4c0c-941e-068d5710135d",
+            "activeSessions": 0
+          }
+        }
+      ],
+      "restoreFence": {
+        "expected": 1,
+        "native": 2,
+        "orgId": "10000000-0000-4000-8000-000000000001",
+        "suspect": true,
+        "source": "pg_dump/pg_restore",
+        "readDenied": true,
+        "issueDenied": true,
+        "activateDenied": true,
+        "reconciledGrantId": "b7152b84-6d41-465d-8e09-e21284e338f3",
+        "ordinaryRevocationStayedFenced": true,
+        "acceptedGeneration": 2,
+        "unaffectedReadRecovered": true,
+        "revokedGrantStayedDenied": true
+      },
+      "windowsModelRead": {
+        "entry": "stdio",
+        "attempted": true,
+        "exitCode": 0,
+        "nativeReads": 1,
+        "toolStatuses": [
+          "completed"
+        ],
+        "modelTurnCompleted": true,
+        "sourceSnapshot": "c65bb85bfbc0b28e1af6643588f38420afa6447f",
+        "status": "PASS"
+      }
+    }
+  ],
+  "goRace": {
+    "exitCode": 0,
+    "uniquePassedTests": 320,
+    "uncoveredTests": [],
+    "fixtureRuns": [
+      {
+        "stage": "standard",
+        "fixture": "9ab66ce3e5",
+        "passedTests": 300
+      },
+      {
+        "stage": "write",
+        "fixture": "a1b4c862f6",
+        "passedTests": 10
+      },
+      {
+        "stage": "revocation",
+        "fixture": "3a9825e16e",
+        "passedTests": 10
+      }
+    ],
+    "reviewRegressionTests": {
+      "revocation": [
+        "TestRevocationHistoricalCleanupPreservesLiveGrant",
+        "TestRevocationRecoveryFenceBlocksOldPackage"
+      ],
+      "write": [
+        "TestControlledWriteRecoveryFenceBlocksStaleMetadata"
+      ]
+    }
+  },
+  "migration": {
+    "runId": "ef26b1eace",
+    "exitCode": 0,
+    "migrationAndRollbackChecks": 22,
+    "readRolloutChecks": 116
+  },
+  "generatedContractsVerified": 5
+}
