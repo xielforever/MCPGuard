@@ -5,13 +5,20 @@
   const $ = id => document.getElementById(id);
   const {el, button, badge, stateBadge, notice, panel, table, field, keyValues} = ui;
   const pages = [
-    ['操作与审批', 'actions', '受控操作 / CONTROL BRIDGE', '核对身份、资源与冻结计划，再作出审批决定。'],
-    ['自助访问', 'key', '自助访问 / SELF-SERVICE', '查看 v0.2 资源、凭据、撤销与写审批（真实服务端 API）。'],
-    ['资源', 'database', '资源管理 / RESOURCES', '查看真实资源绑定，管理受控工具的启用状态。'],
-    ['规则', 'rules', '策略管理 / POLICIES', '拒绝规则优先；工具授权与审批要求分别校验。'],
-    ['用户与权限', 'users', '身份与授权 / IDENTITIES', '维护现有身份、工具授权、资源审批资格和用户组。'],
-    ['本人审计', 'history', '个人轨迹 / AUDIT', '按游标读取当前身份的真实审计记录。'],
-    ['通知与设置', 'settings', '通知与接入 / SETTINGS', '查看通知投递和当前身份接入方式。']
+    {label: '操作与审批', glyph: 'actions', eyebrow: '受控操作 / CONTROL BRIDGE',
+      description: '核对身份、资源与冻结计划，再作出审批决定。', render: renderApprovals},
+    {label: '自助访问', glyph: 'key', eyebrow: '自助访问 / SELF-SERVICE',
+      description: '查看 v0.2 资源、凭据、撤销与写审批（真实服务端 API）。', render: renderSelfService},
+    {label: '资源', glyph: 'database', eyebrow: '资源管理 / RESOURCES',
+      description: '查看真实资源绑定，管理受控工具的启用状态。', render: renderResources},
+    {label: '规则', glyph: 'rules', eyebrow: '策略管理 / POLICIES',
+      description: '拒绝规则优先；工具授权与审批要求分别校验。', render: renderRules},
+    {label: '用户与权限', glyph: 'users', eyebrow: '身份与授权 / IDENTITIES',
+      description: '维护现有身份、工具授权、资源审批资格和用户组。', render: renderIdentities},
+    {label: '本人审计', glyph: 'history', eyebrow: '个人轨迹 / AUDIT',
+      description: '按游标读取当前身份的真实审计记录。', render: renderAudit},
+    {label: '通知与设置', glyph: 'settings', eyebrow: '通知与接入 / SETTINGS',
+      description: '查看通知投递和当前身份接入方式。', render: renderSettings}
   ];
   const tools = ['pg.update_demo_note', 'redis.get_demo_note', 'redis.set_demo_note', 'directory.get_demo_office', 'inventory.reserve_demo'];
   const actionStates = new Set(Object.keys(globalThis.MCPGuardUIStateLabels.action));
@@ -121,7 +128,7 @@
     $('summary').replaceChildren(...counts.map(([label, value]) => { const item = el('div', null, 'summary-item'); item.append(el('span', label), el('strong', value)); return item; }));
   }
   function renderNav() {
-    $('nav').replaceChildren(...pages.map(([label, glyph], index) => {
+    $('nav').replaceChildren(...pages.map(({label, glyph}, index) => {
       const item = el('button', null, 'nav-item'); item.type = 'button'; item.setAttribute('aria-label', label);
       if (index === page) item.setAttribute('aria-current', 'page');
       item.append(ui.icon(glyph), el('span', label)); item.addEventListener('click', () => navigate(index)); return item;
@@ -130,10 +137,10 @@
   function renderPage() {
     if (!snapshot) return;
     renderNav();
-    const [label, , eyebrow, description] = pages[page];
+    const {label, eyebrow, description, render} = pages[page];
     $('page-title').textContent = label; $('pageEyebrow').textContent = eyebrow; $('pageDescription').textContent = description;
     $('content').replaceChildren();
-    [renderApprovals, renderSelfService, renderResources, renderRules, renderIdentities, renderAudit, renderSettings][page]($('content'));
+    render($('content'));
     renderRecovery();
   }
   function closeMenu(focus) {
@@ -380,7 +387,8 @@
         const data = await api('api/audit?after=' + encodeURIComponent(after) + '&limit=25', {}, expected);
         if (current !== audit) throw stale();
         current.rows.push(...data.events); current.after = data.nextAfter; current.loaded = true; current.ended = data.events.length < 25; current.busy = false;
-        if (page === 4) renderPage(); showMessage('已读取 ' + data.events.length + ' 条本人事件。', 'success');
+        if (pages[page].render === renderAudit) renderPage();
+        showMessage('已读取 ' + data.events.length + ' 条本人事件。', 'success');
       } finally { current.busy = false; }
     }, {disabled: audit.ended || audit.busy, icon: 'history'});
     toolbar.append(el('span', audit.loaded ? '已载入 ' + audit.rows.length + ' 条 · 游标 ' + audit.after : '尚未读取事件', 'mg-muted'), load); section.append(toolbar);
