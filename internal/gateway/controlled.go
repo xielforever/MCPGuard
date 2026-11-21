@@ -33,6 +33,9 @@ func managedError(err error) *SafeError {
 	if errors.Is(err, controlled.ErrConflict) {
 		code, category, message = "STATE_CONFLICT", "CONFLICT", "The action or configuration revision has changed."
 	}
+	if errors.Is(err, controlled.ErrJenkinsSchemaChanged) {
+		return &SafeError{"JENKINS_SCHEMA_CHANGED", "CONFLICT", "The Jenkins parameter schema changed. Describe the job again and submit a new request for approval.", "QUERY_STATUS"}
+	}
 	return &SafeError{code, category, message, "QUERY_STATUS"}
 }
 func (g *Gateway) AttachControlled(s *controlled.Service, console *controlled.Console, n *controlled.Notifier) {
@@ -41,7 +44,7 @@ func (g *Gateway) AttachControlled(s *controlled.Service, console *controlled.Co
 	g.Notifier = n
 	f, t := false, true
 	for _, tool := range s.Tools {
-		if g.Reader == nil || tool.Name == "pg.get_demo_item" {
+		if g.Reader == nil || tool.Name == "pg.get_demo_item" || tool.Name == controlled.JenkinsSubmitTool {
 			continue
 		}
 		name := tool.Name
@@ -85,15 +88,24 @@ func (g *Gateway) AttachControlled(s *controlled.Service, console *controlled.Co
 		})
 	}
 	for _, op := range []string{"STATUS", "RESUME", "CANCEL"} {
-		if g.Reader == nil && op == "RESUME" {
+		if g.Reader == nil && !s.JenkinsEnabled() && op == "RESUME" {
 			continue
 		}
 		g.registerActionControl(s, op)
 	}
 	g.registerActionHistory(s, &f)
+	if s.JenkinsEnabled() {
+		g.registerJenkins(s)
+	}
 }
 
 func (g *Gateway) registerActionControl(s *controlled.Service, operation string) {
+	if operation == "RESUME" {
+		if g.actionResumeRegistered {
+			return
+		}
+		g.actionResumeRegistered = true
+	}
 	f := false
 	g.MCP.AddTool(&mcp.Tool{Name: "action." + strings.ToLower(operation), Description: "Inspect, explicitly resume or cancel one of your own controlled actions. Approval is performed by another authorized person in the local console. Never automatically replay an unknown outcome.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"actionId": map[string]any{"type": "string", "format": "uuid"}}, "required": []string{"actionId"}, "additionalProperties": false}, OutputSchema: controlledActionSchema, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: operation == "STATUS", IdempotentHint: operation != "RESUME", DestructiveHint: &f, OpenWorldHint: &f}}, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		p, ok := principal(req.Extra)

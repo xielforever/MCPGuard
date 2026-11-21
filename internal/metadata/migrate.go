@@ -20,9 +20,12 @@ var controlledDDL string
 //go:embed migrations/004_group_authorization.sql
 var groupAuthorizationDDL string
 
+//go:embed migrations/005_jenkins_resource.sql
+var jenkinsResourceDDL string
+
 var schema = pgmigration.Set{
 	Schema:  "mcpguard",
-	Scripts: []string{readSliceDDL, authorizationDDL, controlledDDL, groupAuthorizationDDL},
+	Scripts: []string{readSliceDDL, authorizationDDL, controlledDDL, groupAuthorizationDDL, jenkinsResourceDDL},
 }
 
 func PlanMigration(ctx context.Context, dsn string) (pgmigration.Plan, error) {

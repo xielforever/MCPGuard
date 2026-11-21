@@ -16,6 +16,7 @@ type Config struct {
 	EncryptionKey, PlanKey                                            []byte
 	AuthMode, OAuthFixtureConfig                                      string
 	NativeConfig, ConsoleConfig, NotificationConfig                   string
+	JenkinsConfig                                                     string
 	LegacyDemo                                                        bool
 	ResourceCatalog                                                   bool
 	ResourceAccess                                                    bool
@@ -48,6 +49,10 @@ func Load() (Config, error) {
 	}
 	c.ConsoleConfig = os.Getenv("MCPGUARD_CONSOLE_CONFIG")
 	c.NotificationConfig = os.Getenv("MCPGUARD_NOTIFICATION_CONFIG")
+	c.JenkinsConfig = os.Getenv("MCPGUARD_JENKINS_CONFIG")
+	if c.JenkinsConfig != "" && c.ConsoleConfig == "" {
+		return c, errors.New("MCPGUARD_JENKINS_CONFIG requires MCPGUARD_CONSOLE_CONFIG for build approval")
+	}
 	if os.Getenv("MCPGUARD_RESOURCE_CATALOG") != "disabled" {
 		if err := c.loadResources(); err != nil {
 			return c, err

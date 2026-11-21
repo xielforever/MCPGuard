@@ -11,7 +11,7 @@ import (
 func (s *Store) CheckReady(ctx context.Context) error {
 	var ready bool
 	err := s.Pool.QueryRow(ctx, `SELECT
-		coalesce((SELECT max(version)=4 FROM mcpguard.schema_versions),false)
+		coalesce((SELECT max(version) IN (4,5) FROM mcpguard.schema_versions),false)
 		AND current_setting('transaction_read_only')='off'
 		AND NOT (r.rolsuper OR r.rolcreatedb OR r.rolcreaterole)
 		AND NOT has_schema_privilege(current_user,'mcpguard','CREATE')
@@ -34,7 +34,7 @@ func (s *Store) CheckReady(ctx context.Context) error {
 			('mcpguard.control_resources','SELECT'),('mcpguard.control_rules','SELECT'),
 			('mcpguard.control_heads','SELECT'),('mcpguard.control_members','SELECT'),
 			('mcpguard.tool_grants','SELECT'),('mcpguard.reviewer_grants','SELECT'),
-			('mcpguard.control_operations','INSERT'),('mcpguard.notification_outbox','SELECT')
+			('mcpguard.control_operations','SELECT'),('mcpguard.control_operations','INSERT'),('mcpguard.notification_outbox','SELECT')
 			,('mcpguard.control_groups','SELECT'),('mcpguard.group_members','SELECT'),
 			('mcpguard.group_tool_grants','SELECT'),('mcpguard.group_reviewer_grants','SELECT')
 		) AS required(tbl,priv))

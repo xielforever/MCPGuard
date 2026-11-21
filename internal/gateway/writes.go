@@ -83,7 +83,7 @@ func (g *Gateway) controlAction(ctx context.Context, s *controlled.Service, p me
 		return nil, controlled.ErrInput
 	}
 	if g.Writes == nil {
-		return s.Control(ctx, p, id, operation)
+		return g.controlManagedAction(ctx, s, p, id, operation)
 	}
 	call, cancel := context.WithTimeout(ctx, 6*time.Second)
 	defer cancel()
@@ -124,10 +124,7 @@ func (g *Gateway) controlAction(ctx context.Context, s *controlled.Service, p me
 		return nil, err
 	}
 	if !owned {
-		if operation == "RESUME" && g.Reader == nil {
-			return nil, controlled.ErrDenied
-		}
-		return s.Control(ctx, p, id, operation)
+		return g.controlManagedAction(ctx, s, p, id, operation)
 	}
 	out, err := g.Writes.Status(call, p, id)
 	if err != nil {

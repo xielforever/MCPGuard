@@ -434,7 +434,7 @@ func (s *Service) Decide(ctx context.Context, p metadata.Principal, id, vote, ha
 	if old != nil {
 		return old, nil
 	}
-	if !revisionMatches(match, a.Revision) || a.State != "PENDING_APPROVAL" || hash != a.Hash || !a.Expires.After(time.Now()) || a.Config != v || a.Binding != s.Native.Binding() {
+	if !revisionMatches(match, a.Revision) || a.State != "PENDING_APPROVAL" || hash != a.Hash || !a.Expires.After(time.Now()) || a.Config != v || a.Binding != s.resourceBinding(a.Resource) {
 		return nil, ErrConflict
 	}
 	if _, e = s.plan(a); e != nil {
@@ -521,7 +521,8 @@ func (s *Service) Snapshot(ctx context.Context, p metadata.Principal) (map[strin
 			rows.Close()
 			return nil, e
 		}
-		resources = append(resources, map[string]any{"name": n, "id": id, "enabled": enabled, "configured": s.Native.Available(n)})
+		configured := s.available(n) && (n != jenkinsResource || s.jenkinsForOrg(p.OrgID))
+		resources = append(resources, map[string]any{"name": n, "id": id, "enabled": enabled, "configured": configured})
 	}
 	e = rows.Err()
 	rows.Close()
