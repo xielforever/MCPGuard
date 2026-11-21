@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/xielforever/MCPGuard/internal/controlled"
 	"github.com/xielforever/MCPGuard/internal/gateway"
+	"github.com/xielforever/MCPGuard/internal/jenkins"
 	"github.com/xielforever/MCPGuard/internal/metadata"
 	"github.com/xielforever/MCPGuard/internal/nativepg"
 	"github.com/xielforever/MCPGuard/internal/oauthfixture"
@@ -52,7 +53,7 @@ func run() error {
 		if e := metadata.Migrate(c, dsn); e != nil {
 			return errors.New("metadata migration failed; inspect the database with the migration role")
 		}
-		slog.Info("metadata migrations 1-4 applied/verified")
+		slog.Info("metadata migrations applied/verified")
 		return nil
 	}
 	if len(os.Args) != 1 {
@@ -102,6 +103,15 @@ func run() error {
 	console, e := controlled.OpenConsole(control, cfg.ConsoleConfig)
 	if e != nil {
 		return e
+	}
+	if cfg.JenkinsConfig != "" {
+		client, err := jenkins.Open(cfg.JenkinsConfig)
+		if err != nil {
+			return err
+		}
+		if err = control.EnableJenkins(boot, client); err != nil {
+			return err
+		}
 	}
 	notifier, e := controlled.OpenNotifier(control, cfg.NotificationConfig)
 	if e != nil {

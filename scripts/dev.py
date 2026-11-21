@@ -169,7 +169,7 @@ def up():
         sql += f"INSERT INTO mcpguard.principals(org_id,id,display_name,token_hash,expires_at,can_read,scope_id) VALUES('{ORG}','{ident}','{name}',decode('{digest}','hex'),clock_timestamp()+interval '24 hours',{allowed},'{scope}') ON CONFLICT(org_id,id) DO UPDATE SET token_hash=EXCLUDED.token_hash,expires_at=EXCLUDED.expires_at,enabled=true,can_read=EXCLUDED.can_read,scope_id=EXCLUDED.scope_id;\n"
     sql += "COMMIT;\n" + (ROOT / "scripts/fixtures/grants.sql").read_text()
     psql(cfg, cfg.get("fixtureMetadataDb") or "mcpguard_meta", sql)
-    print("PostgreSQL 16.14 ready; migrations 1-4 verified; dev identities prepared. Secrets remain in the selected private fixture state.")
+    print("PostgreSQL 16.14 ready; metadata migrations verified; dev identities prepared. Secrets remain in the selected private fixture state.")
 
 
 def free_port():

@@ -33,21 +33,22 @@ var resultSchema json.RawMessage
 var itemPattern = regexp.MustCompile(`^item_demo_[a-z0-9_]{1,32}$`)
 
 type Gateway struct {
-	Store       *metadata.Store
-	Reader      *nativepg.Reader
-	Root        context.Context
-	MCP         *mcp.Server
-	slots       chan struct{}
-	Controlled  *controlled.Service
-	Console     *controlled.Console
-	Notifier    *controlled.Notifier
-	Resources   *resources.Catalog
-	Access      *resources.AccessService
-	Credentials *resources.CredentialService
-	Downloads   *resources.DownloadService
-	Contexts    *resources.ContextService
-	Reads       *resources.ReadService
-	Writes      *resources.WriteService
+	Store                  *metadata.Store
+	Reader                 *nativepg.Reader
+	Root                   context.Context
+	MCP                    *mcp.Server
+	slots                  chan struct{}
+	Controlled             *controlled.Service
+	Console                *controlled.Console
+	Notifier               *controlled.Notifier
+	Resources              *resources.Catalog
+	Access                 *resources.AccessService
+	Credentials            *resources.CredentialService
+	Downloads              *resources.DownloadService
+	Contexts               *resources.ContextService
+	Reads                  *resources.ReadService
+	Writes                 *resources.WriteService
+	actionResumeRegistered bool
 }
 
 func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
@@ -115,7 +116,20 @@ func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
 						return nil, safeProtocolError("Tool authorization is unavailable")
 					}
 					for _, name := range visible {
-						allowed[name] = true
+						if name != controlled.JenkinsSubmitTool {
+							allowed[name] = true
+						}
+					}
+				}
+				if g.Controlled.JenkinsEnabled() {
+					visible, err := g.Controlled.JenkinsVisible(c, cur)
+					if err != nil {
+						return nil, safeProtocolError("Jenkins tool authorization is unavailable")
+					}
+					if visible {
+						for _, name := range []string{jenkinsListTool, jenkinsDescribeTool, controlled.JenkinsSubmitTool, jenkinsQueueTool} {
+							allowed[name] = true
+						}
 					}
 				}
 				tools := []*mcp.Tool{}

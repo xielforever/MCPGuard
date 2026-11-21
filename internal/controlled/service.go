@@ -24,10 +24,11 @@ type Executor interface {
 	Execute(context.Context, Tool, string, map[string]any) Outcome
 }
 type Service struct {
-	Store  *metadata.Store
-	Native Executor
-	Tools  []Tool
-	Origin string
+	Store   *metadata.Store
+	Native  Executor
+	Tools   []Tool
+	Origin  string
+	jenkins *jenkinsIntegration
 }
 
 func New(s *metadata.Store, n Executor, origin string) (*Service, error) {
@@ -35,7 +36,7 @@ func New(s *metadata.Store, n Executor, origin string) (*Service, error) {
 	if e != nil {
 		return nil, e
 	}
-	return &Service{s, n, ts, origin}, nil
+	return &Service{Store: s, Native: n, Tools: ts, Origin: origin}, nil
 }
 func (s *Service) Tool(name string) (Tool, bool) {
 	for _, t := range s.Tools {
@@ -68,7 +69,7 @@ func (s *Service) head(ctx context.Context, tx pgx.Tx, org string) (int64, error
 	return v, e
 }
 func (s *Service) authorize(ctx context.Context, tx pgx.Tx, p metadata.Principal, t Tool, args map[string]any) (approval bool, err error) {
-	if !p.CanRead || !s.Native.Available(t.Resource) {
+	if !p.CanRead || !s.available(t.Resource) || (t.Resource == jenkinsResource && !s.jenkinsForOrg(p.OrgID)) {
 		return false, ErrDenied
 	}
 	var allowed bool
@@ -125,7 +126,7 @@ func (s *Service) Visible(ctx context.Context, p metadata.Principal) ([]string, 
 		if e = rows.Scan(&n, &r); e != nil {
 			return nil, e
 		}
-		if s.Native.Available(r) {
+		if s.available(r) && (r != jenkinsResource || s.jenkinsForOrg(p.OrgID)) {
 			out = append(out, n)
 		}
 	}
@@ -200,6 +201,9 @@ type frozenPlan struct {
 }
 
 func (s *Service) Create(ctx context.Context, p metadata.Principal, name string, raw []byte) (map[string]any, error) {
+	if name == JenkinsSubmitTool {
+		return s.SubmitJenkinsBuild(ctx, p, raw)
+	}
 	t, ok := s.Tool(name)
 	if !ok || name == "pg.get_demo_item" {
 		return nil, ErrInput
@@ -225,28 +229,9 @@ func (s *Service) Create(ctx context.Context, p metadata.Principal, name string,
 	if e != nil {
 		return nil, e
 	}
-	a := action{Org: p.OrgID, ID: uuid.NewString(), Owner: p.ID, Attempt: uuid.NewString(), Tool: t.Name, Resource: t.Resource, Scope: cur.ScopeID, Config: v, Revision: 1, Approval: approval, Binding: s.Native.Binding(), State: "READY", Created: time.Now().UTC(), Expires: time.Now().UTC().Add(15 * time.Minute)}
-	if approval {
-		a.State = "PENDING_APPROVAL"
-	}
-	// PostgreSQL persists microseconds. Freeze that exact value in the plan.
-	a.Created = a.Created.Truncate(time.Microsecond)
-	a.Expires = a.Expires.Truncate(time.Microsecond)
-	b, _ := json.Marshal(frozenPlan{a.Org, a.Owner, a.Scope, a.Tool, a.Resource, a.Binding, a.Expires.Format(time.RFC3339Nano), "1", a.Config, args})
-	a.Hash = s.Store.Vault.Hash(b)
-	a.Cipher = s.Store.Vault.Seal(b, a.binding("PLAN"))
-	_, e = tx.Exec(ctx, `INSERT INTO mcpguard.managed_actions(org_id,id,principal_id,attempt_id,tool_name,resource_name,scope_id,config_revision,plan_hash,plan_ciphertext,binding_hash,requires_approval,state,created_at,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`, a.Org, a.ID, a.Owner, a.Attempt, a.Tool, a.Resource, a.Scope, a.Config, a.Hash, a.Cipher, a.Binding, a.Approval, a.State, a.Created, a.Expires)
+	a, e := s.recordAction(ctx, tx, cur, t, v, approval, args)
 	if e != nil {
 		return nil, e
-	}
-	if e = s.audit(ctx, tx, a, a.Owner, "ACTION_CREATED"); e != nil {
-		return nil, e
-	}
-	if approval {
-		_, e = tx.Exec(ctx, `INSERT INTO mcpguard.notification_outbox(org_id,id,action_id) VALUES($1,$2,$3)`, a.Org, uuid.NewString(), a.ID)
-		if e != nil {
-			return nil, e
-		}
 	}
 	if e = tx.Commit(ctx); e != nil {
 		return nil, e
@@ -262,6 +247,31 @@ func (s *Service) Create(ctx context.Context, p metadata.Principal, name string,
 		return r, nil
 	}
 	return res, nil
+}
+
+func (s *Service) recordAction(ctx context.Context, tx pgx.Tx, p metadata.Principal, t Tool, config int64, approval bool, args map[string]any) (action, error) {
+	now := time.Now().UTC().Truncate(time.Microsecond)
+	a := action{Org: p.OrgID, ID: uuid.NewString(), Owner: p.ID, Attempt: uuid.NewString(), Tool: t.Name, Resource: t.Resource, Scope: p.ScopeID, Config: config, Revision: 1, Approval: approval, Binding: s.resourceBinding(t.Resource), State: "READY", Created: now, Expires: now.Add(15 * time.Minute)}
+	if approval {
+		a.State = "PENDING_APPROVAL"
+	}
+	b, _ := json.Marshal(frozenPlan{a.Org, a.Owner, a.Scope, a.Tool, a.Resource, a.Binding, a.Expires.Format(time.RFC3339Nano), "1", a.Config, args})
+	a.Hash = s.Store.Vault.Hash(b)
+	a.Cipher = s.Store.Vault.Seal(b, a.binding("PLAN"))
+	_, e := tx.Exec(ctx, `INSERT INTO mcpguard.managed_actions(org_id,id,principal_id,attempt_id,tool_name,resource_name,scope_id,config_revision,plan_hash,plan_ciphertext,binding_hash,requires_approval,state,created_at,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`, a.Org, a.ID, a.Owner, a.Attempt, a.Tool, a.Resource, a.Scope, a.Config, a.Hash, a.Cipher, a.Binding, a.Approval, a.State, a.Created, a.Expires)
+	if e != nil {
+		return action{}, e
+	}
+	if e = s.audit(ctx, tx, a, a.Owner, "ACTION_CREATED"); e != nil {
+		return action{}, e
+	}
+	if approval {
+		_, e = tx.Exec(ctx, `INSERT INTO mcpguard.notification_outbox(org_id,id,action_id) VALUES($1,$2,$3)`, a.Org, uuid.NewString(), a.ID)
+		if e != nil {
+			return action{}, e
+		}
+	}
+	return a, nil
 }
 func (s *Service) deferred(a action) map[string]any {
 	next := []string{"STATUS", "CANCEL"}
@@ -391,7 +401,7 @@ func (s *Service) control(ctx context.Context, p metadata.Principal, id, op stri
 			t, ok := s.Tool(a.Tool)
 			args, pe := s.plan(a)
 			_, ae := s.authorize(ctx, tx, cur, t, args)
-			valid := ok && pe == nil && ae == nil && cur.ScopeID == a.Scope && v == a.Config && a.Binding == s.Native.Binding()
+			valid := ok && pe == nil && ae == nil && cur.ScopeID == a.Scope && v == a.Config && a.Binding == s.resourceBinding(a.Resource)
 			if valid && a.Approval {
 				var reviewerOK bool
 				pe = tx.QueryRow(ctx, `SELECT p.enabled AND p.expires_at>clock_timestamp() AND mcpguard.has_reviewer_grant(a.org_id,d.reviewer_id,a.resource_name) AND d.reviewer_id<>a.principal_id AND d.plan_hash=a.plan_hash AND d.vote='APPROVE' FROM mcpguard.managed_decisions d JOIN mcpguard.managed_actions a ON (a.org_id,a.id)=(d.org_id,d.action_id) JOIN mcpguard.principals p ON (p.org_id,p.id)=(d.org_id,d.reviewer_id) WHERE a.org_id=$1 AND a.id=$2`, a.Org, a.ID).Scan(&reviewerOK)
@@ -474,11 +484,17 @@ func final(a action, o Outcome) map[string]any {
 	if o.Code != "" {
 		status = "FAILED"
 		retry := "MANUAL_NEW_ACTION"
+		category := "EXECUTION"
+		message := "The bounded native operation did not produce a confirmed result. Unknown outcomes must be reconciled; this action cannot be replayed."
 		if o.SideEffect == "UNKNOWN" || o.Dispatch == "DISPATCH_UNKNOWN" {
 			status = "OUTCOME_UNKNOWN"
 			retry = "RECONCILE"
 		}
-		safe = map[string]any{"code": o.Code, "category": "EXECUTION", "safeMessage": "The bounded native operation did not produce a confirmed result. Unknown outcomes must be reconciled; this action cannot be replayed.", "retryDisposition": retry}
+		if o.Code == "JENKINS_SCHEMA_CHANGED" {
+			category = "CONFLICT"
+			message = "The Jenkins job changed. Read its current parameters and submit a new approval request."
+		}
+		safe = map[string]any{"code": o.Code, "category": category, "safeMessage": message, "retryDisposition": retry}
 	}
 	if status != "SUCCEEDED" {
 		o.Data = nil
@@ -514,7 +530,11 @@ func (s *Service) execute(ctx context.Context, a action) error {
 	if e == nil {
 		t, _ := s.Tool(a.Tool)
 		nctx, done := context.WithTimeout(ctx, time.Duration(t.Limits.Timeout)*time.Millisecond)
-		o = s.Native.Execute(nctx, t, a.Scope, args)
+		if a.Tool == JenkinsSubmitTool && s.jenkinsForOrg(a.Org) {
+			o = s.executeJenkins(nctx, args)
+		} else if t.Resource != jenkinsResource && s.Native != nil {
+			o = s.Native.Execute(nctx, t, a.Scope, args)
+		}
 		done()
 	}
 	r := final(a, o)
