@@ -280,9 +280,11 @@ def start_gateway(stack, scratch, binary, cfg, controller, log):
         "Username": "visitor", "OrgID": dev.ORG, "PrincipalID": dev.IDS["visitor"],
         "PasswordHash": hashlib.sha256(password.encode()).hexdigest(),
     }]))
-    dev.write_private(settings, json.dumps(controller))
     env = dev.runtime_env(cfg)
-    env.update(MCPGUARD_JENKINS_CONFIG=str(settings), MCPGUARD_CONSOLE_CONFIG=str(console), MCPGUARD_LEGACY_DEMO="disabled")
+    env.update(MCPGUARD_CONSOLE_CONFIG=str(console), MCPGUARD_LEGACY_DEMO="disabled")
+    if controller is not None:
+        dev.write_private(settings, json.dumps(controller))
+        env["MCPGUARD_JENKINS_CONFIG"] = str(settings)
     gateway = stack.enter_context(subprocess.Popen([str(binary)], env=env, stdout=log, stderr=log))
     stack.callback(gateway.terminate)
     port = int(cfg["MCPGUARD_LISTEN"].rsplit(":", 1)[1])

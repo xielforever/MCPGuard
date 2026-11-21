@@ -4,6 +4,7 @@ WORKDIR /src
 COPY go.mod go.sum ./
 COPY cmd/ ./cmd/
 COPY internal/ ./internal/
+COPY pkg/ ./pkg/
 # Managed workspaces may supply their outbound CA as a build secret. The CA is
 # used only for downloads and is never copied into the image or committed.
 RUN --mount=type=secret,id=proxy_ca \

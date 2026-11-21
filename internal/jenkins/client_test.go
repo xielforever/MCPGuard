@@ -22,10 +22,10 @@ func testClient(t *testing.T, handler http.HandlerFunc) *Client {
 	t.Helper()
 	server := httptest.NewServer(handler)
 	t.Cleanup(server.Close)
-	client, err := newClient(config{
+	client, err := New(Config{
 		ControllerID: "ci", OrgID: testOrgID, BaseURL: server.URL + "/jenkins",
 		Username: "reader", APIToken: "fixture-api-token", Folders: []string{"orders"},
-	})
+	}, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

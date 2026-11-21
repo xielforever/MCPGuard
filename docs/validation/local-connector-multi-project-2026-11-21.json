@@ -1,0 +1,115 @@
+{
+  "status": "PASS",
+  "runId": "2c543f39809a",
+  "client": "installed DeepSeek Harness MCP registry and executor",
+  "transport": "mcpguard-connect stdio to Streamable HTTP",
+  "backend": "isolated PostgreSQL 16.14",
+  "projects": [
+    {
+      "repository": "DBHub",
+      "workspace": "C:\\dev\\projects\\DBHub",
+      "head": "ebc75d7c4558ecaa33591178ab7c39e00006a263",
+      "principalId": "20000000-0000-4000-8000-000000000001",
+      "principalAlias": "alice",
+      "privateConnectorId": "a4c05cea-590b-4202-a681-a9435e06c33e",
+      "clientVersion": "0.2.2-rc.3",
+      "visibleBefore": [
+        "a4c05cea-590b-4202-a681-a9435e06c33e",
+        "bacaecd9-7d93-4212-a776-b060d86b7a57"
+      ],
+      "sharedRead": {
+        "schema": "shared_delivery",
+        "tables": [
+          "jobs"
+        ],
+        "nativeConnections": 1
+      },
+      "privateRead": {
+        "schema": "dbhub_private",
+        "tables": [
+          "inventory"
+        ],
+        "nativeConnections": 1
+      },
+      "otherPrivateDirectCall": {
+        "code": "ACCESS_DENIED",
+        "nativeConnections": 0
+      },
+      "stoppedSharedDirectCall": {
+        "code": "ACCESS_DENIED",
+        "nativeConnections": 0,
+        "requestDelayMs": 0.0
+      },
+      "visibleAfter": [
+        "a4c05cea-590b-4202-a681-a9435e06c33e"
+      ],
+      "privateReadAfterDisable": {
+        "schema": "dbhub_private",
+        "tables": [
+          "inventory"
+        ],
+        "nativeConnections": 1
+      },
+      "sameClientSession": true
+    },
+    {
+      "repository": "dsh-project-control",
+      "workspace": "C:\\dev\\projects\\dsh-project-control",
+      "head": "0707b0aaa330c5cd34d204513a4c865982934563",
+      "principalId": "20000000-0000-4000-8000-000000000002",
+      "principalAlias": "bob",
+      "privateConnectorId": "8cdd0e47-bd74-4738-a088-ef1d2adb8339",
+      "clientVersion": "0.2.2-rc.3",
+      "visibleBefore": [
+        "8cdd0e47-bd74-4738-a088-ef1d2adb8339",
+        "bacaecd9-7d93-4212-a776-b060d86b7a57"
+      ],
+      "sharedRead": {
+        "schema": "shared_delivery",
+        "tables": [
+          "jobs"
+        ],
+        "nativeConnections": 1
+      },
+      "privateRead": {
+        "schema": "dsh_project_control_private",
+        "tables": [
+          "pipelines"
+        ],
+        "nativeConnections": 1
+      },
+      "otherPrivateDirectCall": {
+        "code": "ACCESS_DENIED",
+        "nativeConnections": 0
+      },
+      "stoppedSharedDirectCall": {
+        "code": "ACCESS_DENIED",
+        "nativeConnections": 0,
+        "requestDelayMs": 14.7
+      },
+      "visibleAfter": [
+        "8cdd0e47-bd74-4738-a088-ef1d2adb8339"
+      ],
+      "privateReadAfterDisable": {
+        "schema": "dsh_project_control_private",
+        "tables": [
+          "pipelines"
+        ],
+        "nativeConnections": 1
+      },
+      "sameClientSession": true
+    }
+  ],
+  "sharedConnector": {
+    "id": "bacaecd9-7d93-4212-a776-b060d86b7a57",
+    "revisionAfterDisable": 4,
+    "auditEvents": [
+      "DISABLED",
+      "ENABLED",
+      "TEST_PASSED",
+      "CREATED"
+    ],
+    "authorizedNativeConnections": 6,
+    "deniedNativeConnections": 0
+  }
+}

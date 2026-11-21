@@ -1,6 +1,7 @@
 // Isolated installed DeepSeek Harness tool registry for MCPGuard fixtures.
 // Stdin is a private pipe: transport config, then {tool,args} requests as JSON lines.
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { createInterface } from 'node:readline';
 import { pathToFileURL } from 'node:url';
@@ -38,7 +39,7 @@ const fibers = [];
 try {
   const initial = await inbox.next();
   if (initial.done) throw new Error('configuration missing');
-  const config = JSON.parse(initial.value);
+  const {reportWorkspace, ...config} = JSON.parse(initial.value);
   process.env.DSH_TELEMETRY = 'off';
   const [cordis, prompt, tools, executor, client] = await Promise.all([
     load('cordis'), load('dsh-system-prompt'), load('dsh-tools'),
@@ -59,7 +60,12 @@ try {
   await mount(client, { ...config, serverName: 'mcpguard_ra18', failOnStartupError: true,
     startupTimeoutMs: config.startupTimeoutMs ?? 16000, toolCallTimeoutMs: 16000, reconnect: { enabled: false } });
   const names = ctx.tools.definitions().map((tool) => tool.name).filter((name) => name.startsWith(registerPrefix));
-  reply({ event: 'ready', names });
+  const ready = { event: 'ready', names };
+  if (reportWorkspace) {
+    ready.workspace = process.cwd();
+    ready.runtimeVersion = JSON.parse(readFileSync(path.join(asar, 'package.json'), 'utf8')).version;
+  }
+  reply(ready);
 
   for await (const line of inbox) {
     phase = 'invocation';
