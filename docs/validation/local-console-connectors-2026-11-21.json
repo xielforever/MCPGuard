@@ -1,0 +1,96 @@
+{
+  "status": "PASS",
+  "runId": "966f9720ff83",
+  "jenkinsVersion": "2.580.2",
+  "browser": {
+    "status": "PASS",
+    "browser": "Chrome",
+    "connectors": [
+      {
+        "id": "a2a8120d-414e-4e8c-8c18-c686ffc66007",
+        "name": "orders-db",
+        "type": "postgresql",
+        "revision": 3,
+        "testStatus": "PASSED",
+        "enabled": true,
+        "events": [
+          "\u542f\u7528",
+          "\u6d4b\u8bd5\u901a\u8fc7",
+          "\u65b0\u589e"
+        ]
+      },
+      {
+        "id": "c2a5d3d7-032a-4f35-9890-1fa3352a8979",
+        "name": "orders-cache",
+        "type": "redis",
+        "revision": 3,
+        "testStatus": "PASSED",
+        "enabled": true,
+        "events": [
+          "\u542f\u7528",
+          "\u6d4b\u8bd5\u901a\u8fc7",
+          "\u65b0\u589e"
+        ]
+      },
+      {
+        "id": "cab1ddd6-bc84-4027-aeb0-0232c4fe37d9",
+        "name": "delivery-ci",
+        "type": "jenkins",
+        "revision": 3,
+        "testStatus": "PASSED",
+        "enabled": true,
+        "events": [
+          "\u542f\u7528",
+          "\u6d4b\u8bd5\u901a\u8fc7",
+          "\u65b0\u589e"
+        ]
+      },
+      {
+        "id": "fb40b182-29d4-4871-b226-439a9f6dccaa",
+        "name": "orders-workloads",
+        "type": "kubernetes",
+        "revision": 3,
+        "testStatus": "PASSED",
+        "enabled": true,
+        "events": [
+          "\u542f\u7528",
+          "\u6d4b\u8bd5\u901a\u8fc7",
+          "\u65b0\u589e"
+        ]
+      }
+    ]
+  },
+  "mcp": {
+    "postgresql": {
+      "schema": "commerce",
+      "tables": [
+        "orders"
+      ]
+    },
+    "redis": {
+      "found": true
+    },
+    "jenkins": {
+      "jobs": [
+        "inventory-verification",
+        "orders-validation"
+      ],
+      "parameters": [
+        "GIT_REF",
+        "RUN_TESTS"
+      ]
+    },
+    "kubernetes": {
+      "namespace": "orders-verification",
+      "deployments": [
+        "orders-validation"
+      ]
+    },
+    "checks": [
+      "grant_isolation",
+      "scope",
+      "bad_credentials",
+      "hot_disable"
+    ]
+  }
+}

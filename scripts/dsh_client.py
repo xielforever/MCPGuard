@@ -55,7 +55,7 @@ def runtime_env(install=None, home=None):
 class DSHClient:
     """Keeps one native MCP registry/executor alive for an entire fixture."""
 
-    def __init__(self, config, log, *, install=None):
+    def __init__(self, config, log, *, install=None, workspace=None, home=None):
         install = Path(install) if install is not None else install_path()
         executable = install / EXECUTABLE
         if not executable.is_file():
@@ -63,7 +63,7 @@ class DSHClient:
         self.pending = queue.Queue()
         self.process = subprocess.Popen(
             [str(executable), '--expose-internals', windows(SCRIPTS / 'dsh-tool-host.mjs')],
-            env=runtime_env(install), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=log,
+            cwd=workspace, env=runtime_env(install, home), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=log,
             text=True, encoding='utf-8',
         )
         self.reader = threading.Thread(target=self._collect, daemon=True)

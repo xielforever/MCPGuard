@@ -16,3 +16,5 @@ GRANT UPDATE(revision) ON mcpguard.control_heads TO mcpguard_app;
 GRANT UPDATE(enabled,can_read,scope_id) ON mcpguard.principals TO mcpguard_app;
 GRANT INSERT,UPDATE,DELETE ON mcpguard.control_groups,mcpguard.group_members,mcpguard.group_tool_grants,mcpguard.group_reviewer_grants TO mcpguard_app;
 GRANT EXECUTE ON FUNCTION mcpguard.has_tool_grant(uuid,uuid,text),mcpguard.has_reviewer_grant(uuid,uuid,text) TO mcpguard_app;
+GRANT INSERT ON mcpguard.connectors,mcpguard.connector_grants,mcpguard.connector_audit TO mcpguard_app;
+GRANT UPDATE(revision,enabled,test_status,tested_at) ON mcpguard.connectors TO mcpguard_app;

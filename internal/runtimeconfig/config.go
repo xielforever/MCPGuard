@@ -17,6 +17,7 @@ type Config struct {
 	AuthMode, OAuthFixtureConfig                                      string
 	NativeConfig, ConsoleConfig, NotificationConfig                   string
 	JenkinsConfig                                                     string
+	ConnectorCIDRs                                                    string
 	LegacyDemo                                                        bool
 	ResourceCatalog                                                   bool
 	ResourceAccess                                                    bool
@@ -52,6 +53,10 @@ func Load() (Config, error) {
 	c.JenkinsConfig = os.Getenv("MCPGUARD_JENKINS_CONFIG")
 	if c.JenkinsConfig != "" && c.ConsoleConfig == "" {
 		return c, errors.New("MCPGUARD_JENKINS_CONFIG requires MCPGUARD_CONSOLE_CONFIG for build approval")
+	}
+	c.ConnectorCIDRs = os.Getenv("MCPGUARD_CONNECTOR_ALLOWED_CIDRS")
+	if c.ConnectorCIDRs != "" && c.ConsoleConfig == "" {
+		return c, errors.New("MCPGUARD_CONNECTOR_ALLOWED_CIDRS requires MCPGUARD_CONSOLE_CONFIG")
 	}
 	if os.Getenv("MCPGUARD_RESOURCE_CATALOG") != "disabled" {
 		if err := c.loadResources(); err != nil {

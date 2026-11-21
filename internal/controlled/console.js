@@ -10,7 +10,7 @@
     {label: '自助访问', glyph: 'key', eyebrow: '自助访问 / SELF-SERVICE',
       description: '查看 v0.2 资源、凭据、撤销与写审批（真实服务端 API）。', render: renderSelfService},
     {label: '资源', glyph: 'database', eyebrow: '资源管理 / RESOURCES',
-      description: '查看真实资源绑定，管理受控工具的启用状态。', render: renderResources},
+      description: '查看资源绑定，管理连接器与启用状态。', render: renderResources},
     {label: '规则', glyph: 'rules', eyebrow: '策略管理 / POLICIES',
       description: '拒绝规则优先；工具授权与审批要求分别校验。', render: renderRules},
     {label: '用户与权限', glyph: 'users', eyebrow: '身份与授权 / IDENTITIES',
@@ -21,6 +21,16 @@
       description: '查看通知投递和当前身份接入方式。', render: renderSettings}
   ];
   const tools = ['pg.update_demo_note', 'redis.get_demo_note', 'redis.set_demo_note', 'directory.get_demo_office', 'inventory.reserve_demo'];
+  const connectorTypes = [
+    {value: 'postgresql', label: 'PostgreSQL'}, {value: 'redis', label: 'Redis'},
+    {value: 'jenkins', label: 'Jenkins'}, {value: 'kubernetes', label: 'Kubernetes'}
+  ];
+  const connectorTestStates = {
+    NOT_TESTED: ['待测试', 'neutral'], PASSED: ['测试通过', 'success'], FAILED: ['测试失败', 'danger']
+  };
+  const connectorEvents = {
+    CREATED: '新增', TEST_PASSED: '测试通过', TEST_FAILED: '测试失败', ENABLED: '启用', DISABLED: '停用'
+  };
   const actionStates = new Set(Object.keys(globalThis.MCPGuardUIStateLabels.action));
   let snapshot = null, csrf = '', epoch = 0, page = 0, detail = null, selectedID = '';
   let detailSeq = 0, stateSeq = 0, pending = null, queueSearch = '';
@@ -308,12 +318,194 @@
   }
 
   function renderResources(parent) {
-    parent.append(notice('连接配置由服务端私有配置管理。此页显示资源绑定与启停状态。', 'neutral'));
+    if (snapshot.admin && Array.isArray(snapshot.connectors)) renderConnectors(parent);
     const revision = snapshot.revision;
     parent.append(listPanel('资源目录', '“已配置”表示存在配置绑定，不代表本次已探测连接健康。', ['资源', '连接配置', '状态', '操作'], snapshot.resources.map(resource => {
       const title = el('div', null, 'resource-name'); title.append(ui.icon('database'), el('strong', resource.name));
       return [title, boolBadge(resource.configured, '已配置', '未配置'), boolBadge(resource.enabled, '启用', '停用'), snapshot.admin ? button(resource.enabled ? '停用' : '启用', trigger => configure({kind: 'resource', resource: resource.name, enabled: !resource.enabled}, trigger, revision), {small: true}) : '需要管理员权限'];
     })));
+  }
+  function renderConnectors(parent) {
+    const audit = el('div');
+    audit.hidden = true;
+    audit.setAttribute('aria-live', 'polite');
+    let auditSequence = 0;
+    async function showAudit(connector) {
+      const expected = epoch, sequence = ++auditSequence;
+      audit.hidden = false;
+      audit.replaceChildren(notice('正在读取连接器审计…'));
+      try {
+        const result = await api('api/connectors/' + encodeURIComponent(connector.id) + '/events', {}, expected);
+        if (!audit.isConnected || sequence !== auditSequence) return;
+        audit.replaceChildren(listPanel(connector.name + ' · 审计', '', ['事件', '版本', '操作人', '时间'], result.events.map(event => [
+          connectorEvents[event.type.replace(/^CONNECTOR_/, '')] || '连接器状态变更', String(event.revision),
+          identityName(event.actorId), ui.date(event.at)
+        ])));
+      } catch (error) {
+        if (!error.silent && audit.isConnected && sequence === auditSequence) {
+          audit.replaceChildren(notice(ui.errorText(error), 'warning'));
+        }
+        throw error;
+      }
+    }
+    const rows = snapshot.connectors.map(connector => {
+      const [label, tone] = connectorTestStates[connector.testStatus] || ['状态待核对', 'neutral'];
+      const actions = el('div', null, 'table-actions');
+      const toggleLabel = connector.enabled ? '停用' : '启用';
+      const test = button('测试连接', trigger => connectorCommand(connector, 'test', trigger), {small: true});
+      const toggle = button(toggleLabel, trigger => connectorCommand(connector, 'toggle', trigger), {small: true});
+      const history = button('审计', () => showAudit(connector), {small: true});
+      test.disabled = connector.enabled;
+      if (connector.enabled) test.title = '停用后可重新测试';
+      toggle.disabled = !connector.enabled && connector.testStatus !== 'PASSED';
+      for (const [control, action] of [[test, '测试连接'], [toggle, toggleLabel], [history, '查看审计']]) {
+        control.setAttribute('aria-label', action + ' ' + connector.name);
+      }
+      actions.append(test, toggle, history);
+      const type = connectorTypes.find(item => item.value === connector.type);
+      const name = el('span', connector.name);
+      name.dataset.connectorId = connector.id;
+      return [name, type?.label || connector.type, badge(label, tone),
+        connector.testedAt ? ui.date(connector.testedAt) : '—',
+        boolBadge(connector.enabled, '已启用', '已停用'), actions];
+    });
+    parent.append(listPanel('连接器', '新建后先测试连接，再启用给所选 MCP 用户。', ['名称', '类型', '测试状态', '最近测试', '启停状态', '操作'], rows), audit);
+    renderConnectorForm(parent);
+  }
+  function renderConnectorForm(parent) {
+    const users = snapshot.users.filter(user => user.enabled && user.canRead);
+    if (users.length === 0) {
+      parent.append(notice('没有可授权的 MCP 用户。请在「用户与权限」核对现有身份及业务权限。', 'warning'));
+      return;
+    }
+    let connection;
+    const form = ui.form('新增连接器', '', '保存连接器', async () => {
+      const expected = epoch;
+      if (pending) throw new PublicError('上一项提交尚未确认，请先处理。');
+      const principalIds = access.filter(input => input.checked).map(input => input.value);
+      if (principalIds.length === 0) throw new PublicError('请至少勾选一位可使用此连接器的 MCP 用户。', 400);
+      const connectorName = name.value.trim();
+      if (!connectorName) throw new PublicError('请输入连接器名称。', 400);
+      let request;
+      try {
+        request = api('api/connectors', {
+          method: 'POST',
+          headers: {'Idempotency-Key': crypto.randomUUID()},
+          body: JSON.stringify({name: connectorName, type: type.value, principalIds,
+            config: connection.readConfig(), credentials: connection.readCredentials()})
+        }, expected);
+      } finally {
+        connection.clearSecret();
+      }
+      try {
+        await request;
+      } catch (error) {
+        if (error.silent || error.status && error.status < 500) throw error;
+        // Resolve an uncertain save through the catalogue. Retrying never retains the submitted secret.
+        try { await refresh(); }
+        catch (failure) { if (failure.silent) throw failure; }
+        assertEpoch(expected);
+        throw new PublicError('新增请求的结果尚未确认。请核对连接器列表后再提交。');
+      }
+      assertEpoch(expected);
+      showMessage('已保存连接器。请先测试连接。', 'success');
+      try { await refresh(); }
+      catch (error) { if (!error.silent) showMessage('已保存连接器，请刷新列表后测试。', 'warning'); }
+    });
+    const name = field(form.fields, '连接器名称', 'text', {required: true, maxLength: 100});
+    const type = field(form.fields, '连接器类型', 'select', {choices: connectorTypes});
+    const fields = el('div', null, 'connector-fields');
+    form.fields.append(fields);
+    const audience = el('fieldset', null, 'connector-audience');
+    audience.append(el('legend', '可使用此连接器的 MCP 用户'));
+    const userList = el('div', null, 'connector-users');
+    audience.append(userList);
+    const access = users.map(user => {
+      const input = field(userList, user.name, 'checkbox');
+      input.value = user.id;
+      return input;
+    });
+    form.fields.append(audience);
+    function refreshFields() {
+      connection?.clearSecret();
+      fields.replaceChildren();
+      connection = renderConnectorFields(fields, type.value);
+    }
+    type.addEventListener('change', refreshFields);
+    refreshFields();
+    parent.append(form.element);
+  }
+  function renderConnectorFields(parent, type) {
+    const config = [];
+    const credentials = [];
+    function input(list, key, label, kind, options) {
+      const control = field(parent, label, kind, options);
+      list.push([key, control]);
+      return control;
+    }
+    const network = type === 'postgresql' || type === 'redis';
+    let tls;
+    if (network) {
+      input(config, 'host', '主机', 'text', {required: true, maxLength: 253});
+      const port = input(config, 'port', '端口', 'number', {required: true, value: type === 'postgresql' ? 5432 : 6379});
+      port.min = '1';
+      port.max = '65535';
+      port.step = '1';
+      tls = input(config, 'tls', '使用 TLS', 'checkbox', {checked: true});
+    } else {
+      input(config, 'baseUrl', '服务地址', 'url', {required: true, maxLength: 2048});
+    }
+    if (type === 'postgresql') {
+      input(config, 'database', '数据库', 'text', {required: true, maxLength: 63});
+      input(config, 'schema', 'Schema', 'text', {required: true, maxLength: 63});
+    } else if (type === 'redis') {
+      input(config, 'keyPrefix', '允许的键前缀', 'text', {required: true, maxLength: 256});
+      input(config, 'probeKey', '用于测试的键', 'text', {required: true, maxLength: 1024, hint: '使用已存在且符合允许前缀的键。'});
+    } else if (type === 'jenkins') {
+      input(config, 'folder', '任务目录', 'text', {required: true, maxLength: 512, value: '/', hint: '使用 / 表示根目录。'});
+    } else {
+      input(config, 'namespace', '只读命名空间', 'text', {required: true, maxLength: 63});
+    }
+    if (type !== 'kubernetes') {
+      const user = input(credentials, 'username', '服务账号', 'text', {required: true, maxLength: 256});
+      user.autocomplete = 'off';
+    }
+    const secretLabel = network ? '密码' : type === 'jenkins' ? 'API Token' : 'Bearer Token';
+    const secret = input(credentials, 'secret', secretLabel, 'password', {required: true, maxLength: type === 'jenkins' ? 1024 : 8192});
+    secret.autocomplete = 'new-password';
+    const certificate = input(config, 'caCertificate', 'CA 证书（可选）', 'textarea', {hint: '仅在使用私有 CA 时填写 PEM 证书。', maxLength: 16384});
+    if (tls) {
+      tls.addEventListener('change', () => {
+        certificate.disabled = !tls.checked;
+        certificate.parentElement.hidden = !tls.checked;
+        if (!tls.checked) certificate.value = '';
+      });
+    }
+    function values(controls) {
+      return Object.fromEntries(controls.filter(([, control]) => !control.disabled && (control.type === 'checkbox' || control.value !== ''))
+        .map(([key, control]) => [key, control.type === 'checkbox' ? control.checked :
+          control.type === 'number' ? control.valueAsNumber : control.value]));
+    }
+    return {readConfig: () => values(config), readCredentials: () => values(credentials), clearSecret: () => { secret.value = ''; }};
+  }
+  async function connectorCommand(connector, action, trigger) {
+    const expected = epoch, path = 'api/connectors/' + encodeURIComponent(connector.id);
+    const test = action === 'test', enabled = !connector.enabled;
+    const label = test ? '测试连接' : enabled ? '启用连接器' : '停用连接器';
+    if (!test) {
+      const confirmed = await ui.confirm({
+        title: label, details: [['连接器', connector.name], ['配置版本', connector.revision]],
+        confirmLabel: enabled ? '确认启用' : '确认停用', returnTo: trigger, canRestore: () => epoch === expected
+      });
+      assertEpoch(expected);
+      if (!confirmed) return;
+    }
+    await submitCommand({
+      path: test ? path + '/test' : path, method: test ? 'POST' : 'PATCH',
+      body: test ? '{}' : JSON.stringify({enabled}), revision: connector.revision,
+      label, success: test ? '已记录连接测试结果。' : enabled ? '连接器已启用。' : '连接器已停用。',
+      target: connector.name, key: crypto.randomUUID(), epoch: expected
+    });
   }
   function renderRules(parent) {
     parent.append(notice('拒绝规则优先。受控写入始终需要他人审批；ALLOW 不能授予缺失的工具权限。', 'info'));

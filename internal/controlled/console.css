@@ -62,6 +62,10 @@ body[data-nav=compact] .nav-item:hover span, body[data-nav=compact] .nav-item:fo
 .resource-name { display: flex; gap: var(--mg-space-3); align-items: center; }
 .resource-name .mg-icon { color: var(--mg-color-primary); }
 .table-actions { display: flex; gap: var(--mg-space-2); flex-wrap: wrap; }
+.connector-fields { display: contents; }
+.connector-audience { min-inline-size: 0; margin: 0; padding: var(--mg-space-2) var(--mg-space-3); border: var(--mg-stroke-hairline) solid var(--mg-color-separator); border-radius: var(--mg-radius-control); }
+.connector-audience legend { padding-inline: var(--mg-space-2); color: var(--mg-color-text-secondary); font-size: var(--mg-font-size-label); }
+.connector-users { max-block-size: 14rem; overflow: auto; }
 .audit-toolbar { display: flex; justify-content: space-between; align-items: center; gap: var(--mg-space-4); flex-wrap: wrap; margin: var(--mg-space-4) var(--mg-space-6); }
 .app-footer { display: flex; align-items: center; gap: var(--mg-space-2); color: var(--mg-color-text-muted); font-size: var(--mg-font-size-label); padding: var(--mg-space-6) 0 0; }
 .app-footer .mg-icon { width: var(--mg-icon-sm); height: var(--mg-icon-sm); }

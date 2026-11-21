@@ -218,6 +218,11 @@ func run() error {
 			}
 		}
 	}
+	if cfg.ConnectorCIDRs != "" {
+		if err := g.AttachConnectors(boot, cfg.ConnectorCIDRs); err != nil {
+			return err
+		}
+	}
 	handler := g.Handler()
 	if cfg.AuthMode == "oauth-fixture" {
 		oauth, err := oauthfixture.Load(cfg.OAuthFixtureConfig, s.OAuthPrincipal)

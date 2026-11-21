@@ -23,6 +23,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/xielforever/MCPGuard/internal/connectors"
 	"github.com/xielforever/MCPGuard/internal/metadata"
 	"github.com/xielforever/MCPGuard/internal/uitheme"
 )
@@ -36,9 +37,10 @@ type session struct {
 	Expires   time.Time
 }
 type Console struct {
-	Service       *Service
-	Logins        []Login
-	Notifications *Notifier
+	Service           *Service
+	Logins            []Login
+	Notifications     *Notifier
+	ConnectorRegistry *connectors.Registry
 	// APIExtension runs only after browser session, current identity and CSRF
 	// validation. It cannot accept a bearer token in place of browser login.
 	APIExtension func(http.ResponseWriter, *http.Request, metadata.Principal) bool
@@ -296,6 +298,14 @@ func (c *Console) serveAPI(w http.ResponseWriter, r *http.Request) {
 		}
 		out["csrf"] = s.CSRF
 		out["notificationConfigured"] = c.Notifications.Configured()
+		if c.ConnectorRegistry != nil && out["admin"] == true {
+			list, err := c.ConnectorRegistry.ListAdmin(ctx, p)
+			if err != nil {
+				http.Error(w, "连接器列表暂不可用", http.StatusServiceUnavailable)
+				return
+			}
+			out["connectors"] = list
+		}
 		jsonReply(w, out)
 		return
 	}

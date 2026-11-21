@@ -41,6 +41,7 @@ type Gateway struct {
 	Controlled             *controlled.Service
 	Console                *controlled.Console
 	Notifier               *controlled.Notifier
+	connectors             *connectorRuntime
 	Resources              *resources.Catalog
 	Access                 *resources.AccessService
 	Credentials            *resources.CredentialService
@@ -81,6 +82,11 @@ func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
 			}
 			if g.Controlled != nil {
 				allowed := map[string]bool{"audit.list": true, "gateway.health": true, "action.status": true, "action.resume": true, "action.cancel": true, "history.list": true, "history.get_result": true}
+				if cur.CanRead && g.connectors != nil {
+					for _, tool := range connectorTools {
+						allowed[tool.name] = true
+					}
+				}
 				if g.Resources != nil {
 					allowed["resource.list"] = true
 					allowed["resource.get"] = true

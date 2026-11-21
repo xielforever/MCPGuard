@@ -38,7 +38,7 @@ const (
 	maxDepth         = 8
 )
 
-type config struct {
+type Config struct {
 	ControllerID string   `json:"controllerId"`
 	OrgID        string   `json:"orgId"`
 	BaseURL      string   `json:"baseUrl"`
@@ -50,7 +50,7 @@ type config struct {
 // Client is bound to one operator-configured controller, tenant and folder
 // scope. URLs and credentials are never accepted from tool input.
 type Client struct {
-	cfg     config
+	cfg     Config
 	base    *url.URL
 	binding string
 	http    *http.Client
@@ -61,16 +61,18 @@ func Open(path string) (*Client, error) {
 	if err != nil {
 		return nil, ErrInput
 	}
-	var cfg config
+	var cfg Config
 	d := json.NewDecoder(bytes.NewReader(raw))
 	d.DisallowUnknownFields()
 	if err := d.Decode(&cfg); err != nil || d.Decode(new(any)) != io.EOF {
 		return nil, ErrInput
 	}
-	return newClient(cfg)
+	return New(cfg, nil, nil)
 }
 
-func newClient(cfg config) (*Client, error) {
+// New binds a controller to the provided destination policy and TLS settings.
+// Nil settings preserve the behavior of the operator-managed file loader.
+func New(cfg Config, dial func(context.Context, string, string) (net.Conn, error), clientTLS *tls.Config) (*Client, error) {
 	org, err := uuid.Parse(cfg.OrgID)
 	if err != nil || org.String() != cfg.OrgID || org == uuid.Nil ||
 		!safeName(cfg.ControllerID) || !validCredential(cfg.Username, 256) ||
@@ -100,6 +102,14 @@ func newClient(cfg config) (*Client, error) {
 	cfg.Folders = slices.Compact(folders)
 	raw, _ := json.Marshal([]any{cfg.ControllerID, cfg.OrgID, base.String(), cfg.Username, cfg.Folders})
 	hash := sha256.Sum256(raw)
+	if dial == nil {
+		dial = (&net.Dialer{Timeout: 3 * time.Second}).DialContext
+	}
+	if clientTLS == nil {
+		clientTLS = &tls.Config{MinVersion: tls.VersionTLS12}
+	} else {
+		clientTLS = clientTLS.Clone()
+	}
 	return &Client{
 		cfg:     cfg,
 		base:    base,
@@ -110,8 +120,8 @@ func newClient(cfg config) (*Client, error) {
 				return http.ErrUseLastResponse
 			},
 			Transport: &http.Transport{
-				DialContext:            (&net.Dialer{Timeout: 3 * time.Second}).DialContext,
-				TLSClientConfig:        &tls.Config{MinVersion: tls.VersionTLS12},
+				DialContext:            dial,
+				TLSClientConfig:        clientTLS,
 				TLSHandshakeTimeout:    3 * time.Second,
 				DisableKeepAlives:      true,
 				MaxResponseHeaderBytes: 16 << 10,
@@ -119,6 +129,9 @@ func newClient(cfg config) (*Client, error) {
 		},
 	}, nil
 }
+
+// ValidFolder reports whether folder is a non-root Jenkins folder path.
+func ValidFolder(folder string) bool { return validFullName(folder) }
 
 func validCredential(value string, max int) bool {
 	return value != "" && len(value) <= max && !strings.ContainsFunc(value, unicode.IsControl)
