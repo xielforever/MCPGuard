@@ -18,6 +18,9 @@ import (
 // requester must resume explicitly. Nothing is written by this tool.
 func (g *Gateway) AttachWrites(w *resources.WriteService) {
 	g.Writes = w
+	if w.HighRisk != nil {
+		g.attachHighRiskWrites(w)
+	}
 	if g.Controlled != nil && g.Reader == nil {
 		g.registerActionControl(g.Controlled, "RESUME")
 	}
@@ -84,6 +87,38 @@ func (g *Gateway) controlAction(ctx context.Context, s *controlled.Service, p me
 	}
 	call, cancel := context.WithTimeout(ctx, 6*time.Second)
 	defer cancel()
+	if operation == "RESUME" {
+		protected, err := g.Writes.IsHighRisk(call, p, id)
+		if err != nil {
+			return nil, err
+		}
+		private, hasPrivateCode := req.Params.Meta[highRiskCodeMeta]
+		if protected {
+			code, _ := private.(string)
+			contexts := g.Contexts
+			proof, proofErr := contextProof(req)
+			if proofErr != nil {
+				contexts = nil
+			}
+			out, err := g.Writes.ResumeHighRisk(call, p, id, code, contexts, proof)
+			if errors.Is(err, resources.ErrDenied) {
+				return nil, controlled.ErrDenied
+			}
+			if err != nil {
+				return nil, err
+			}
+			outcome := "STATE_RETURNED"
+			var result *Result
+			if out.Result != nil {
+				outcome, result = "RESULT_RETURNED", writeExecutionResult(out)
+			}
+			return map[string]any{"kind": "ACTION_CONTROL", "requestId": uuid.NewString(), "operation": operation, "outcome": outcome,
+				"action": writeActionView(out), "result": result, "error": nil}, nil
+		}
+		if hasPrivateCode {
+			return nil, controlled.ErrDenied
+		}
+	}
 	owned, err := g.Writes.OwnsAction(call, p, id)
 	if err != nil {
 		return nil, err
@@ -159,6 +194,8 @@ func writeActionView(out resources.WriteStatus) map[string]any {
 		requestStatus = "FAILED"
 		if out.HasResult {
 			executionID, dispatch = out.RequestID, "DISPATCHED"
+		} else if out.DispatchIntent {
+			executionID, dispatch = out.RequestID, "INTENT_RECORDED"
 		}
 	case "CANCELLED":
 		revision, requestStatus = 2, "CANCELLED"
@@ -167,14 +204,18 @@ func writeActionView(out resources.WriteStatus) map[string]any {
 	case "OUTCOME_UNKNOWN":
 		requestStatus, executionID, dispatch, side = "OUTCOME_UNKNOWN", out.RequestID, "DISPATCH_UNKNOWN", "UNKNOWN"
 	}
+	toolName := resources.WriteToolName
+	if out.HighRisk != nil {
+		toolName = resources.HighRiskToolName
+	}
 	return map[string]any{"actionId": out.RequestID, "state": state, "authorizationSource": source,
-		"interactionMode": "CONTROL_FLOW", "revision": revision, "planHash": out.PlanHash, "toolName": resources.WriteToolName,
+		"interactionMode": "CONTROL_FLOW", "revision": revision, "planHash": out.PlanHash, "toolName": toolName,
 		"resourceId": out.ResourceID, "createdAt": out.CreatedAt, "expiresAt": out.ExpiresAt, "executionId": executionID,
 		"dispatchState": dispatch, "requestStatus": requestStatus, "sideEffectStatus": side, "availableActions": actions}
 }
 
 func writeExecutionResult(out resources.WriteStatus) *Result {
-	r := failure("EXECUTION_FAILED", "EXECUTION", "The controlled update did not complete successfully.")
+	r := failure("EXECUTION_FAILED", "EXECUTION", "The controlled write did not complete successfully.")
 	r.ActionID, r.AttemptID, r.ExecutionID = &out.RequestID, &out.RequestID, &out.RequestID
 	r.DispatchState, r.Metadata, r.Data = "DISPATCHED", observed(), out.Result
 	if out.State == "SUCCEEDED" {

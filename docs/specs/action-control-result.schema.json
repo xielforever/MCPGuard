@@ -3,6 +3,7 @@
   "$id": "https://mcpguard.example.invalid/specs/action-control-result.schema.json",
   "title": "MCPGuard action control tools output v1",
   "description": "Public structured results of action.status/resume/cancel. Distinct from business ToolResult; an in-progress execution returns an ActionView, never a fake FINAL result.",
+  "type": "object",
   "oneOf": [
     {
       "$ref": "#/$defs/controlResult"

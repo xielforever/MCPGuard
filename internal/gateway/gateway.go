@@ -100,6 +100,9 @@ func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
 				}
 				if g.Writes != nil {
 					allowed["pg.update_note"] = true
+					if g.Writes.HighRisk != nil {
+						allowed[resources.HighRiskToolName] = true
+					}
 				}
 				if cur.CanRead && g.Reader != nil {
 					var enabled bool
@@ -440,6 +443,16 @@ func (g *Gateway) RunRecovery(ctx context.Context) {
 			c, done := context.WithTimeout(ctx, 4*time.Second)
 			if err := g.Notifier.Deliver(c); err != nil {
 				slog.Error("notification outbox unavailable")
+			}
+			done()
+		}
+		if g.Writes != nil && g.Writes.HighRisk != nil && ctx.Err() == nil {
+			c, done := context.WithTimeout(ctx, 4*time.Second)
+			if err := g.Writes.HighRisk.Notifier.Deliver(c); err != nil {
+				slog.Error("high-risk notification outbox unavailable")
+			}
+			if err := g.Writes.RecoverHighRisk(c); err != nil {
+				slog.Error("high-risk recovery storage unavailable")
 			}
 			done()
 		}

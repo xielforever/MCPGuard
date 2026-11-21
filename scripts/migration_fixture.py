@@ -128,7 +128,7 @@ def before_catalog(state, cfg):
     metadata_plan = json.loads(invoke(state, 'mcpguard', ['migrate', '--dry-run'], env).stdout)
     check(metadata_plan['currentVersion'] == 4 and metadata_plan['pendingVersions'] == [], 'legacy migration preflight verifies versions 1–4')
     catalog_plan = json.loads(invoke(state, 'mcpguard-catalog', ['migrate', '--dry-run'], env).stdout)
-    check(catalog_plan['currentVersion'] == 0 and catalog_plan['pendingVersions'] == list(range(1, 14)), 'catalog preflight lists the pending changes on the legacy database')
+    check(catalog_plan['currentVersion'] == 0 and catalog_plan['pendingVersions'] == list(range(1, 15)), 'catalog preflight lists the pending changes on the legacy database')
     invoke(state, 'mcpguard-catalog', ['migrate'], env, expected=1)
     check(query(cfg, 'mcpguard_meta', "SELECT to_regnamespace('mcpguard_ra') IS NULL;") == 't'
           and ledger(cfg, action) == baseline, 'preflight and rejected apply preserve schema and legacy ledger')
@@ -280,7 +280,7 @@ def main(regression):
     before = json.loads((state / 'ra17-baseline.json').read_text())
     env = base.dev.runtime_env(cfg) | {'MCPGUARD_MIGRATION_DSN': cfg['MCPGUARD_MIGRATION_DSN']}
     plan = json.loads(invoke(state, 'mcpguard-catalog', ['migrate', '--dry-run'], env).stdout)
-    check(plan['currentVersion'] == 13 and plan['pendingVersions'] == [], 'incremental catalog migration reaches v13 and reruns cleanly')
+    check(plan['currentVersion'] == 14 and plan['pendingVersions'] == [], 'incremental catalog migration reaches v14 and reruns cleanly')
     check(ledger(cfg, before['action']) == before['ledger'] and demo_digest(cfg) == before['demo'], 'catalog migration preserves seeded legacy data and ledger byte for byte')
     provider_upgrade(state, cfg)
 

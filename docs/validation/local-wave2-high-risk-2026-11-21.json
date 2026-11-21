@@ -1,0 +1,4709 @@
+{
+  "scope": "isolated local Wave 2 high-risk fixture",
+  "relatedIssue": 21,
+  "historicalBaseline": {
+    "http": {
+      "fixture": "b0bdf67540",
+      "entry": "http",
+      "orgId": "10000000-0000-4000-8000-000000000001",
+      "sourceSnapshot": "77ab201d929be7334c155a5b272c86962ddf7ea5",
+      "postgresImage": "postgres:16.14-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+      "principalId": "20000000-0000-4000-8000-000000000001",
+      "reviewerId": "20000000-0000-4000-8000-000000000003",
+      "checks": [
+        "the isolated orders database has no Wave 2 changes before this run",
+        "Harness discovered pg.plan_high_risk",
+        "visitor has an independent console session",
+        "alice has an independent console session",
+        "access.request has expected tool error=False",
+        "console decisions returned HTTP 200",
+        "credential.prepare_download has expected tool error=True",
+        "PROVISIONING cannot issue a package",
+        "native account verified before ACTIVE",
+        "account is specific to this granted resource",
+        "credential.prepare_download has expected tool error=False",
+        "native HTTP tool response does not deliver private bytes",
+        "the real client delivered and activated a private package",
+        "native fixture uses the provisioned write identity",
+        "pg.plan_high_risk has expected tool error=False",
+        "UPDATE_ORDER_AMOUNT produces an undispatched plan",
+        "APPROVAL_REQUIRED local receiver and durable retry receipt agree",
+        "authorization-code endpoint returned 403",
+        "console decisions returned HTTP 403",
+        "console decisions returned HTTP 200",
+        "authorization-code endpoint returned 403",
+        "APPROVED local receiver and durable retry receipt agree",
+        "UPDATE_ORDER_AMOUNT approval and notification have no native effect",
+        "authorization-code endpoint returned 200",
+        "private claim shares notice expiry and uses no-store",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "evidence endpoint returned 200",
+        "expired code has an audit denial, no dispatch and no native effect",
+        "pg.plan_high_risk has expected tool error=False",
+        "UPDATE_ORDER_AMOUNT produces an undispatched plan",
+        "APPROVAL_REQUIRED local receiver and durable retry receipt agree",
+        "authorization-code endpoint returned 403",
+        "console decisions returned HTTP 403",
+        "console decisions returned HTTP 200",
+        "authorization-code endpoint returned 403",
+        "APPROVED local receiver and durable retry receipt agree",
+        "UPDATE_ORDER_AMOUNT approval and notification have no native effect",
+        "action.resume has expected tool error=True",
+        "authorization-code endpoint returned 200",
+        "private claim shares notice expiry and uses no-store",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "a missing or wrong code does not change PostgreSQL",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "UPDATE_ORDER_AMOUNT completed through the private Harness input",
+        "UPDATE_ORDER_AMOUNT PostgreSQL effect is exactly the approved scope",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "authorization-code endpoint returned 403",
+        "UPDATE_ORDER_AMOUNT code replay preserved PostgreSQL state",
+        "evidence endpoint returned 200",
+        "UPDATE_ORDER_AMOUNT audit contains one approval, one consumption and one dispatch",
+        "UPDATE_ORDER_AMOUNT audit explains the blocked submissions",
+        "pg.plan_high_risk has expected tool error=False",
+        "CREATE_ORDERS_INDEX produces an undispatched plan",
+        "APPROVAL_REQUIRED local receiver and durable retry receipt agree",
+        "authorization-code endpoint returned 403",
+        "console decisions returned HTTP 403",
+        "console decisions returned HTTP 200",
+        "authorization-code endpoint returned 403",
+        "APPROVED local receiver and durable retry receipt agree",
+        "CREATE_ORDERS_INDEX approval and notification have no native effect",
+        "action.resume has expected tool error=True",
+        "authorization-code endpoint returned 200",
+        "private claim shares notice expiry and uses no-store",
+        "a missing or wrong code does not change PostgreSQL",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "CREATE_ORDERS_INDEX completed through the private Harness input",
+        "CREATE_ORDERS_INDEX PostgreSQL effect is exactly the approved scope",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "authorization-code endpoint returned 403",
+        "CREATE_ORDERS_INDEX code replay preserved PostgreSQL state",
+        "evidence endpoint returned 200",
+        "CREATE_ORDERS_INDEX audit contains one approval, one consumption and one dispatch",
+        "CREATE_ORDERS_INDEX audit explains the blocked submissions",
+        "pg.plan_high_risk has expected tool error=False",
+        "DELETE_CANCELLED_ORDER produces an undispatched plan",
+        "APPROVAL_REQUIRED local receiver and durable retry receipt agree",
+        "authorization-code endpoint returned 403",
+        "console decisions returned HTTP 403",
+        "console decisions returned HTTP 200",
+        "authorization-code endpoint returned 403",
+        "APPROVED local receiver and durable retry receipt agree",
+        "DELETE_CANCELLED_ORDER approval and notification have no native effect",
+        "action.resume has expected tool error=True",
+        "authorization-code endpoint returned 200",
+        "private claim shares notice expiry and uses no-store",
+        "a missing or wrong code does not change PostgreSQL",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "DELETE_CANCELLED_ORDER completed through the private Harness input",
+        "DELETE_CANCELLED_ORDER PostgreSQL effect is exactly the approved scope",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "authorization-code endpoint returned 403",
+        "DELETE_CANCELLED_ORDER code replay preserved PostgreSQL state",
+        "evidence endpoint returned 200",
+        "DELETE_CANCELLED_ORDER audit contains one approval, one consumption and one dispatch",
+        "DELETE_CANCELLED_ORDER audit explains the blocked submissions",
+        "model-visible results, evidence and logs omit credentials and codes"
+      ],
+      "access": [
+        {
+          "accountId": "7aabd064-3fd0-4bec-a27e-a478c006b71c",
+          "identity": "mg_7aabd0643fd04beca27ea478c006b71c",
+          "nativeVerified": "VERIFIED",
+          "jobId": "76abc93d-6739-4460-a49e-81900632a1af",
+          "roleOid": 16464,
+          "grantState": "ACTIVE",
+          "grantVersion": "2",
+          "resourceId": "40000000-0000-4000-8000-000000000001",
+          "resourceVersion": "1",
+          "requestId": "19b4794d-a256-4bd3-b1f7-662ee75771fb",
+          "decisionId": "9afcb912-42fe-4a3f-81be-6033da518c59",
+          "grantId": "e47f84bc-357e-4f03-b428-00f9e7024005",
+          "credentialId": "6b470ac5-ea7e-4c1c-856e-24ce931f60f9",
+          "leaseId": "9cc71f42-91ed-414d-8bb9-b367ed38ccb2",
+          "downloadId": "a540bee8-7a49-420a-b317-a80fc3c68feb",
+          "contextId": "465bf7e7-b79d-42dc-804b-084fe4ed74ee",
+          "profile": "write"
+        }
+      ],
+      "mcpProtocol": "2025-11-25",
+      "clientSurface": "DeepSeek Harness native MCP executor and private SDK handoff",
+      "operatorSurface": "console HTTP session",
+      "acceptanceLayer": "automated native client",
+      "modelTurnStarted": false,
+      "channel": "WECOM",
+      "operations": [
+        {
+          "operation": "UPDATE_ORDER_AMOUNT",
+          "toolReceipt": {
+            "transport": "streamable-http",
+            "harnessVersion": "0.2.2-rc.3",
+            "sdkVersion": "2.2.0",
+            "actionId": "6666587a-510b-4681-9620-ce1b234067a1",
+            "requestId": "ef0b968f-1eb7-4afa-aa18-890881bf8241",
+            "outcome": "RESULT_RETURNED",
+            "actionState": "SUCCEEDED",
+            "dispatchState": "DISPATCHED",
+            "executionStatus": "SUCCEEDED",
+            "errorCode": null,
+            "rejected": false
+          },
+          "audit": {
+            "actionId": "6666587a-510b-4681-9620-ce1b234067a1",
+            "state": "SUCCEEDED",
+            "events": [
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "PLANNED",
+                "detail": {
+                  "plan": {
+                    "table": "orders",
+                    "schema": "mcpguard_w2_fixture",
+                    "target": "order_recalc_1",
+                    "tenantId": "tenant_a",
+                    "newAmount": 120,
+                    "oldAmount": 100,
+                    "affectedRows": 1,
+                    "expectedStatus": "READY_TO_SHIP",
+                    "expectedVersion": 1
+                  },
+                  "planHash": "1sSZ75gmZ2Tkjx0ctlF9-qjyPBebYaXRMd748afivCY",
+                  "operation": "UPDATE_ORDER_AMOUNT",
+                  "resourceId": "40000000-0000-4000-8000-000000000001",
+                  "credentialId": "6b470ac5-ea7e-4c1c-856e-24ce931f60f9"
+                },
+                "at": "2026-11-21T05:19:18.636607+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "APPROVED",
+                "detail": {
+                  "planHash": "1sSZ75gmZ2Tkjx0ctlF9-qjyPBebYaXRMd748afivCY"
+                },
+                "at": "2026-11-21T05:19:27.181371+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "CODE_ISSUED",
+                "detail": {
+                  "codeId": "c9a8b756-05ce-44e0-8d6f-43b55c7602b3",
+                  "planHash": "1sSZ75gmZ2Tkjx0ctlF9-qjyPBebYaXRMd748afivCY",
+                  "expiresAt": "2026-11-20T21:19:47.179244Z"
+                },
+                "at": "2026-11-21T05:19:27.181991+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "MISSING_CODE"
+                },
+                "at": "2026-11-21T05:19:37.25689+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CLAIMED",
+                "detail": {
+                  "codeId": "c9a8b756-05ce-44e0-8d6f-43b55c7602b3"
+                },
+                "at": "2026-11-21T05:19:37.386775+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "INVALID_CODE"
+                },
+                "at": "2026-11-21T05:19:37.982728+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CONSUMED",
+                "detail": {
+                  "codeId": "c9a8b756-05ce-44e0-8d6f-43b55c7602b3"
+                },
+                "at": "2026-11-21T05:19:39.054573+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "DISPATCH_INTENT",
+                "detail": {
+                  "planHash": "1sSZ75gmZ2Tkjx0ctlF9-qjyPBebYaXRMd748afivCY"
+                },
+                "at": "2026-11-21T05:19:39.056002+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "SUCCEEDED",
+                "detail": {
+                  "native": {
+                    "outcome": "UPDATED",
+                    "newVersion": 2,
+                    "affectedRows": 1
+                  }
+                },
+                "at": "2026-11-21T05:19:39.232194+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "ALREADY_CONSUMED"
+                },
+                "at": "2026-11-21T05:19:40.603579+08:00"
+              }
+            ],
+            "notifications": [
+              {
+                "notificationId": "fb177eeb-0e2c-40e8-ae36-e57c200e4eac",
+                "actionId": "6666587a-510b-4681-9620-ce1b234067a1",
+                "recipientId": "20000000-0000-4000-8000-000000000003",
+                "channel": "WECOM",
+                "event": "APPROVAL_REQUIRED",
+                "expiresAt": "2026-11-21T05:28:49.484396+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T05:19:27.13748+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T21:19:22.14067Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T21:19:27.137645Z"
+                  }
+                ]
+              },
+              {
+                "notificationId": "2438e59b-b284-44ed-a051-e3cb372a7e69",
+                "actionId": "6666587a-510b-4681-9620-ce1b234067a1",
+                "recipientId": "20000000-0000-4000-8000-000000000001",
+                "channel": "WECOM",
+                "event": "APPROVED",
+                "expiresAt": "2026-11-21T05:19:47.179244+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T05:19:37.135571+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T21:19:32.135715Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T21:19:37.13569Z"
+                  }
+                ]
+              }
+            ]
+          },
+          "beforePostgreSQL": {
+            "index": null,
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          },
+          "afterPostgreSQL": {
+            "index": null,
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          }
+        },
+        {
+          "operation": "CREATE_ORDERS_INDEX",
+          "toolReceipt": {
+            "transport": "streamable-http",
+            "harnessVersion": "0.2.2-rc.3",
+            "sdkVersion": "2.2.0",
+            "actionId": "e15ed2d1-baaa-436a-9f23-d1c589dbe55e",
+            "requestId": "d87872fb-ce3a-4a34-a95b-25e7b6f0a550",
+            "outcome": "RESULT_RETURNED",
+            "actionState": "SUCCEEDED",
+            "dispatchState": "DISPATCHED",
+            "executionStatus": "SUCCEEDED",
+            "errorCode": null,
+            "rejected": false
+          },
+          "audit": {
+            "actionId": "e15ed2d1-baaa-436a-9f23-d1c589dbe55e",
+            "state": "SUCCEEDED",
+            "events": [
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "PLANNED",
+                "detail": {
+                  "plan": {
+                    "table": "orders",
+                    "schema": "mcpguard_w2_fixture",
+                    "target": "orders_shipping_lookup_idx",
+                    "indexColumn": "shipping_code",
+                    "affectedRows": 0,
+                    "indexDefinition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+                  },
+                  "planHash": "5zkAqW3C211E6C9khjxA_xa0cPTTB0MJyEvJsbKbQ08",
+                  "operation": "CREATE_ORDERS_INDEX",
+                  "resourceId": "40000000-0000-4000-8000-000000000001",
+                  "credentialId": "6b470ac5-ea7e-4c1c-856e-24ce931f60f9"
+                },
+                "at": "2026-11-21T05:19:41.283001+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "APPROVED",
+                "detail": {
+                  "planHash": "5zkAqW3C211E6C9khjxA_xa0cPTTB0MJyEvJsbKbQ08"
+                },
+                "at": "2026-11-21T05:19:47.220955+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "CODE_ISSUED",
+                "detail": {
+                  "codeId": "653508a7-ba58-46e1-876c-31901b7dc75f",
+                  "planHash": "5zkAqW3C211E6C9khjxA_xa0cPTTB0MJyEvJsbKbQ08",
+                  "expiresAt": "2026-11-20T21:20:07.217989Z"
+                },
+                "at": "2026-11-21T05:19:47.221738+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "MISSING_CODE"
+                },
+                "at": "2026-11-21T05:19:57.223681+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CLAIMED",
+                "detail": {
+                  "codeId": "653508a7-ba58-46e1-876c-31901b7dc75f"
+                },
+                "at": "2026-11-21T05:19:57.276886+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CONSUMED",
+                "detail": {
+                  "codeId": "653508a7-ba58-46e1-876c-31901b7dc75f"
+                },
+                "at": "2026-11-21T05:19:57.985722+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "DISPATCH_INTENT",
+                "detail": {
+                  "planHash": "5zkAqW3C211E6C9khjxA_xa0cPTTB0MJyEvJsbKbQ08"
+                },
+                "at": "2026-11-21T05:19:57.98601+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "SUCCEEDED",
+                "detail": {
+                  "native": {
+                    "outcome": "INDEX_CREATED",
+                    "indexValid": true,
+                    "affectedRows": 0,
+                    "indexDefinition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+                  }
+                },
+                "at": "2026-11-21T05:19:58.057974+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "ALREADY_CONSUMED"
+                },
+                "at": "2026-11-21T05:19:59.567299+08:00"
+              }
+            ],
+            "notifications": [
+              {
+                "notificationId": "46fc605b-886f-40b1-b87f-f501964b1d80",
+                "actionId": "e15ed2d1-baaa-436a-9f23-d1c589dbe55e",
+                "recipientId": "20000000-0000-4000-8000-000000000003",
+                "channel": "WECOM",
+                "event": "APPROVAL_REQUIRED",
+                "expiresAt": "2026-11-21T05:28:49.484396+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T05:19:47.142118+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T21:19:42.143896Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T21:19:47.142262Z"
+                  }
+                ]
+              },
+              {
+                "notificationId": "8c9d8a2b-abc8-4423-89b0-9ab3ceee65d6",
+                "actionId": "e15ed2d1-baaa-436a-9f23-d1c589dbe55e",
+                "recipientId": "20000000-0000-4000-8000-000000000001",
+                "channel": "WECOM",
+                "event": "APPROVED",
+                "expiresAt": "2026-11-21T05:20:07.217989+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T05:19:57.132642+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T21:19:52.133959Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T21:19:57.132792Z"
+                  }
+                ]
+              }
+            ]
+          },
+          "beforePostgreSQL": {
+            "index": null,
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          },
+          "afterPostgreSQL": {
+            "index": {
+              "valid": true,
+              "definition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+            },
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          }
+        },
+        {
+          "operation": "DELETE_CANCELLED_ORDER",
+          "toolReceipt": {
+            "transport": "streamable-http",
+            "harnessVersion": "0.2.2-rc.3",
+            "sdkVersion": "2.2.0",
+            "actionId": "b061e3c3-61a8-4c1c-abe8-97a48d39ff8c",
+            "requestId": "d41a26a3-0b8f-4400-ac3c-e044ad163403",
+            "outcome": "RESULT_RETURNED",
+            "actionState": "SUCCEEDED",
+            "dispatchState": "DISPATCHED",
+            "executionStatus": "SUCCEEDED",
+            "errorCode": null,
+            "rejected": false
+          },
+          "audit": {
+            "actionId": "b061e3c3-61a8-4c1c-abe8-97a48d39ff8c",
+            "state": "SUCCEEDED",
+            "events": [
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "PLANNED",
+                "detail": {
+                  "plan": {
+                    "table": "orders",
+                    "schema": "mcpguard_w2_fixture",
+                    "target": "order_cancelled_1",
+                    "tenantId": "tenant_a",
+                    "affectedRows": 1,
+                    "expectedStatus": "CANCELLED",
+                    "expectedVersion": 1
+                  },
+                  "planHash": "GnfOc0HrPJGAARONNrabQR1xY18k0C6hDas5EuOPjtg",
+                  "operation": "DELETE_CANCELLED_ORDER",
+                  "resourceId": "40000000-0000-4000-8000-000000000001",
+                  "credentialId": "6b470ac5-ea7e-4c1c-856e-24ce931f60f9"
+                },
+                "at": "2026-11-21T05:19:59.907085+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "APPROVED",
+                "detail": {
+                  "planHash": "GnfOc0HrPJGAARONNrabQR1xY18k0C6hDas5EuOPjtg"
+                },
+                "at": "2026-11-21T05:20:07.176633+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "CODE_ISSUED",
+                "detail": {
+                  "codeId": "2b22f8f1-c2f7-4b8d-8259-a1d6d7427fd3",
+                  "planHash": "GnfOc0HrPJGAARONNrabQR1xY18k0C6hDas5EuOPjtg",
+                  "expiresAt": "2026-11-20T21:20:27.175426Z"
+                },
+                "at": "2026-11-21T05:20:07.177103+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "MISSING_CODE"
+                },
+                "at": "2026-11-21T05:20:17.23426+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CLAIMED",
+                "detail": {
+                  "codeId": "2b22f8f1-c2f7-4b8d-8259-a1d6d7427fd3"
+                },
+                "at": "2026-11-21T05:20:17.296444+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CONSUMED",
+                "detail": {
+                  "codeId": "2b22f8f1-c2f7-4b8d-8259-a1d6d7427fd3"
+                },
+                "at": "2026-11-21T05:20:18.080644+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "DISPATCH_INTENT",
+                "detail": {
+                  "planHash": "GnfOc0HrPJGAARONNrabQR1xY18k0C6hDas5EuOPjtg"
+                },
+                "at": "2026-11-21T05:20:18.081051+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "SUCCEEDED",
+                "detail": {
+                  "native": {
+                    "outcome": "DELETED",
+                    "affectedRows": 1
+                  }
+                },
+                "at": "2026-11-21T05:20:18.150489+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "ALREADY_CONSUMED"
+                },
+                "at": "2026-11-21T05:20:18.941726+08:00"
+              }
+            ],
+            "notifications": [
+              {
+                "notificationId": "c2ec3ae7-6fef-4fba-ae59-0cea1e58e6d2",
+                "actionId": "b061e3c3-61a8-4c1c-abe8-97a48d39ff8c",
+                "recipientId": "20000000-0000-4000-8000-000000000003",
+                "channel": "WECOM",
+                "event": "APPROVAL_REQUIRED",
+                "expiresAt": "2026-11-21T05:28:49.484396+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T05:20:07.136361+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T21:20:02.134088Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T21:20:07.136516Z"
+                  }
+                ]
+              },
+              {
+                "notificationId": "3bfcce83-c898-4258-8bd3-6425e54703de",
+                "actionId": "b061e3c3-61a8-4c1c-abe8-97a48d39ff8c",
+                "recipientId": "20000000-0000-4000-8000-000000000001",
+                "channel": "WECOM",
+                "event": "APPROVED",
+                "expiresAt": "2026-11-21T05:20:27.175426+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T05:20:17.132433+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T21:20:12.133445Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T21:20:17.132591Z"
+                  }
+                ]
+              }
+            ]
+          },
+          "beforePostgreSQL": {
+            "index": {
+              "valid": true,
+              "definition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+            },
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          },
+          "afterPostgreSQL": {
+            "index": {
+              "valid": true,
+              "definition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+            },
+            "orders": [
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          }
+        }
+      ],
+      "expiredCode": {
+        "toolReceipt": {
+          "transport": "streamable-http",
+          "harnessVersion": "0.2.2-rc.3",
+          "sdkVersion": "2.2.0",
+          "actionId": "72a1d8b2-36a6-4077-a0f4-746d2d63027e",
+          "requestId": "1334f504-f0c4-4e11-8f72-93b82417d90f",
+          "outcome": null,
+          "actionState": null,
+          "dispatchState": null,
+          "executionStatus": null,
+          "errorCode": "ACCESS_DENIED",
+          "rejected": true
+        },
+        "audit": {
+          "actionId": "72a1d8b2-36a6-4077-a0f4-746d2d63027e",
+          "state": "APPROVED",
+          "events": [
+            {
+              "actorId": "20000000-0000-4000-8000-000000000001",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "order_recalc_1",
+                  "tenantId": "tenant_a",
+                  "newAmount": 120,
+                  "oldAmount": 100,
+                  "affectedRows": 1,
+                  "expectedStatus": "READY_TO_SHIP",
+                  "expectedVersion": 1
+                },
+                "planHash": "1sSZ75gmZ2Tkjx0ctlF9-qjyPBebYaXRMd748afivCY",
+                "operation": "UPDATE_ORDER_AMOUNT",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "6b470ac5-ea7e-4c1c-856e-24ce931f60f9"
+              },
+              "at": "2026-11-21T05:18:50.68541+08:00"
+            },
+            {
+              "actorId": "20000000-0000-4000-8000-000000000003",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "1sSZ75gmZ2Tkjx0ctlF9-qjyPBebYaXRMd748afivCY"
+              },
+              "at": "2026-11-21T05:18:57.177501+08:00"
+            },
+            {
+              "actorId": "20000000-0000-4000-8000-000000000003",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "852217b3-a609-431b-933f-53533ef41973",
+                "planHash": "1sSZ75gmZ2Tkjx0ctlF9-qjyPBebYaXRMd748afivCY",
+                "expiresAt": "2026-11-20T21:19:17.176205Z"
+              },
+              "at": "2026-11-21T05:18:57.177947+08:00"
+            },
+            {
+              "actorId": "20000000-0000-4000-8000-000000000001",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "852217b3-a609-431b-933f-53533ef41973"
+              },
+              "at": "2026-11-21T05:19:07.283484+08:00"
+            },
+            {
+              "actorId": "20000000-0000-4000-8000-000000000001",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "CODE_EXPIRED"
+              },
+              "at": "2026-11-21T05:19:18.198715+08:00"
+            }
+          ],
+          "notifications": [
+            {
+              "notificationId": "9fc2f3bb-0104-4f66-8c90-a0d7af38c2fe",
+              "actionId": "72a1d8b2-36a6-4077-a0f4-746d2d63027e",
+              "recipientId": "20000000-0000-4000-8000-000000000003",
+              "channel": "WECOM",
+              "event": "APPROVAL_REQUIRED",
+              "expiresAt": "2026-11-21T05:28:49.484396+08:00",
+              "state": "ACKNOWLEDGED",
+              "attempts": 2,
+              "acknowledgedAt": "2026-11-21T05:18:57.136952+08:00",
+              "attemptLog": [
+                {
+                  "number": 1,
+                  "outcome": "RECEIVER_REJECTED",
+                  "completedAt": "2026-11-20T21:18:52.159556Z"
+                },
+                {
+                  "number": 2,
+                  "outcome": "ACKNOWLEDGED",
+                  "completedAt": "2026-11-20T21:18:57.137037Z"
+                }
+              ]
+            },
+            {
+              "notificationId": "2bc49215-1ab3-4c38-90d4-abb12e85f1f6",
+              "actionId": "72a1d8b2-36a6-4077-a0f4-746d2d63027e",
+              "recipientId": "20000000-0000-4000-8000-000000000001",
+              "channel": "WECOM",
+              "event": "APPROVED",
+              "expiresAt": "2026-11-21T05:19:17.176205+08:00",
+              "state": "ACKNOWLEDGED",
+              "attempts": 2,
+              "acknowledgedAt": "2026-11-21T05:19:07.134569+08:00",
+              "attemptLog": [
+                {
+                  "number": 1,
+                  "outcome": "RECEIVER_REJECTED",
+                  "completedAt": "2026-11-20T21:19:02.157891Z"
+                },
+                {
+                  "number": 2,
+                  "outcome": "ACKNOWLEDGED",
+                  "completedAt": "2026-11-20T21:19:07.134679Z"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "checkedAt": "2026-11-20T21:20:19.635197+00:00",
+      "sha256": {
+        "mcpguard": "4333493740caae69314fc57721779d4b050e7a3b30858d12e8495937c04eb51d",
+        "mcpguard-connect": "a3eeb57f692304401fa0b49a367c61a5c597073e828e71ef698b6e17a1ec9132",
+        "w2_high_risk_orders.sql": "f15eef262746dbcd17cc67fe125b055af7098b0c29a4ed14bd5002c082ee21fe",
+        "dsh-private-resume.mjs": "34823f1dbaabf228b409c8796ac9d916d575fb9f93d8ed0950f757467c6df00d",
+        "dsh-tool-host.mjs": "18f3bfde3d1b59f6c4cfe4f4c04678614ffc918934958a4f399c7e7a374ac628"
+      },
+      "status": "PASS"
+    },
+    "stdio": {
+      "result": "NATIVE_EFFECTS_AND_AUDIT_CONFIRMED",
+      "runnerExit": "FAILED_LOG_DECODING_AFTER_OPERATION_ASSERTIONS",
+      "fixture": "b0ae10ea3a",
+      "readback": [
+        {
+          "state": "APPROVED",
+          "events": [
+            {
+              "at": "2026-11-20T21:17:14.607735+00:00",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "order_recalc_1",
+                  "tenantId": "tenant_a",
+                  "newAmount": 120,
+                  "oldAmount": 100,
+                  "affectedRows": 1,
+                  "expectedStatus": "READY_TO_SHIP",
+                  "expectedVersion": 1
+                },
+                "planHash": "8kOMkwAMYmAfUGrPvPGL1RuN5FbVYxaEdq1hJ4eRrG8",
+                "operation": "UPDATE_ORDER_AMOUNT",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "f633789f-8236-416e-aba6-aac488ab19ae"
+              }
+            },
+            {
+              "at": "2026-11-20T21:17:20.434248+00:00",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "8kOMkwAMYmAfUGrPvPGL1RuN5FbVYxaEdq1hJ4eRrG8"
+              }
+            },
+            {
+              "at": "2026-11-20T21:17:20.434809+00:00",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "ee5cb876-d3af-4d38-978f-06def983fee0",
+                "planHash": "8kOMkwAMYmAfUGrPvPGL1RuN5FbVYxaEdq1hJ4eRrG8",
+                "expiresAt": "2026-11-20T21:17:40.432929Z"
+              }
+            },
+            {
+              "at": "2026-11-20T21:17:30.560068+00:00",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "ee5cb876-d3af-4d38-978f-06def983fee0"
+              }
+            },
+            {
+              "at": "2026-11-20T21:17:41.69825+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "CODE_EXPIRED"
+              }
+            }
+          ],
+          "notices": 2,
+          "actionId": "bcd22867-412f-463e-b91a-3cb5b38622dd"
+        },
+        {
+          "state": "SUCCEEDED",
+          "events": [
+            {
+              "at": "2026-11-20T21:17:42.038188+00:00",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "order_recalc_1",
+                  "tenantId": "tenant_a",
+                  "newAmount": 120,
+                  "oldAmount": 100,
+                  "affectedRows": 1,
+                  "expectedStatus": "READY_TO_SHIP",
+                  "expectedVersion": 1
+                },
+                "planHash": "8kOMkwAMYmAfUGrPvPGL1RuN5FbVYxaEdq1hJ4eRrG8",
+                "operation": "UPDATE_ORDER_AMOUNT",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "f633789f-8236-416e-aba6-aac488ab19ae"
+              }
+            },
+            {
+              "at": "2026-11-20T21:17:50.436181+00:00",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "8kOMkwAMYmAfUGrPvPGL1RuN5FbVYxaEdq1hJ4eRrG8"
+              }
+            },
+            {
+              "at": "2026-11-20T21:17:50.436502+00:00",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "4be72003-c117-4ae2-a89e-7813eb0e7c59",
+                "planHash": "8kOMkwAMYmAfUGrPvPGL1RuN5FbVYxaEdq1hJ4eRrG8",
+                "expiresAt": "2026-11-20T21:18:10.435606Z"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:00.644087+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "MISSING_CODE"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:00.722274+00:00",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "4be72003-c117-4ae2-a89e-7813eb0e7c59"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:02.27169+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "INVALID_CODE"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:04.002469+00:00",
+              "kind": "CODE_CONSUMED",
+              "detail": {
+                "codeId": "4be72003-c117-4ae2-a89e-7813eb0e7c59"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:04.002786+00:00",
+              "kind": "DISPATCH_INTENT",
+              "detail": {
+                "planHash": "8kOMkwAMYmAfUGrPvPGL1RuN5FbVYxaEdq1hJ4eRrG8"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:04.07947+00:00",
+              "kind": "SUCCEEDED",
+              "detail": {
+                "native": {
+                  "outcome": "UPDATED",
+                  "newVersion": 2,
+                  "affectedRows": 1
+                }
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:05.932296+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "ALREADY_CONSUMED"
+              }
+            }
+          ],
+          "notices": 2,
+          "actionId": "35b4d0b7-fa83-4b26-877a-e7bcd52605ac"
+        },
+        {
+          "state": "SUCCEEDED",
+          "events": [
+            {
+              "at": "2026-11-20T21:18:06.597268+00:00",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "orders_shipping_lookup_idx",
+                  "indexColumn": "shipping_code",
+                  "affectedRows": 0,
+                  "indexDefinition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+                },
+                "planHash": "hR2_GsfrZKZbrNVCWgZzOuIYoPd69bWXpSCQIgSnTDQ",
+                "operation": "CREATE_ORDERS_INDEX",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "f633789f-8236-416e-aba6-aac488ab19ae"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:15.43041+00:00",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "hR2_GsfrZKZbrNVCWgZzOuIYoPd69bWXpSCQIgSnTDQ"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:15.430863+00:00",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "9c219c14-ad48-43f6-8dfa-6fb113f2653e",
+                "planHash": "hR2_GsfrZKZbrNVCWgZzOuIYoPd69bWXpSCQIgSnTDQ",
+                "expiresAt": "2026-11-20T21:18:35.42934Z"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:25.610122+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "MISSING_CODE"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:25.654539+00:00",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "9c219c14-ad48-43f6-8dfa-6fb113f2653e"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:26.985752+00:00",
+              "kind": "CODE_CONSUMED",
+              "detail": {
+                "codeId": "9c219c14-ad48-43f6-8dfa-6fb113f2653e"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:26.986167+00:00",
+              "kind": "DISPATCH_INTENT",
+              "detail": {
+                "planHash": "hR2_GsfrZKZbrNVCWgZzOuIYoPd69bWXpSCQIgSnTDQ"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:27.039677+00:00",
+              "kind": "SUCCEEDED",
+              "detail": {
+                "native": {
+                  "outcome": "INDEX_CREATED",
+                  "indexValid": true,
+                  "affectedRows": 0,
+                  "indexDefinition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+                }
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:29.167545+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "ALREADY_CONSUMED"
+              }
+            }
+          ],
+          "notices": 2,
+          "actionId": "d6aecdd4-627b-40b9-9d3c-0e0727a1ed44"
+        },
+        {
+          "state": "SUCCEEDED",
+          "events": [
+            {
+              "at": "2026-11-20T21:18:29.914235+00:00",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "order_cancelled_1",
+                  "tenantId": "tenant_a",
+                  "affectedRows": 1,
+                  "expectedStatus": "CANCELLED",
+                  "expectedVersion": 1
+                },
+                "planHash": "P2JpkQ2ngjgxQeUYHOZGDbq1-nWWS-5bIpPkuFJLVic",
+                "operation": "DELETE_CANCELLED_ORDER",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "f633789f-8236-416e-aba6-aac488ab19ae"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:35.420769+00:00",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "P2JpkQ2ngjgxQeUYHOZGDbq1-nWWS-5bIpPkuFJLVic"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:35.421262+00:00",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "c0334206-bd87-47ac-baf1-8a2901564805",
+                "planHash": "P2JpkQ2ngjgxQeUYHOZGDbq1-nWWS-5bIpPkuFJLVic",
+                "expiresAt": "2026-11-20T21:18:55.419993Z"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:45.776997+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "MISSING_CODE"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:45.821177+00:00",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "c0334206-bd87-47ac-baf1-8a2901564805"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:47.425307+00:00",
+              "kind": "CODE_CONSUMED",
+              "detail": {
+                "codeId": "c0334206-bd87-47ac-baf1-8a2901564805"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:47.425851+00:00",
+              "kind": "DISPATCH_INTENT",
+              "detail": {
+                "planHash": "P2JpkQ2ngjgxQeUYHOZGDbq1-nWWS-5bIpPkuFJLVic"
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:47.499976+00:00",
+              "kind": "SUCCEEDED",
+              "detail": {
+                "native": {
+                  "outcome": "DELETED",
+                  "affectedRows": 1
+                }
+              }
+            },
+            {
+              "at": "2026-11-20T21:18:49.370536+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "ALREADY_CONSUMED"
+              }
+            }
+          ],
+          "notices": 2,
+          "actionId": "463d2d2c-c7de-455e-a6cd-b9362a2411d9"
+        }
+      ],
+      "postgres": {
+        "index": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)",
+        "targetAmount": 120,
+        "targetVersion": 2,
+        "tenantBComparison": 100,
+        "targetCancelledRows": 0,
+        "otherTenantCancelledRows": 1
+      }
+    }
+  },
+  "candidateNegativeReadback": {
+    "http": {
+      "fixture": "39c5f9f40b",
+      "readback": [
+        {
+          "state": "APPROVED",
+          "events": [
+            {
+              "at": "2026-11-20T21:48:01.194646+00:00",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "order_recalc_1",
+                  "tenantId": "tenant_a",
+                  "newAmount": 120,
+                  "oldAmount": 100,
+                  "affectedRows": 1,
+                  "expectedStatus": "READY_TO_SHIP",
+                  "expectedVersion": 1
+                },
+                "planHash": "CReUdaEZPBGsWPSgzw_jBQkWI5kgjZGcXGaGj_Ld7dY",
+                "operation": "UPDATE_ORDER_AMOUNT",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "a718f198-0d8f-487b-ba8a-32bcf3485c08"
+              }
+            },
+            {
+              "at": "2026-11-20T21:48:13.717521+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "NOT_APPROVED"
+              }
+            },
+            {
+              "at": "2026-11-20T21:48:24.785216+00:00",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "CReUdaEZPBGsWPSgzw_jBQkWI5kgjZGcXGaGj_Ld7dY"
+              }
+            },
+            {
+              "at": "2026-11-20T21:48:24.785634+00:00",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "1ac807b1-c511-4082-bc82-9c95499279bc",
+                "planHash": "CReUdaEZPBGsWPSgzw_jBQkWI5kgjZGcXGaGj_Ld7dY",
+                "expiresAt": "2026-11-20T21:49:14.782969Z"
+              }
+            },
+            {
+              "at": "2026-11-20T21:48:34.671304+00:00",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "1ac807b1-c511-4082-bc82-9c95499279bc"
+              }
+            },
+            {
+              "at": "2026-11-20T21:49:17.356114+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "CODE_EXPIRED"
+              }
+            }
+          ],
+          "notices": 2,
+          "actionId": "5ef75f90-03a0-4c4e-8051-cf7cfa1e8c34"
+        },
+        {
+          "state": "APPROVED",
+          "events": [
+            {
+              "at": "2026-11-20T21:49:56.791528+00:00",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "orders_shipping_lookup_idx",
+                  "indexColumn": "shipping_code",
+                  "affectedRows": 0,
+                  "indexDefinition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+                },
+                "planHash": "3mmjv0N8jCTwlk7yKQIilP92ucCkf4BjX_xBuxJqtO0",
+                "operation": "CREATE_ORDERS_INDEX",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "a718f198-0d8f-487b-ba8a-32bcf3485c08"
+              }
+            },
+            {
+              "at": "2026-11-20T21:50:04.731443+00:00",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "3mmjv0N8jCTwlk7yKQIilP92ucCkf4BjX_xBuxJqtO0"
+              }
+            },
+            {
+              "at": "2026-11-20T21:50:04.7322+00:00",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "a49ee5d4-9d92-400d-af93-5a7c37ed6768",
+                "planHash": "3mmjv0N8jCTwlk7yKQIilP92ucCkf4BjX_xBuxJqtO0",
+                "expiresAt": "2026-11-20T21:50:54.728968Z"
+              }
+            },
+            {
+              "at": "2026-11-20T21:50:14.968229+00:00",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "a49ee5d4-9d92-400d-af93-5a7c37ed6768"
+              }
+            }
+          ],
+          "notices": 2,
+          "actionId": "2cef2249-1e00-4743-95ba-d95cf2ac291e"
+        },
+        {
+          "state": "APPROVED",
+          "events": [
+            {
+              "at": "2026-11-20T21:50:15.469382+00:00",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "order_recalc_1",
+                  "tenantId": "tenant_a",
+                  "newAmount": 120,
+                  "oldAmount": 100,
+                  "affectedRows": 1,
+                  "expectedStatus": "READY_TO_SHIP",
+                  "expectedVersion": 1
+                },
+                "planHash": "CReUdaEZPBGsWPSgzw_jBQkWI5kgjZGcXGaGj_Ld7dY",
+                "operation": "UPDATE_ORDER_AMOUNT",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "a718f198-0d8f-487b-ba8a-32bcf3485c08"
+              }
+            },
+            {
+              "at": "2026-11-20T21:50:24.619026+00:00",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "CReUdaEZPBGsWPSgzw_jBQkWI5kgjZGcXGaGj_Ld7dY"
+              }
+            },
+            {
+              "at": "2026-11-20T21:50:24.619525+00:00",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "560bb518-9dbb-4405-b4df-1cdcfda7e0a0",
+                "planHash": "CReUdaEZPBGsWPSgzw_jBQkWI5kgjZGcXGaGj_Ld7dY",
+                "expiresAt": "2026-11-20T21:51:14.617029Z"
+              }
+            },
+            {
+              "at": "2026-11-20T21:50:34.744139+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "MISSING_CODE"
+              }
+            },
+            {
+              "at": "2026-11-20T21:50:34.798901+00:00",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "560bb518-9dbb-4405-b4df-1cdcfda7e0a0"
+              }
+            },
+            {
+              "at": "2026-11-20T21:50:35.43036+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "INVALID_CODE"
+              }
+            },
+            {
+              "at": "2026-11-20T21:50:40.363817+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "INVALID_CODE"
+              }
+            },
+            {
+              "at": "2026-11-20T21:51:25.620756+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "WRONG_APPLICANT"
+              }
+            },
+            {
+              "at": "2026-11-20T21:52:06.583873+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "CODE_EXPIRED"
+              }
+            },
+            {
+              "at": "2026-11-20T21:52:06.984769+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "CODE_EXPIRED"
+              }
+            }
+          ],
+          "notices": 2,
+          "actionId": "fed4e74b-0e4a-4913-b8de-c13ec667730e"
+        }
+      ],
+      "postgres": {
+        "index": null,
+        "targetAmount": 100,
+        "targetVersion": 1,
+        "tenantBComparison": 100,
+        "targetCancelledRows": 1,
+        "otherTenantCancelledRows": 1
+      }
+    },
+    "stdio": {
+      "fixture": "d3a3a7ae63",
+      "readback": [
+        {
+          "state": "APPROVED",
+          "events": [
+            {
+              "at": "2026-11-20T21:46:41.414722+00:00",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "order_recalc_1",
+                  "tenantId": "tenant_a",
+                  "newAmount": 120,
+                  "oldAmount": 100,
+                  "affectedRows": 1,
+                  "expectedStatus": "READY_TO_SHIP",
+                  "expectedVersion": 1
+                },
+                "planHash": "R9rfRU8YDzsNYSn6qj_-2nTandIqDEAfe8jWUfzdyb8",
+                "operation": "UPDATE_ORDER_AMOUNT",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "0cb1e569-5d9c-40b7-999c-2f5540dd1a18"
+              }
+            },
+            {
+              "at": "2026-11-20T21:46:52.308916+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "NOT_APPROVED"
+              }
+            },
+            {
+              "at": "2026-11-20T21:46:55.592877+00:00",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "R9rfRU8YDzsNYSn6qj_-2nTandIqDEAfe8jWUfzdyb8"
+              }
+            },
+            {
+              "at": "2026-11-20T21:46:55.593328+00:00",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "23da136e-ab5d-47a3-9bc2-cf5b9fbce96e",
+                "planHash": "R9rfRU8YDzsNYSn6qj_-2nTandIqDEAfe8jWUfzdyb8",
+                "expiresAt": "2026-11-20T21:47:45.585413Z"
+              }
+            },
+            {
+              "at": "2026-11-20T21:47:05.191736+00:00",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "23da136e-ab5d-47a3-9bc2-cf5b9fbce96e"
+              }
+            },
+            {
+              "at": "2026-11-20T21:47:50.580721+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "CODE_EXPIRED"
+              }
+            }
+          ],
+          "notices": 2,
+          "actionId": "19adea6c-6058-435b-8572-83412c0da22d"
+        },
+        {
+          "state": "APPROVED",
+          "events": [
+            {
+              "at": "2026-11-20T21:48:28.506545+00:00",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "orders_shipping_lookup_idx",
+                  "indexColumn": "shipping_code",
+                  "affectedRows": 0,
+                  "indexDefinition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+                },
+                "planHash": "FPqBVsFHnaptbMDj0uCRkvwb9-hP3iGEO6dE93E7p70",
+                "operation": "CREATE_ORDERS_INDEX",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "0cb1e569-5d9c-40b7-999c-2f5540dd1a18"
+              }
+            },
+            {
+              "at": "2026-11-20T21:48:34.921043+00:00",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "FPqBVsFHnaptbMDj0uCRkvwb9-hP3iGEO6dE93E7p70"
+              }
+            },
+            {
+              "at": "2026-11-20T21:48:34.921617+00:00",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "8e8db8b6-8e7d-4404-b9bd-b4e995b1d5cd",
+                "planHash": "FPqBVsFHnaptbMDj0uCRkvwb9-hP3iGEO6dE93E7p70",
+                "expiresAt": "2026-11-20T21:49:24.919561Z"
+              }
+            },
+            {
+              "at": "2026-11-20T21:48:45.091886+00:00",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "8e8db8b6-8e7d-4404-b9bd-b4e995b1d5cd"
+              }
+            }
+          ],
+          "notices": 2,
+          "actionId": "76885715-0c4e-4ac0-a48c-5fbf92c93446"
+        },
+        {
+          "state": "APPROVED",
+          "events": [
+            {
+              "at": "2026-11-20T21:48:45.630428+00:00",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "order_recalc_1",
+                  "tenantId": "tenant_a",
+                  "newAmount": 120,
+                  "oldAmount": 100,
+                  "affectedRows": 1,
+                  "expectedStatus": "READY_TO_SHIP",
+                  "expectedVersion": 1
+                },
+                "planHash": "R9rfRU8YDzsNYSn6qj_-2nTandIqDEAfe8jWUfzdyb8",
+                "operation": "UPDATE_ORDER_AMOUNT",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "0cb1e569-5d9c-40b7-999c-2f5540dd1a18"
+              }
+            },
+            {
+              "at": "2026-11-20T21:48:54.907691+00:00",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "R9rfRU8YDzsNYSn6qj_-2nTandIqDEAfe8jWUfzdyb8"
+              }
+            },
+            {
+              "at": "2026-11-20T21:48:54.90806+00:00",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "a7130c40-d375-4456-815f-978b0fabdcad",
+                "planHash": "R9rfRU8YDzsNYSn6qj_-2nTandIqDEAfe8jWUfzdyb8",
+                "expiresAt": "2026-11-20T21:49:44.906398Z"
+              }
+            },
+            {
+              "at": "2026-11-20T21:49:05.103136+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "MISSING_CODE"
+              }
+            },
+            {
+              "at": "2026-11-20T21:49:05.148791+00:00",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "a7130c40-d375-4456-815f-978b0fabdcad"
+              }
+            },
+            {
+              "at": "2026-11-20T21:49:07.200637+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "INVALID_CODE"
+              }
+            },
+            {
+              "at": "2026-11-20T21:49:16.697633+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "INVALID_CODE"
+              }
+            },
+            {
+              "at": "2026-11-20T21:49:56.38975+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "WRONG_APPLICANT"
+              }
+            },
+            {
+              "at": "2026-11-20T21:50:36.938737+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "CODE_EXPIRED"
+              }
+            }
+          ],
+          "notices": 2,
+          "actionId": "fbbc87b1-c8e5-4534-8e90-6eabb07c19c1"
+        }
+      ],
+      "postgres": {
+        "index": null,
+        "targetAmount": 100,
+        "targetVersion": 1,
+        "tenantBComparison": 100,
+        "targetCancelledRows": 1,
+        "otherTenantCancelledRows": 1
+      }
+    },
+    "gatewaySha256": "210ae37278f2f9fd5d54eb3cab9c303e7a22afe758d69b09689311bafe1afab6",
+    "codeTTLSeconds": 50,
+    "result": "NEGATIVE_CASES_VERIFIED_CONCURRENT_HANDOFF_EXPIRED"
+  },
+  "regression": {
+    "goRaceNormal": {
+      "runId": "e356b8f198",
+      "passed": 309
+    },
+    "goRaceWrite": {
+      "runId": "46bd25baad",
+      "passed": 10
+    },
+    "goRaceRevocation": {
+      "runId": "7ccdd28e78",
+      "passed": 10
+    },
+    "offlineFinalGoRaceExitCode": 0,
+    "migration": {
+      "runId": "a6f4327b77",
+      "migrationAndRollback": 22,
+      "readRollout": 116
+    }
+  },
+  "extendedWindow": {
+    "codeTTLSeconds": 180,
+    "stdio": {
+      "result": "UPDATE_CONFIRMED_CONCURRENT_CLIENT_TRANSPORT_FAILED",
+      "runnerExit": "FAILED_SECOND_PRIVATE_TRANSPORT_STARTUP",
+      "fixture": "6f599861ec",
+      "readback": [
+        {
+          "state": "APPROVED",
+          "events": [
+            {
+              "at": "2026-11-20T21:55:19.229301+00:00",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "order_recalc_1",
+                  "tenantId": "tenant_a",
+                  "newAmount": 120,
+                  "oldAmount": 100,
+                  "affectedRows": 1,
+                  "expectedStatus": "READY_TO_SHIP",
+                  "expectedVersion": 1
+                },
+                "planHash": "1XvoYcX3FRDM8JOUyrO0praJDSz9W2PuBLhhQpyabXM",
+                "operation": "UPDATE_ORDER_AMOUNT",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "03497fbe-644b-478c-a5ff-6751a227e848"
+              }
+            },
+            {
+              "at": "2026-11-20T21:55:27.713497+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "NOT_APPROVED"
+              }
+            },
+            {
+              "at": "2026-11-20T21:55:41.889235+00:00",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "1XvoYcX3FRDM8JOUyrO0praJDSz9W2PuBLhhQpyabXM"
+              }
+            },
+            {
+              "at": "2026-11-20T21:55:41.889625+00:00",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "aa998323-263c-41cd-ae17-9c4f78817e2d",
+                "planHash": "1XvoYcX3FRDM8JOUyrO0praJDSz9W2PuBLhhQpyabXM",
+                "expiresAt": "2026-11-20T21:58:41.88756Z"
+              }
+            },
+            {
+              "at": "2026-11-20T21:55:50.242362+00:00",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "aa998323-263c-41cd-ae17-9c4f78817e2d"
+              }
+            }
+          ],
+          "notices": 2,
+          "actionId": "afa1f031-c910-4993-a7ce-f30b0d48610d"
+        },
+        {
+          "state": "APPROVED",
+          "events": [
+            {
+              "at": "2026-11-20T21:55:50.458293+00:00",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "orders_shipping_lookup_idx",
+                  "indexColumn": "shipping_code",
+                  "affectedRows": 0,
+                  "indexDefinition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+                },
+                "planHash": "FE6dfrnGJPdOJuRIrNpiYXKN79D5l8Lm3Isq0BdgAKk",
+                "operation": "CREATE_ORDERS_INDEX",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "03497fbe-644b-478c-a5ff-6751a227e848"
+              }
+            },
+            {
+              "at": "2026-11-20T21:56:00.199939+00:00",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "FE6dfrnGJPdOJuRIrNpiYXKN79D5l8Lm3Isq0BdgAKk"
+              }
+            },
+            {
+              "at": "2026-11-20T21:56:00.200325+00:00",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "73d3927f-2323-40e1-b3c1-cb438fffc79a",
+                "planHash": "FE6dfrnGJPdOJuRIrNpiYXKN79D5l8Lm3Isq0BdgAKk",
+                "expiresAt": "2026-11-20T21:59:00.198952Z"
+              }
+            },
+            {
+              "at": "2026-11-20T21:56:10.471805+00:00",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "73d3927f-2323-40e1-b3c1-cb438fffc79a"
+              }
+            }
+          ],
+          "notices": 2,
+          "actionId": "1d583ffd-2478-4d97-a91f-d09807fd871c"
+        },
+        {
+          "state": "SUCCEEDED",
+          "events": [
+            {
+              "at": "2026-11-20T21:56:11.176152+00:00",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "order_recalc_1",
+                  "tenantId": "tenant_a",
+                  "newAmount": 120,
+                  "oldAmount": 100,
+                  "affectedRows": 1,
+                  "expectedStatus": "READY_TO_SHIP",
+                  "expectedVersion": 1
+                },
+                "planHash": "1XvoYcX3FRDM8JOUyrO0praJDSz9W2PuBLhhQpyabXM",
+                "operation": "UPDATE_ORDER_AMOUNT",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "03497fbe-644b-478c-a5ff-6751a227e848"
+              }
+            },
+            {
+              "at": "2026-11-20T21:56:20.16096+00:00",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "1XvoYcX3FRDM8JOUyrO0praJDSz9W2PuBLhhQpyabXM"
+              }
+            },
+            {
+              "at": "2026-11-20T21:56:20.161298+00:00",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "83d8871a-6ab4-47df-a723-3b03cdc59b93",
+                "planHash": "1XvoYcX3FRDM8JOUyrO0praJDSz9W2PuBLhhQpyabXM",
+                "expiresAt": "2026-11-20T21:59:20.15974Z"
+              }
+            },
+            {
+              "at": "2026-11-20T21:56:30.340956+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "MISSING_CODE"
+              }
+            },
+            {
+              "at": "2026-11-20T21:56:30.3848+00:00",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "83d8871a-6ab4-47df-a723-3b03cdc59b93"
+              }
+            },
+            {
+              "at": "2026-11-20T21:56:31.608121+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "INVALID_CODE"
+              }
+            },
+            {
+              "at": "2026-11-20T21:56:34.288614+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "INVALID_CODE"
+              }
+            },
+            {
+              "at": "2026-11-20T21:56:35.153097+00:00",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "WRONG_APPLICANT"
+              }
+            },
+            {
+              "at": "2026-11-20T21:56:36.587977+00:00",
+              "kind": "CODE_CONSUMED",
+              "detail": {
+                "codeId": "83d8871a-6ab4-47df-a723-3b03cdc59b93"
+              }
+            },
+            {
+              "at": "2026-11-20T21:56:36.588192+00:00",
+              "kind": "DISPATCH_INTENT",
+              "detail": {
+                "planHash": "1XvoYcX3FRDM8JOUyrO0praJDSz9W2PuBLhhQpyabXM"
+              }
+            },
+            {
+              "at": "2026-11-20T21:56:36.657195+00:00",
+              "kind": "SUCCEEDED",
+              "detail": {
+                "native": {
+                  "outcome": "UPDATED",
+                  "newVersion": 2,
+                  "affectedRows": 1
+                }
+              }
+            }
+          ],
+          "notices": 2,
+          "actionId": "02ef7f3d-6025-47c2-9d64-a3f0a2847292"
+        }
+      ],
+      "postgres": {
+        "index": null,
+        "targetAmount": 120,
+        "targetVersion": 2,
+        "tenantBComparison": 100,
+        "targetCancelledRows": 1,
+        "otherTenantCancelledRows": 1
+      }
+    },
+    "http": {
+      "fixture": "5271fe0cba",
+      "entry": "http",
+      "orgId": "10000000-0000-4000-8000-000000000001",
+      "sourceSnapshot": "77ab201d929be7334c155a5b272c86962ddf7ea5",
+      "postgresImage": "postgres:16.14-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+      "principalId": "20000000-0000-4000-8000-000000000001",
+      "reviewerId": "20000000-0000-4000-8000-000000000003",
+      "checks": [
+        "the isolated orders database has no Wave 2 changes before this run",
+        "Harness discovered pg.plan_high_risk",
+        "visitor has an independent console session",
+        "alice has an independent console session",
+        "access.request has expected tool error=False",
+        "console decisions returned HTTP 200",
+        "credential.prepare_download has expected tool error=True",
+        "PROVISIONING cannot issue a package",
+        "native account verified before ACTIVE",
+        "account is specific to this granted resource",
+        "credential.prepare_download has expected tool error=False",
+        "native HTTP tool response does not deliver private bytes",
+        "the real client delivered and activated a private package",
+        "native fixture uses the provisioned write identity",
+        "pg.plan_high_risk has expected tool error=True",
+        "an extra tool argument is rejected before creating an action or changing native state",
+        "pg.plan_high_risk has expected tool error=False",
+        "UPDATE_ORDER_AMOUNT produces an undispatched plan",
+        "console decisions returned HTTP 409",
+        "reviewer cannot approve before the notification is acknowledged",
+        "APPROVAL_REQUIRED receiver agrees with the durable failure and acknowledgement records",
+        "authorization-code endpoint returned 403",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "console decisions returned HTTP 403",
+        "console decisions returned HTTP 200",
+        "authorization-code endpoint returned 403",
+        "APPROVED receiver agrees with the durable failure and acknowledgement records",
+        "UPDATE_ORDER_AMOUNT approval and notification have no native effect",
+        "authorization-code endpoint returned 200",
+        "private claim shares notice expiry and uses no-store",
+        "pg.plan_high_risk has expected tool error=False",
+        "CREATE_ORDERS_INDEX produces an undispatched plan",
+        "APPROVAL_REQUIRED receiver agrees with the durable failure and acknowledgement records",
+        "authorization-code endpoint returned 403",
+        "console decisions returned HTTP 403",
+        "console decisions returned HTTP 200",
+        "authorization-code endpoint returned 403",
+        "APPROVED receiver agrees with the durable failure and acknowledgement records",
+        "CREATE_ORDERS_INDEX approval and notification have no native effect",
+        "authorization-code endpoint returned 200",
+        "private claim shares notice expiry and uses no-store",
+        "pg.plan_high_risk has expected tool error=False",
+        "UPDATE_ORDER_AMOUNT produces an undispatched plan",
+        "APPROVAL_REQUIRED receiver agrees with the durable failure and acknowledgement records",
+        "authorization-code endpoint returned 403",
+        "console decisions returned HTTP 403",
+        "console decisions returned HTTP 200",
+        "authorization-code endpoint returned 403",
+        "APPROVED receiver agrees with the durable failure and acknowledgement records",
+        "UPDATE_ORDER_AMOUNT approval and notification have no native effect",
+        "action.resume has expected tool error=True",
+        "authorization-code endpoint returned 200",
+        "private claim shares notice expiry and uses no-store",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "other action code remains within its own validity window",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "evidence endpoint returned 200",
+        "cross-action submission did not consume or dispatch the action that owns the code",
+        "a missing or wrong code does not change PostgreSQL",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "two concurrent submissions of one valid code yield exactly one accepted receipt",
+        "UPDATE_ORDER_AMOUNT completed through the private Harness input",
+        "UPDATE_ORDER_AMOUNT PostgreSQL effect is exactly the approved scope",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "authorization-code endpoint returned 403",
+        "UPDATE_ORDER_AMOUNT code replay preserved PostgreSQL state",
+        "evidence endpoint returned 200",
+        "UPDATE_ORDER_AMOUNT audit contains one approval, one consumption and one dispatch",
+        "audit records invalid-code denials for both the invented and cross-action codes",
+        "UPDATE_ORDER_AMOUNT audit explains the blocked submissions",
+        "pg.plan_high_risk has expected tool error=False",
+        "CREATE_ORDERS_INDEX produces an undispatched plan",
+        "APPROVAL_REQUIRED receiver agrees with the durable failure and acknowledgement records",
+        "authorization-code endpoint returned 403",
+        "console decisions returned HTTP 403",
+        "console decisions returned HTTP 200",
+        "authorization-code endpoint returned 403",
+        "APPROVED receiver agrees with the durable failure and acknowledgement records",
+        "CREATE_ORDERS_INDEX approval and notification have no native effect",
+        "action.resume has expected tool error=True",
+        "authorization-code endpoint returned 200",
+        "private claim shares notice expiry and uses no-store",
+        "a missing or wrong code does not change PostgreSQL",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "CREATE_ORDERS_INDEX completed through the private Harness input",
+        "CREATE_ORDERS_INDEX PostgreSQL effect is exactly the approved scope",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "authorization-code endpoint returned 403",
+        "CREATE_ORDERS_INDEX code replay preserved PostgreSQL state",
+        "evidence endpoint returned 200",
+        "CREATE_ORDERS_INDEX audit contains one approval, one consumption and one dispatch",
+        "CREATE_ORDERS_INDEX audit explains the blocked submissions",
+        "pg.plan_high_risk has expected tool error=False",
+        "DELETE_CANCELLED_ORDER produces an undispatched plan",
+        "APPROVAL_REQUIRED receiver agrees with the durable failure and acknowledgement records",
+        "authorization-code endpoint returned 403",
+        "console decisions returned HTTP 403",
+        "console decisions returned HTTP 200",
+        "authorization-code endpoint returned 403",
+        "APPROVED receiver agrees with the durable failure and acknowledgement records",
+        "DELETE_CANCELLED_ORDER approval and notification have no native effect",
+        "action.resume has expected tool error=True",
+        "authorization-code endpoint returned 200",
+        "private claim shares notice expiry and uses no-store",
+        "a missing or wrong code does not change PostgreSQL",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "DELETE_CANCELLED_ORDER completed through the private Harness input",
+        "DELETE_CANCELLED_ORDER PostgreSQL effect is exactly the approved scope",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "authorization-code endpoint returned 403",
+        "DELETE_CANCELLED_ORDER code replay preserved PostgreSQL state",
+        "evidence endpoint returned 200",
+        "DELETE_CANCELLED_ORDER audit contains one approval, one consumption and one dispatch",
+        "DELETE_CANCELLED_ORDER audit explains the blocked submissions",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "evidence endpoint returned 200",
+        "expired code has an audit denial, no dispatch and no native effect",
+        "model-visible results, evidence and logs omit credentials and codes",
+        "candidate binaries and Harness adapters stayed fixed during the run"
+      ],
+      "access": [
+        {
+          "accountId": "f9877cbf-ed82-4f46-bd98-2909134a3a37",
+          "identity": "mg_f9877cbfed824f46bd982909134a3a37",
+          "nativeVerified": "VERIFIED",
+          "jobId": "dded775b-46d4-41e4-9504-e2a87d6acbaa",
+          "roleOid": 16464,
+          "grantState": "ACTIVE",
+          "grantVersion": "2",
+          "resourceId": "40000000-0000-4000-8000-000000000001",
+          "resourceVersion": "1",
+          "requestId": "5d284516-bf6a-4166-86a4-3e8b6ec19afd",
+          "decisionId": "ca918c02-f834-4179-b086-a2ce29156199",
+          "grantId": "33fb42de-a929-41bf-9dc1-3a41f36d1452",
+          "credentialId": "9d28aa2e-0903-4501-9908-71aa2d2f8927",
+          "leaseId": "65e4bfca-735a-4d4d-83e6-9ae852fdd231",
+          "downloadId": "a0227aa4-3726-4f9d-81e1-ea320adec9f8",
+          "contextId": "e129e09e-6b70-4d48-bab4-f0c6bf300957",
+          "profile": "write"
+        }
+      ],
+      "mcpProtocol": "2025-11-25",
+      "clientSurface": "DeepSeek Harness native MCP executor and private SDK handoff",
+      "operatorSurface": "console HTTP session",
+      "acceptanceLayer": "automated native client",
+      "modelTurnStarted": false,
+      "channel": "WECOM",
+      "operations": [
+        {
+          "operation": "UPDATE_ORDER_AMOUNT",
+          "toolReceipt": {
+            "transport": "streamable-http",
+            "harnessVersion": "0.2.2-rc.3",
+            "sdkVersion": "2.2.0",
+            "actionId": "4d2c5f65-cc7c-4427-9de2-7655a34dadc3",
+            "requestId": "15f00d53-7446-456a-bb21-d10fcbd19d4c",
+            "outcome": "RESULT_RETURNED",
+            "actionState": "SUCCEEDED",
+            "dispatchState": "DISPATCHED",
+            "executionStatus": "SUCCEEDED",
+            "errorCode": null,
+            "rejected": false
+          },
+          "audit": {
+            "actionId": "4d2c5f65-cc7c-4427-9de2-7655a34dadc3",
+            "state": "SUCCEEDED",
+            "events": [
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "PLANNED",
+                "detail": {
+                  "plan": {
+                    "table": "orders",
+                    "schema": "mcpguard_w2_fixture",
+                    "target": "order_recalc_1",
+                    "tenantId": "tenant_a",
+                    "newAmount": 120,
+                    "oldAmount": 100,
+                    "affectedRows": 1,
+                    "expectedStatus": "READY_TO_SHIP",
+                    "expectedVersion": 1
+                  },
+                  "planHash": "CkNvNm8HqqQW-kgrnoGR-CRP_K6bkb7NqfANmogutYc",
+                  "operation": "UPDATE_ORDER_AMOUNT",
+                  "resourceId": "40000000-0000-4000-8000-000000000001",
+                  "credentialId": "9d28aa2e-0903-4501-9908-71aa2d2f8927"
+                },
+                "at": "2026-11-21T05:56:09.30681+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "APPROVED",
+                "detail": {
+                  "planHash": "CkNvNm8HqqQW-kgrnoGR-CRP_K6bkb7NqfANmogutYc"
+                },
+                "at": "2026-11-21T05:56:18.78473+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "CODE_ISSUED",
+                "detail": {
+                  "codeId": "2f717149-e6e9-4999-9f8f-c568c3aa400b",
+                  "planHash": "CkNvNm8HqqQW-kgrnoGR-CRP_K6bkb7NqfANmogutYc",
+                  "expiresAt": "2026-11-20T21:59:18.783381Z"
+                },
+                "at": "2026-11-21T05:56:18.785112+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "MISSING_CODE"
+                },
+                "at": "2026-11-21T05:56:28.889302+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CLAIMED",
+                "detail": {
+                  "codeId": "2f717149-e6e9-4999-9f8f-c568c3aa400b"
+                },
+                "at": "2026-11-21T05:56:28.935557+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "INVALID_CODE"
+                },
+                "at": "2026-11-21T05:56:29.432915+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "INVALID_CODE"
+                },
+                "at": "2026-11-21T05:56:29.941281+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000002",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "WRONG_APPLICANT"
+                },
+                "at": "2026-11-21T05:56:30.447962+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CONSUMED",
+                "detail": {
+                  "codeId": "2f717149-e6e9-4999-9f8f-c568c3aa400b"
+                },
+                "at": "2026-11-21T05:56:33.860483+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "DISPATCH_INTENT",
+                "detail": {
+                  "planHash": "CkNvNm8HqqQW-kgrnoGR-CRP_K6bkb7NqfANmogutYc"
+                },
+                "at": "2026-11-21T05:56:33.861089+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "ALREADY_CONSUMED"
+                },
+                "at": "2026-11-21T05:56:33.86657+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "SUCCEEDED",
+                "detail": {
+                  "native": {
+                    "outcome": "UPDATED",
+                    "newVersion": 2,
+                    "affectedRows": 1
+                  }
+                },
+                "at": "2026-11-21T05:56:33.950933+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "ALREADY_CONSUMED"
+                },
+                "at": "2026-11-21T05:56:34.576376+08:00"
+              }
+            ],
+            "notifications": [
+              {
+                "notificationId": "f9de0db1-101b-4a7c-b6e7-130657d40130",
+                "actionId": "4d2c5f65-cc7c-4427-9de2-7655a34dadc3",
+                "recipientId": "20000000-0000-4000-8000-000000000003",
+                "channel": "WECOM",
+                "event": "APPROVAL_REQUIRED",
+                "expiresAt": "2026-11-21T06:05:20.339431+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T05:56:18.770519+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T21:56:13.768933Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T21:56:18.770606Z"
+                  }
+                ]
+              },
+              {
+                "notificationId": "c4aa5b39-89c4-48aa-8992-f91f6cb43f0b",
+                "actionId": "4d2c5f65-cc7c-4427-9de2-7655a34dadc3",
+                "recipientId": "20000000-0000-4000-8000-000000000001",
+                "channel": "WECOM",
+                "event": "APPROVED",
+                "expiresAt": "2026-11-21T05:59:18.783381+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T05:56:28.768629+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T21:56:23.779623Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T21:56:28.768746Z"
+                  }
+                ]
+              }
+            ]
+          },
+          "beforePostgreSQL": {
+            "index": null,
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          },
+          "afterPostgreSQL": {
+            "index": null,
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          }
+        },
+        {
+          "operation": "CREATE_ORDERS_INDEX",
+          "toolReceipt": {
+            "transport": "streamable-http",
+            "harnessVersion": "0.2.2-rc.3",
+            "sdkVersion": "2.2.0",
+            "actionId": "71d0de3a-bd5a-47bc-852b-56df869bc56e",
+            "requestId": "75186928-06ce-44a1-aba4-8ce0be664232",
+            "outcome": "RESULT_RETURNED",
+            "actionState": "SUCCEEDED",
+            "dispatchState": "DISPATCHED",
+            "executionStatus": "SUCCEEDED",
+            "errorCode": null,
+            "rejected": false
+          },
+          "audit": {
+            "actionId": "71d0de3a-bd5a-47bc-852b-56df869bc56e",
+            "state": "SUCCEEDED",
+            "events": [
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "PLANNED",
+                "detail": {
+                  "plan": {
+                    "table": "orders",
+                    "schema": "mcpguard_w2_fixture",
+                    "target": "orders_shipping_lookup_idx",
+                    "indexColumn": "shipping_code",
+                    "affectedRows": 0,
+                    "indexDefinition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+                  },
+                  "planHash": "BymXQXpIuCjaduhmzkM2knLRyPSzdKT5g_AXtxdOR9w",
+                  "operation": "CREATE_ORDERS_INDEX",
+                  "resourceId": "40000000-0000-4000-8000-000000000001",
+                  "credentialId": "9d28aa2e-0903-4501-9908-71aa2d2f8927"
+                },
+                "at": "2026-11-21T05:56:35.042765+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "APPROVED",
+                "detail": {
+                  "planHash": "BymXQXpIuCjaduhmzkM2knLRyPSzdKT5g_AXtxdOR9w"
+                },
+                "at": "2026-11-21T05:56:43.803789+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "CODE_ISSUED",
+                "detail": {
+                  "codeId": "e1514a92-338f-42ae-abb9-a57ad27ba8ba",
+                  "planHash": "BymXQXpIuCjaduhmzkM2knLRyPSzdKT5g_AXtxdOR9w",
+                  "expiresAt": "2026-11-20T21:59:43.802685Z"
+                },
+                "at": "2026-11-21T05:56:43.804164+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "MISSING_CODE"
+                },
+                "at": "2026-11-21T05:56:53.872926+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CLAIMED",
+                "detail": {
+                  "codeId": "e1514a92-338f-42ae-abb9-a57ad27ba8ba"
+                },
+                "at": "2026-11-21T05:56:53.914794+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CONSUMED",
+                "detail": {
+                  "codeId": "e1514a92-338f-42ae-abb9-a57ad27ba8ba"
+                },
+                "at": "2026-11-21T05:56:54.671091+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "DISPATCH_INTENT",
+                "detail": {
+                  "planHash": "BymXQXpIuCjaduhmzkM2knLRyPSzdKT5g_AXtxdOR9w"
+                },
+                "at": "2026-11-21T05:56:54.671826+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "SUCCEEDED",
+                "detail": {
+                  "native": {
+                    "outcome": "INDEX_CREATED",
+                    "indexValid": true,
+                    "affectedRows": 0,
+                    "indexDefinition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+                  }
+                },
+                "at": "2026-11-21T05:56:54.765664+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "ALREADY_CONSUMED"
+                },
+                "at": "2026-11-21T05:56:55.473696+08:00"
+              }
+            ],
+            "notifications": [
+              {
+                "notificationId": "1f64af2e-e23d-4779-9384-e5ca316eb7cd",
+                "actionId": "71d0de3a-bd5a-47bc-852b-56df869bc56e",
+                "recipientId": "20000000-0000-4000-8000-000000000003",
+                "channel": "WECOM",
+                "event": "APPROVAL_REQUIRED",
+                "expiresAt": "2026-11-21T06:05:20.339431+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T05:56:43.769934+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T21:56:38.770207Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T21:56:43.770043Z"
+                  }
+                ]
+              },
+              {
+                "notificationId": "c39fefee-4c4c-4b5a-924e-1ca54b61c138",
+                "actionId": "71d0de3a-bd5a-47bc-852b-56df869bc56e",
+                "recipientId": "20000000-0000-4000-8000-000000000001",
+                "channel": "WECOM",
+                "event": "APPROVED",
+                "expiresAt": "2026-11-21T05:59:43.802685+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T05:56:53.76822+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T21:56:48.768658Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T21:56:53.768336Z"
+                  }
+                ]
+              }
+            ]
+          },
+          "beforePostgreSQL": {
+            "index": null,
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          },
+          "afterPostgreSQL": {
+            "index": {
+              "valid": true,
+              "definition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+            },
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          }
+        },
+        {
+          "operation": "DELETE_CANCELLED_ORDER",
+          "toolReceipt": {
+            "transport": "streamable-http",
+            "harnessVersion": "0.2.2-rc.3",
+            "sdkVersion": "2.2.0",
+            "actionId": "9485b1f7-f5b1-4baf-a441-89f343a72fa9",
+            "requestId": "535e98bf-4729-49cd-bc35-7e05f55350f7",
+            "outcome": "RESULT_RETURNED",
+            "actionState": "SUCCEEDED",
+            "dispatchState": "DISPATCHED",
+            "executionStatus": "SUCCEEDED",
+            "errorCode": null,
+            "rejected": false
+          },
+          "audit": {
+            "actionId": "9485b1f7-f5b1-4baf-a441-89f343a72fa9",
+            "state": "SUCCEEDED",
+            "events": [
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "PLANNED",
+                "detail": {
+                  "plan": {
+                    "table": "orders",
+                    "schema": "mcpguard_w2_fixture",
+                    "target": "order_cancelled_1",
+                    "tenantId": "tenant_a",
+                    "affectedRows": 1,
+                    "expectedStatus": "CANCELLED",
+                    "expectedVersion": 1
+                  },
+                  "planHash": "xSZrQFqjNKCKwc8oKja80KU538xepr4S1h3afdrvL-Q",
+                  "operation": "DELETE_CANCELLED_ORDER",
+                  "resourceId": "40000000-0000-4000-8000-000000000001",
+                  "credentialId": "9d28aa2e-0903-4501-9908-71aa2d2f8927"
+                },
+                "at": "2026-11-21T05:56:56.041061+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "APPROVED",
+                "detail": {
+                  "planHash": "xSZrQFqjNKCKwc8oKja80KU538xepr4S1h3afdrvL-Q"
+                },
+                "at": "2026-11-21T05:57:03.804192+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "CODE_ISSUED",
+                "detail": {
+                  "codeId": "04ee8ee1-0e1c-4bfb-97e9-af6ff2f113ab",
+                  "planHash": "xSZrQFqjNKCKwc8oKja80KU538xepr4S1h3afdrvL-Q",
+                  "expiresAt": "2026-11-20T22:00:03.803331Z"
+                },
+                "at": "2026-11-21T05:57:03.804462+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "MISSING_CODE"
+                },
+                "at": "2026-11-21T05:57:13.943386+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CLAIMED",
+                "detail": {
+                  "codeId": "04ee8ee1-0e1c-4bfb-97e9-af6ff2f113ab"
+                },
+                "at": "2026-11-21T05:57:13.987051+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CONSUMED",
+                "detail": {
+                  "codeId": "04ee8ee1-0e1c-4bfb-97e9-af6ff2f113ab"
+                },
+                "at": "2026-11-21T05:57:14.754275+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "DISPATCH_INTENT",
+                "detail": {
+                  "planHash": "xSZrQFqjNKCKwc8oKja80KU538xepr4S1h3afdrvL-Q"
+                },
+                "at": "2026-11-21T05:57:14.754838+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "SUCCEEDED",
+                "detail": {
+                  "native": {
+                    "outcome": "DELETED",
+                    "affectedRows": 1
+                  }
+                },
+                "at": "2026-11-21T05:57:14.794337+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "ALREADY_CONSUMED"
+                },
+                "at": "2026-11-21T05:57:15.743122+08:00"
+              }
+            ],
+            "notifications": [
+              {
+                "notificationId": "28b88daf-bbfb-495f-9518-d63adb85c591",
+                "actionId": "9485b1f7-f5b1-4baf-a441-89f343a72fa9",
+                "recipientId": "20000000-0000-4000-8000-000000000003",
+                "channel": "WECOM",
+                "event": "APPROVAL_REQUIRED",
+                "expiresAt": "2026-11-21T06:05:20.339431+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T05:57:03.775444+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T21:56:58.770275Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T21:57:03.775595Z"
+                  }
+                ]
+              },
+              {
+                "notificationId": "73e016b4-992b-44a0-a5fa-2677d691e00c",
+                "actionId": "9485b1f7-f5b1-4baf-a441-89f343a72fa9",
+                "recipientId": "20000000-0000-4000-8000-000000000001",
+                "channel": "WECOM",
+                "event": "APPROVED",
+                "expiresAt": "2026-11-21T06:00:03.803331+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T05:57:13.776501+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T21:57:08.767102Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T21:57:13.776644Z"
+                  }
+                ]
+              }
+            ]
+          },
+          "beforePostgreSQL": {
+            "index": {
+              "valid": true,
+              "definition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+            },
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          },
+          "afterPostgreSQL": {
+            "index": {
+              "valid": true,
+              "definition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+            },
+            "orders": [
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          }
+        }
+      ],
+      "codeTTLSeconds": 180,
+      "contextTTLSeconds": 600,
+      "gatewayStartupTimeoutSeconds": 45,
+      "harnessStartupTimeoutSeconds": 30,
+      "unusedOtherAction": {
+        "actionId": "f2992c1f-d6c4-41d3-895d-b130beb4cb6c",
+        "state": "APPROVED",
+        "events": [
+          {
+            "actorId": "20000000-0000-4000-8000-000000000001",
+            "kind": "PLANNED",
+            "detail": {
+              "plan": {
+                "table": "orders",
+                "schema": "mcpguard_w2_fixture",
+                "target": "orders_shipping_lookup_idx",
+                "indexColumn": "shipping_code",
+                "affectedRows": 0,
+                "indexDefinition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+              },
+              "planHash": "BymXQXpIuCjaduhmzkM2knLRyPSzdKT5g_AXtxdOR9w",
+              "operation": "CREATE_ORDERS_INDEX",
+              "resourceId": "40000000-0000-4000-8000-000000000001",
+              "credentialId": "9d28aa2e-0903-4501-9908-71aa2d2f8927"
+            },
+            "at": "2026-11-21T05:55:49.188405+08:00"
+          },
+          {
+            "actorId": "20000000-0000-4000-8000-000000000003",
+            "kind": "APPROVED",
+            "detail": {
+              "planHash": "BymXQXpIuCjaduhmzkM2knLRyPSzdKT5g_AXtxdOR9w"
+            },
+            "at": "2026-11-21T05:55:58.810477+08:00"
+          },
+          {
+            "actorId": "20000000-0000-4000-8000-000000000003",
+            "kind": "CODE_ISSUED",
+            "detail": {
+              "codeId": "25a3d9a5-eefd-4122-8387-f7b306bb2b24",
+              "planHash": "BymXQXpIuCjaduhmzkM2knLRyPSzdKT5g_AXtxdOR9w",
+              "expiresAt": "2026-11-20T21:58:58.809348Z"
+            },
+            "at": "2026-11-21T05:55:58.810907+08:00"
+          },
+          {
+            "actorId": "20000000-0000-4000-8000-000000000001",
+            "kind": "CODE_CLAIMED",
+            "detail": {
+              "codeId": "25a3d9a5-eefd-4122-8387-f7b306bb2b24"
+            },
+            "at": "2026-11-21T05:56:09.037704+08:00"
+          }
+        ],
+        "notifications": [
+          {
+            "notificationId": "f286e26d-1283-4c89-a67d-7fe0e498a45a",
+            "actionId": "f2992c1f-d6c4-41d3-895d-b130beb4cb6c",
+            "recipientId": "20000000-0000-4000-8000-000000000003",
+            "channel": "WECOM",
+            "event": "APPROVAL_REQUIRED",
+            "expiresAt": "2026-11-21T06:05:20.339431+08:00",
+            "state": "ACKNOWLEDGED",
+            "attempts": 2,
+            "acknowledgedAt": "2026-11-21T05:55:58.78042+08:00",
+            "attemptLog": [
+              {
+                "number": 1,
+                "outcome": "RECEIVER_REJECTED",
+                "completedAt": "2026-11-20T21:55:53.772362Z"
+              },
+              {
+                "number": 2,
+                "outcome": "ACKNOWLEDGED",
+                "completedAt": "2026-11-20T21:55:58.780569Z"
+              }
+            ]
+          },
+          {
+            "notificationId": "95561c5c-2e81-4eb2-ab6f-f549f691eae8",
+            "actionId": "f2992c1f-d6c4-41d3-895d-b130beb4cb6c",
+            "recipientId": "20000000-0000-4000-8000-000000000001",
+            "channel": "WECOM",
+            "event": "APPROVED",
+            "expiresAt": "2026-11-21T05:58:58.809348+08:00",
+            "state": "ACKNOWLEDGED",
+            "attempts": 2,
+            "acknowledgedAt": "2026-11-21T05:56:08.779041+08:00",
+            "attemptLog": [
+              {
+                "number": 1,
+                "outcome": "RECEIVER_REJECTED",
+                "completedAt": "2026-11-20T21:56:03.770816Z"
+              },
+              {
+                "number": 2,
+                "outcome": "ACKNOWLEDGED",
+                "completedAt": "2026-11-20T21:56:08.77919Z"
+              }
+            ]
+          }
+        ]
+      },
+      "concurrentCodeReceipts": [
+        {
+          "transport": "streamable-http",
+          "harnessVersion": "0.2.2-rc.3",
+          "sdkVersion": "2.2.0",
+          "actionId": "4d2c5f65-cc7c-4427-9de2-7655a34dadc3",
+          "requestId": "15f00d53-7446-456a-bb21-d10fcbd19d4c",
+          "outcome": "RESULT_RETURNED",
+          "actionState": "SUCCEEDED",
+          "dispatchState": "DISPATCHED",
+          "executionStatus": "SUCCEEDED",
+          "errorCode": null,
+          "rejected": false
+        },
+        {
+          "transport": "streamable-http",
+          "harnessVersion": "0.2.2-rc.3",
+          "sdkVersion": "2.2.0",
+          "actionId": "4d2c5f65-cc7c-4427-9de2-7655a34dadc3",
+          "requestId": "02151e12-2f12-4b48-8040-a5710645ea80",
+          "outcome": null,
+          "actionState": null,
+          "dispatchState": null,
+          "executionStatus": null,
+          "errorCode": "ACCESS_DENIED",
+          "rejected": true
+        }
+      ],
+      "expiredCode": {
+        "toolReceipt": {
+          "transport": "streamable-http",
+          "harnessVersion": "0.2.2-rc.3",
+          "sdkVersion": "2.2.0",
+          "actionId": "8969db1c-d695-4138-9a64-bc434b9ab455",
+          "requestId": "a7779a51-c411-4d70-bbd7-21c6667d876b",
+          "outcome": null,
+          "actionState": null,
+          "dispatchState": null,
+          "executionStatus": null,
+          "errorCode": "ACCESS_DENIED",
+          "rejected": true
+        },
+        "audit": {
+          "actionId": "8969db1c-d695-4138-9a64-bc434b9ab455",
+          "state": "APPROVED",
+          "events": [
+            {
+              "actorId": "20000000-0000-4000-8000-000000000001",
+              "kind": "PLANNED",
+              "detail": {
+                "plan": {
+                  "table": "orders",
+                  "schema": "mcpguard_w2_fixture",
+                  "target": "order_recalc_1",
+                  "tenantId": "tenant_a",
+                  "newAmount": 120,
+                  "oldAmount": 100,
+                  "affectedRows": 1,
+                  "expectedStatus": "READY_TO_SHIP",
+                  "expectedVersion": 1
+                },
+                "planHash": "CkNvNm8HqqQW-kgrnoGR-CRP_K6bkb7NqfANmogutYc",
+                "operation": "UPDATE_ORDER_AMOUNT",
+                "resourceId": "40000000-0000-4000-8000-000000000001",
+                "credentialId": "9d28aa2e-0903-4501-9908-71aa2d2f8927"
+              },
+              "at": "2026-11-21T05:55:21.324434+08:00"
+            },
+            {
+              "actorId": "20000000-0000-4000-8000-000000000001",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "NOT_APPROVED"
+              },
+              "at": "2026-11-21T05:55:29.459115+08:00"
+            },
+            {
+              "actorId": "20000000-0000-4000-8000-000000000003",
+              "kind": "APPROVED",
+              "detail": {
+                "planHash": "CkNvNm8HqqQW-kgrnoGR-CRP_K6bkb7NqfANmogutYc"
+              },
+              "at": "2026-11-21T05:55:39.401819+08:00"
+            },
+            {
+              "actorId": "20000000-0000-4000-8000-000000000003",
+              "kind": "CODE_ISSUED",
+              "detail": {
+                "codeId": "e36c64b0-43c2-40ff-9064-b78b2778ef83",
+                "planHash": "CkNvNm8HqqQW-kgrnoGR-CRP_K6bkb7NqfANmogutYc",
+                "expiresAt": "2026-11-20T21:58:39.400097Z"
+              },
+              "at": "2026-11-21T05:55:39.402217+08:00"
+            },
+            {
+              "actorId": "20000000-0000-4000-8000-000000000001",
+              "kind": "CODE_CLAIMED",
+              "detail": {
+                "codeId": "e36c64b0-43c2-40ff-9064-b78b2778ef83"
+              },
+              "at": "2026-11-21T05:55:48.918835+08:00"
+            },
+            {
+              "actorId": "20000000-0000-4000-8000-000000000001",
+              "kind": "CODE_DENIED",
+              "detail": {
+                "reason": "CODE_EXPIRED"
+              },
+              "at": "2026-11-21T05:58:40.056724+08:00"
+            }
+          ],
+          "notifications": [
+            {
+              "notificationId": "50d49a15-c6ad-4daa-85a7-803c97905b75",
+              "actionId": "8969db1c-d695-4138-9a64-bc434b9ab455",
+              "recipientId": "20000000-0000-4000-8000-000000000003",
+              "channel": "WECOM",
+              "event": "APPROVAL_REQUIRED",
+              "expiresAt": "2026-11-21T06:05:20.339431+08:00",
+              "state": "ACKNOWLEDGED",
+              "attempts": 2,
+              "acknowledgedAt": "2026-11-21T05:55:28.779566+08:00",
+              "attemptLog": [
+                {
+                  "number": 1,
+                  "outcome": "RECEIVER_REJECTED",
+                  "completedAt": "2026-11-20T21:55:23.772137Z"
+                },
+                {
+                  "number": 2,
+                  "outcome": "ACKNOWLEDGED",
+                  "completedAt": "2026-11-20T21:55:28.779718Z"
+                }
+              ]
+            },
+            {
+              "notificationId": "c87e9aa9-6280-4470-bdb9-b648133ecd8f",
+              "actionId": "8969db1c-d695-4138-9a64-bc434b9ab455",
+              "recipientId": "20000000-0000-4000-8000-000000000001",
+              "channel": "WECOM",
+              "event": "APPROVED",
+              "expiresAt": "2026-11-21T05:58:39.400097+08:00",
+              "state": "ACKNOWLEDGED",
+              "attempts": 2,
+              "acknowledgedAt": "2026-11-21T05:55:48.772398+08:00",
+              "attemptLog": [
+                {
+                  "number": 1,
+                  "outcome": "RECEIVER_REJECTED",
+                  "completedAt": "2026-11-20T21:55:43.788464Z"
+                },
+                {
+                  "number": 2,
+                  "outcome": "ACKNOWLEDGED",
+                  "completedAt": "2026-11-20T21:55:48.772492Z"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "checkedAt": "2026-11-20T21:58:40.388320+00:00",
+      "sha256": {
+        "mcpguard": "210ae37278f2f9fd5d54eb3cab9c303e7a22afe758d69b09689311bafe1afab6",
+        "mcpguard-connect": "a3eeb57f692304401fa0b49a367c61a5c597073e828e71ef698b6e17a1ec9132",
+        "mcpguard-http-helper": "a7842dcf85533865c13ae067fda0b7887dc1abe698e76c4616e6773b52405a1e",
+        "w2_high_risk_orders.sql": "f15eef262746dbcd17cc67fe125b055af7098b0c29a4ed14bd5002c082ee21fe",
+        "dsh-private-resume.mjs": "be87c30e563ed7f08bdadd27848cb3195dfc3126e5590427192b5e1a00be8a2d",
+        "dsh-tool-host.mjs": "6db2166fceb76addebe87d644d63d986d1cebf922a9beb6a026e8d3a74f25c85",
+        "dsh_client.py": "3ca53992c36b63499038fc4389d4bc7690d56fa4cf641a01bfb5f18ccc8c0c34",
+        "high_risk_notification_receiver.py": "a28364388122a5bc94ecf2781533a9851341eaedeabc2a8790b50cd35d5c8a3c",
+        "ra18_client_fixture.py": "d468ac4dd5abe8a0304b89ea88b3057114bc8a5dc50f784bc8a559e54ccd9244",
+        "wave2_high_risk_fixture.py": "56896a387cf5d2bb217616e6611b9dd7ab1f3abd055b604b8af458e4fc5280df"
+      },
+      "status": "PASS"
+    },
+    "stdioSameSession": {
+      "fixture": "79db11b152",
+      "entry": "stdio",
+      "orgId": "10000000-0000-4000-8000-000000000001",
+      "sourceSnapshot": "77ab201d929be7334c155a5b272c86962ddf7ea5",
+      "postgresImage": "postgres:16.14-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+      "principalId": "20000000-0000-4000-8000-000000000001",
+      "reviewerId": "20000000-0000-4000-8000-000000000003",
+      "checks": [
+        "the isolated orders database has no Wave 2 changes before this run",
+        "Harness discovered pg.plan_high_risk",
+        "visitor has an independent console session",
+        "alice has an independent console session",
+        "access.request has expected tool error=False",
+        "console decisions returned HTTP 200",
+        "credential.prepare_download has expected tool error=True",
+        "PROVISIONING cannot issue a package",
+        "native account verified before ACTIVE",
+        "account is specific to this granted resource",
+        "credential.prepare_download has expected tool error=False",
+        "the real client delivered and activated a private package",
+        "native fixture uses the provisioned write identity",
+        "pg.plan_high_risk has expected tool error=False",
+        "CREATE_ORDERS_INDEX produces an undispatched plan",
+        "APPROVAL_REQUIRED receiver agrees with the durable failure and acknowledgement records",
+        "authorization-code endpoint returned 403",
+        "console decisions returned HTTP 403",
+        "console decisions returned HTTP 200",
+        "authorization-code endpoint returned 403",
+        "APPROVED receiver agrees with the durable failure and acknowledgement records",
+        "CREATE_ORDERS_INDEX approval and notification have no native effect",
+        "authorization-code endpoint returned 200",
+        "private claim shares notice expiry and uses no-store",
+        "pg.plan_high_risk has expected tool error=False",
+        "UPDATE_ORDER_AMOUNT produces an undispatched plan",
+        "APPROVAL_REQUIRED receiver agrees with the durable failure and acknowledgement records",
+        "authorization-code endpoint returned 403",
+        "console decisions returned HTTP 403",
+        "console decisions returned HTTP 200",
+        "authorization-code endpoint returned 403",
+        "APPROVED receiver agrees with the durable failure and acknowledgement records",
+        "UPDATE_ORDER_AMOUNT approval and notification have no native effect",
+        "action.resume has expected tool error=True",
+        "authorization-code endpoint returned 200",
+        "private claim shares notice expiry and uses no-store",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "other action code remains within its own validity window",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "evidence endpoint returned 200",
+        "cross-action submission did not consume or dispatch the action that owns the code",
+        "a missing or wrong code does not change PostgreSQL",
+        "same-session private outputs omit credentials and codes",
+        "one installed DSH SDK stdio session returned both structured receipts; inspect audit on failure",
+        "same-session fixture received a successful overall envelope",
+        "two concurrent submissions of one valid code yield exactly one accepted receipt",
+        "UPDATE_ORDER_AMOUNT completed through the private Harness input",
+        "UPDATE_ORDER_AMOUNT PostgreSQL effect is exactly the approved scope",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "authorization-code endpoint returned 403",
+        "UPDATE_ORDER_AMOUNT code replay preserved PostgreSQL state",
+        "evidence endpoint returned 200",
+        "UPDATE_ORDER_AMOUNT audit contains one approval, one consumption and one dispatch",
+        "audit records invalid-code denials for both the invented and cross-action codes",
+        "UPDATE_ORDER_AMOUNT audit explains the blocked submissions",
+        "pg.plan_high_risk has expected tool error=False",
+        "CREATE_ORDERS_INDEX produces an undispatched plan",
+        "APPROVAL_REQUIRED receiver agrees with the durable failure and acknowledgement records",
+        "authorization-code endpoint returned 403",
+        "console decisions returned HTTP 403",
+        "console decisions returned HTTP 200",
+        "authorization-code endpoint returned 403",
+        "APPROVED receiver agrees with the durable failure and acknowledgement records",
+        "CREATE_ORDERS_INDEX approval and notification have no native effect",
+        "action.resume has expected tool error=True",
+        "authorization-code endpoint returned 200",
+        "private claim shares notice expiry and uses no-store",
+        "a missing or wrong code does not change PostgreSQL",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "CREATE_ORDERS_INDEX completed through the private Harness input",
+        "CREATE_ORDERS_INDEX PostgreSQL effect is exactly the approved scope",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "authorization-code endpoint returned 403",
+        "CREATE_ORDERS_INDEX code replay preserved PostgreSQL state",
+        "evidence endpoint returned 200",
+        "CREATE_ORDERS_INDEX audit contains one approval, one consumption and one dispatch",
+        "CREATE_ORDERS_INDEX audit explains the blocked submissions",
+        "pg.plan_high_risk has expected tool error=False",
+        "DELETE_CANCELLED_ORDER produces an undispatched plan",
+        "APPROVAL_REQUIRED receiver agrees with the durable failure and acknowledgement records",
+        "authorization-code endpoint returned 403",
+        "console decisions returned HTTP 403",
+        "console decisions returned HTTP 200",
+        "authorization-code endpoint returned 403",
+        "APPROVED receiver agrees with the durable failure and acknowledgement records",
+        "DELETE_CANCELLED_ORDER approval and notification have no native effect",
+        "action.resume has expected tool error=True",
+        "authorization-code endpoint returned 200",
+        "private claim shares notice expiry and uses no-store",
+        "a missing or wrong code does not change PostgreSQL",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "DELETE_CANCELLED_ORDER completed through the private Harness input",
+        "DELETE_CANCELLED_ORDER PostgreSQL effect is exactly the approved scope",
+        "private handoff output omits secrets",
+        "private completion reports the expected approval result",
+        "private completion correlates action and decision",
+        "authorization-code endpoint returned 403",
+        "DELETE_CANCELLED_ORDER code replay preserved PostgreSQL state",
+        "evidence endpoint returned 200",
+        "DELETE_CANCELLED_ORDER audit contains one approval, one consumption and one dispatch",
+        "DELETE_CANCELLED_ORDER audit explains the blocked submissions",
+        "model-visible results, evidence and logs omit credentials and codes",
+        "candidate binaries and Harness adapters stayed fixed during the run"
+      ],
+      "access": [
+        {
+          "accountId": "ce1780bc-d9e8-4507-82e4-3c8d499a7d66",
+          "identity": "mg_ce1780bcd9e8450782e43c8d499a7d66",
+          "nativeVerified": "VERIFIED",
+          "jobId": "5fb344f0-aed8-4832-b136-f6c2ebfd4913",
+          "roleOid": 16464,
+          "grantState": "ACTIVE",
+          "grantVersion": "2",
+          "resourceId": "40000000-0000-4000-8000-000000000001",
+          "resourceVersion": "1",
+          "requestId": "a3da94c4-0a35-483c-bb83-f7f95fde859c",
+          "decisionId": "e64e09ef-0fdd-49da-9075-516b9063d07f",
+          "grantId": "28a271ed-881b-46c0-8bba-e3eb9d01d75f",
+          "credentialId": "47935d02-6437-411b-bc92-48876b606c75",
+          "leaseId": "d5c65298-e750-4bd4-ba82-77615eea5594",
+          "downloadId": "1965b5b3-5ea6-402d-badd-e4eb38259356",
+          "contextId": "ef0573bd-0d0a-4a3c-ad4c-93e7af1b6e5e",
+          "profile": "write"
+        }
+      ],
+      "mcpProtocol": "2025-11-25",
+      "clientSurface": "DeepSeek Harness native MCP executor and private SDK handoff",
+      "operatorSurface": "console HTTP session",
+      "acceptanceLayer": "automated native client",
+      "modelTurnStarted": false,
+      "channel": "FEISHU",
+      "operations": [
+        {
+          "operation": "UPDATE_ORDER_AMOUNT",
+          "toolReceipt": {
+            "transport": "stdio",
+            "harnessVersion": "0.2.2-rc.3",
+            "sdkVersion": "2.2.0",
+            "actionId": "523e65ff-acc2-4331-b44c-777a841d8d6b",
+            "requestId": "e35f520f-19ff-425b-8959-365a5c7af4d9",
+            "outcome": "RESULT_RETURNED",
+            "actionState": "SUCCEEDED",
+            "dispatchState": "DISPATCHED",
+            "executionStatus": "SUCCEEDED",
+            "errorCode": null,
+            "rejected": false
+          },
+          "audit": {
+            "actionId": "523e65ff-acc2-4331-b44c-777a841d8d6b",
+            "state": "SUCCEEDED",
+            "events": [
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "PLANNED",
+                "detail": {
+                  "plan": {
+                    "table": "orders",
+                    "schema": "mcpguard_w2_fixture",
+                    "target": "order_recalc_1",
+                    "tenantId": "tenant_a",
+                    "newAmount": 120,
+                    "oldAmount": 100,
+                    "affectedRows": 1,
+                    "expectedStatus": "READY_TO_SHIP",
+                    "expectedVersion": 1
+                  },
+                  "planHash": "gW3ir5tHk97fc9_o9-0zf6fnC7fccTMsf-1fIoG6ASw",
+                  "operation": "UPDATE_ORDER_AMOUNT",
+                  "resourceId": "40000000-0000-4000-8000-000000000001",
+                  "credentialId": "47935d02-6437-411b-bc92-48876b606c75"
+                },
+                "at": "2026-11-21T06:01:05.400389+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "APPROVED",
+                "detail": {
+                  "planHash": "gW3ir5tHk97fc9_o9-0zf6fnC7fccTMsf-1fIoG6ASw"
+                },
+                "at": "2026-11-21T06:01:14.965803+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "CODE_ISSUED",
+                "detail": {
+                  "codeId": "3c77567a-dab0-4f20-81a4-41eb351847d8",
+                  "planHash": "gW3ir5tHk97fc9_o9-0zf6fnC7fccTMsf-1fIoG6ASw",
+                  "expiresAt": "2026-11-20T22:04:14.964904Z"
+                },
+                "at": "2026-11-21T06:01:14.966148+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "MISSING_CODE"
+                },
+                "at": "2026-11-21T06:01:25.164135+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CLAIMED",
+                "detail": {
+                  "codeId": "3c77567a-dab0-4f20-81a4-41eb351847d8"
+                },
+                "at": "2026-11-21T06:01:25.206865+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "INVALID_CODE"
+                },
+                "at": "2026-11-21T06:01:26.219285+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "INVALID_CODE"
+                },
+                "at": "2026-11-21T06:01:27.241776+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000002",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "WRONG_APPLICANT"
+                },
+                "at": "2026-11-21T06:01:27.911287+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CONSUMED",
+                "detail": {
+                  "codeId": "3c77567a-dab0-4f20-81a4-41eb351847d8"
+                },
+                "at": "2026-11-21T06:01:29.119156+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "DISPATCH_INTENT",
+                "detail": {
+                  "planHash": "gW3ir5tHk97fc9_o9-0zf6fnC7fccTMsf-1fIoG6ASw"
+                },
+                "at": "2026-11-21T06:01:29.11938+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "SUCCEEDED",
+                "detail": {
+                  "native": {
+                    "outcome": "UPDATED",
+                    "newVersion": 2,
+                    "affectedRows": 1
+                  }
+                },
+                "at": "2026-11-21T06:01:29.200676+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "ALREADY_CONSUMED"
+                },
+                "at": "2026-11-21T06:01:29.263053+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "ALREADY_CONSUMED"
+                },
+                "at": "2026-11-21T06:01:30.370948+08:00"
+              }
+            ],
+            "notifications": [
+              {
+                "notificationId": "5ab91598-c75e-4f4d-8850-03d518e2a47b",
+                "actionId": "523e65ff-acc2-4331-b44c-777a841d8d6b",
+                "recipientId": "20000000-0000-4000-8000-000000000003",
+                "channel": "FEISHU",
+                "event": "APPROVAL_REQUIRED",
+                "expiresAt": "2026-11-21T06:10:46.901884+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T06:01:14.943383+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T22:01:09.944649Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T22:01:14.943485Z"
+                  }
+                ]
+              },
+              {
+                "notificationId": "a6edcba0-b0ca-4202-89b8-dd195f28a32b",
+                "actionId": "523e65ff-acc2-4331-b44c-777a841d8d6b",
+                "recipientId": "20000000-0000-4000-8000-000000000001",
+                "channel": "FEISHU",
+                "event": "APPROVED",
+                "expiresAt": "2026-11-21T06:04:14.964904+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T06:01:24.944658+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T22:01:19.952956Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T22:01:24.944754Z"
+                  }
+                ]
+              }
+            ]
+          },
+          "beforePostgreSQL": {
+            "index": null,
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          },
+          "afterPostgreSQL": {
+            "index": null,
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          }
+        },
+        {
+          "operation": "CREATE_ORDERS_INDEX",
+          "toolReceipt": {
+            "transport": "stdio",
+            "harnessVersion": "0.2.2-rc.3",
+            "sdkVersion": "2.2.0",
+            "actionId": "c9252c78-0455-424b-870a-57ed4ce4d596",
+            "requestId": "f7bb1c0b-7abf-47d7-8b33-142c79788992",
+            "outcome": "RESULT_RETURNED",
+            "actionState": "SUCCEEDED",
+            "dispatchState": "DISPATCHED",
+            "executionStatus": "SUCCEEDED",
+            "errorCode": null,
+            "rejected": false
+          },
+          "audit": {
+            "actionId": "c9252c78-0455-424b-870a-57ed4ce4d596",
+            "state": "SUCCEEDED",
+            "events": [
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "PLANNED",
+                "detail": {
+                  "plan": {
+                    "table": "orders",
+                    "schema": "mcpguard_w2_fixture",
+                    "target": "orders_shipping_lookup_idx",
+                    "indexColumn": "shipping_code",
+                    "affectedRows": 0,
+                    "indexDefinition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+                  },
+                  "planHash": "851yITy7n2OG3IGBALukCiHTKxyvDlQhzk1_mtedDEY",
+                  "operation": "CREATE_ORDERS_INDEX",
+                  "resourceId": "40000000-0000-4000-8000-000000000001",
+                  "credentialId": "47935d02-6437-411b-bc92-48876b606c75"
+                },
+                "at": "2026-11-21T06:01:30.794883+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "APPROVED",
+                "detail": {
+                  "planHash": "851yITy7n2OG3IGBALukCiHTKxyvDlQhzk1_mtedDEY"
+                },
+                "at": "2026-11-21T06:01:39.966573+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "CODE_ISSUED",
+                "detail": {
+                  "codeId": "534dcd7b-6845-4e48-9e9d-1183a47c4cd8",
+                  "planHash": "851yITy7n2OG3IGBALukCiHTKxyvDlQhzk1_mtedDEY",
+                  "expiresAt": "2026-11-20T22:04:39.965188Z"
+                },
+                "at": "2026-11-21T06:01:39.966823+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "MISSING_CODE"
+                },
+                "at": "2026-11-21T06:01:50.112223+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CLAIMED",
+                "detail": {
+                  "codeId": "534dcd7b-6845-4e48-9e9d-1183a47c4cd8"
+                },
+                "at": "2026-11-21T06:01:50.154609+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CONSUMED",
+                "detail": {
+                  "codeId": "534dcd7b-6845-4e48-9e9d-1183a47c4cd8"
+                },
+                "at": "2026-11-21T06:01:51.248818+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "DISPATCH_INTENT",
+                "detail": {
+                  "planHash": "851yITy7n2OG3IGBALukCiHTKxyvDlQhzk1_mtedDEY"
+                },
+                "at": "2026-11-21T06:01:51.249529+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "SUCCEEDED",
+                "detail": {
+                  "native": {
+                    "outcome": "INDEX_CREATED",
+                    "indexValid": true,
+                    "affectedRows": 0,
+                    "indexDefinition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+                  }
+                },
+                "at": "2026-11-21T06:01:51.292819+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "ALREADY_CONSUMED"
+                },
+                "at": "2026-11-21T06:01:52.395735+08:00"
+              }
+            ],
+            "notifications": [
+              {
+                "notificationId": "583a8511-6b4b-4215-b5a8-fd9dc6d31cd0",
+                "actionId": "c9252c78-0455-424b-870a-57ed4ce4d596",
+                "recipientId": "20000000-0000-4000-8000-000000000003",
+                "channel": "FEISHU",
+                "event": "APPROVAL_REQUIRED",
+                "expiresAt": "2026-11-21T06:10:46.901884+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T06:01:39.943826+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T22:01:34.944087Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T22:01:39.943928Z"
+                  }
+                ]
+              },
+              {
+                "notificationId": "0434a3c3-3d7b-4c72-91bd-b9a4d05dfcb2",
+                "actionId": "c9252c78-0455-424b-870a-57ed4ce4d596",
+                "recipientId": "20000000-0000-4000-8000-000000000001",
+                "channel": "FEISHU",
+                "event": "APPROVED",
+                "expiresAt": "2026-11-21T06:04:39.965188+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T06:01:49.94296+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T22:01:44.963767Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T22:01:49.943132Z"
+                  }
+                ]
+              }
+            ]
+          },
+          "beforePostgreSQL": {
+            "index": null,
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          },
+          "afterPostgreSQL": {
+            "index": {
+              "valid": true,
+              "definition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+            },
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          }
+        },
+        {
+          "operation": "DELETE_CANCELLED_ORDER",
+          "toolReceipt": {
+            "transport": "stdio",
+            "harnessVersion": "0.2.2-rc.3",
+            "sdkVersion": "2.2.0",
+            "actionId": "6d13498c-bc1e-4844-8ee3-f259d6039f8e",
+            "requestId": "b8220f91-99c9-49dd-962c-150c970cad7e",
+            "outcome": "RESULT_RETURNED",
+            "actionState": "SUCCEEDED",
+            "dispatchState": "DISPATCHED",
+            "executionStatus": "SUCCEEDED",
+            "errorCode": null,
+            "rejected": false
+          },
+          "audit": {
+            "actionId": "6d13498c-bc1e-4844-8ee3-f259d6039f8e",
+            "state": "SUCCEEDED",
+            "events": [
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "PLANNED",
+                "detail": {
+                  "plan": {
+                    "table": "orders",
+                    "schema": "mcpguard_w2_fixture",
+                    "target": "order_cancelled_1",
+                    "tenantId": "tenant_a",
+                    "affectedRows": 1,
+                    "expectedStatus": "CANCELLED",
+                    "expectedVersion": 1
+                  },
+                  "planHash": "Jcq6IWrymQtriqkYzF4_21pHChGLGGIVtkl51g5i-L0",
+                  "operation": "DELETE_CANCELLED_ORDER",
+                  "resourceId": "40000000-0000-4000-8000-000000000001",
+                  "credentialId": "47935d02-6437-411b-bc92-48876b606c75"
+                },
+                "at": "2026-11-21T06:01:52.847158+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "APPROVED",
+                "detail": {
+                  "planHash": "Jcq6IWrymQtriqkYzF4_21pHChGLGGIVtkl51g5i-L0"
+                },
+                "at": "2026-11-21T06:01:59.989679+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000003",
+                "kind": "CODE_ISSUED",
+                "detail": {
+                  "codeId": "5c383f70-72af-49f8-a4e9-a7348980dad3",
+                  "planHash": "Jcq6IWrymQtriqkYzF4_21pHChGLGGIVtkl51g5i-L0",
+                  "expiresAt": "2026-11-20T22:04:59.988592Z"
+                },
+                "at": "2026-11-21T06:01:59.99014+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "MISSING_CODE"
+                },
+                "at": "2026-11-21T06:02:10.107112+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CLAIMED",
+                "detail": {
+                  "codeId": "5c383f70-72af-49f8-a4e9-a7348980dad3"
+                },
+                "at": "2026-11-21T06:02:10.150722+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_CONSUMED",
+                "detail": {
+                  "codeId": "5c383f70-72af-49f8-a4e9-a7348980dad3"
+                },
+                "at": "2026-11-21T06:02:11.409591+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "DISPATCH_INTENT",
+                "detail": {
+                  "planHash": "Jcq6IWrymQtriqkYzF4_21pHChGLGGIVtkl51g5i-L0"
+                },
+                "at": "2026-11-21T06:02:11.409805+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "SUCCEEDED",
+                "detail": {
+                  "native": {
+                    "outcome": "DELETED",
+                    "affectedRows": 1
+                  }
+                },
+                "at": "2026-11-21T06:02:11.452109+08:00"
+              },
+              {
+                "actorId": "20000000-0000-4000-8000-000000000001",
+                "kind": "CODE_DENIED",
+                "detail": {
+                  "reason": "ALREADY_CONSUMED"
+                },
+                "at": "2026-11-21T06:02:12.673586+08:00"
+              }
+            ],
+            "notifications": [
+              {
+                "notificationId": "6a9e3938-8dcc-4ca2-9480-3120acd10473",
+                "actionId": "6d13498c-bc1e-4844-8ee3-f259d6039f8e",
+                "recipientId": "20000000-0000-4000-8000-000000000003",
+                "channel": "FEISHU",
+                "event": "APPROVAL_REQUIRED",
+                "expiresAt": "2026-11-21T06:10:46.901884+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T06:01:59.960788+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T22:01:54.94334Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T22:01:59.960895Z"
+                  }
+                ]
+              },
+              {
+                "notificationId": "22b7066e-8ec8-417e-ac1d-4d77a151b77b",
+                "actionId": "6d13498c-bc1e-4844-8ee3-f259d6039f8e",
+                "recipientId": "20000000-0000-4000-8000-000000000001",
+                "channel": "FEISHU",
+                "event": "APPROVED",
+                "expiresAt": "2026-11-21T06:04:59.988592+08:00",
+                "state": "ACKNOWLEDGED",
+                "attempts": 2,
+                "acknowledgedAt": "2026-11-21T06:02:09.943905+08:00",
+                "attemptLog": [
+                  {
+                    "number": 1,
+                    "outcome": "RECEIVER_REJECTED",
+                    "completedAt": "2026-11-20T22:02:04.94371Z"
+                  },
+                  {
+                    "number": 2,
+                    "outcome": "ACKNOWLEDGED",
+                    "completedAt": "2026-11-20T22:02:09.944064Z"
+                  }
+                ]
+              }
+            ]
+          },
+          "beforePostgreSQL": {
+            "index": {
+              "valid": true,
+              "definition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+            },
+            "orders": [
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_b"
+              },
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          },
+          "afterPostgreSQL": {
+            "index": {
+              "valid": true,
+              "definition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+            },
+            "orders": [
+              {
+                "amount": 120,
+                "status": "READY_TO_SHIP",
+                "version": 2,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_a"
+              },
+              {
+                "amount": 70,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_untouched_1",
+                "tenant_id": "tenant_a",
+                "shipping_code": "shipping_c"
+              },
+              {
+                "amount": 80,
+                "status": "CANCELLED",
+                "version": 1,
+                "order_id": "order_cancelled_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_e"
+              },
+              {
+                "amount": 50,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_other_tenant_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_f"
+              },
+              {
+                "amount": 100,
+                "status": "READY_TO_SHIP",
+                "version": 1,
+                "order_id": "order_recalc_1",
+                "tenant_id": "tenant_b",
+                "shipping_code": "shipping_d"
+              }
+            ]
+          }
+        }
+      ],
+      "codeTTLSeconds": 180,
+      "contextTTLSeconds": 600,
+      "gatewayStartupTimeoutSeconds": 45,
+      "harnessStartupTimeoutSeconds": 30,
+      "scope": "three isolated stdio positive scenarios and same-session concurrency",
+      "expiry": "verified in independent prior 50-second stdio sample",
+      "unusedOtherAction": {
+        "actionId": "719ad46b-f7b0-450f-b5df-f36fb18884a1",
+        "state": "APPROVED",
+        "events": [
+          {
+            "actorId": "20000000-0000-4000-8000-000000000001",
+            "kind": "PLANNED",
+            "detail": {
+              "plan": {
+                "table": "orders",
+                "schema": "mcpguard_w2_fixture",
+                "target": "orders_shipping_lookup_idx",
+                "indexColumn": "shipping_code",
+                "affectedRows": 0,
+                "indexDefinition": "CREATE INDEX orders_shipping_lookup_idx ON mcpguard_w2_fixture.orders USING btree (shipping_code)"
+              },
+              "planHash": "851yITy7n2OG3IGBALukCiHTKxyvDlQhzk1_mtedDEY",
+              "operation": "CREATE_ORDERS_INDEX",
+              "resourceId": "40000000-0000-4000-8000-000000000001",
+              "credentialId": "47935d02-6437-411b-bc92-48876b606c75"
+            },
+            "at": "2026-11-21T06:00:47.64631+08:00"
+          },
+          {
+            "actorId": "20000000-0000-4000-8000-000000000003",
+            "kind": "APPROVED",
+            "detail": {
+              "planHash": "851yITy7n2OG3IGBALukCiHTKxyvDlQhzk1_mtedDEY"
+            },
+            "at": "2026-11-21T06:00:54.986451+08:00"
+          },
+          {
+            "actorId": "20000000-0000-4000-8000-000000000003",
+            "kind": "CODE_ISSUED",
+            "detail": {
+              "codeId": "4dfa9201-1b6e-4188-aa15-6f2fab6d752a",
+              "planHash": "851yITy7n2OG3IGBALukCiHTKxyvDlQhzk1_mtedDEY",
+              "expiresAt": "2026-11-20T22:03:54.984395Z"
+            },
+            "at": "2026-11-21T06:00:54.986984+08:00"
+          },
+          {
+            "actorId": "20000000-0000-4000-8000-000000000001",
+            "kind": "CODE_CLAIMED",
+            "detail": {
+              "codeId": "4dfa9201-1b6e-4188-aa15-6f2fab6d752a"
+            },
+            "at": "2026-11-21T06:01:05.092548+08:00"
+          }
+        ],
+        "notifications": [
+          {
+            "notificationId": "6257e7b3-2841-47f2-b10e-0fed5109c5c8",
+            "actionId": "719ad46b-f7b0-450f-b5df-f36fb18884a1",
+            "recipientId": "20000000-0000-4000-8000-000000000003",
+            "channel": "FEISHU",
+            "event": "APPROVAL_REQUIRED",
+            "expiresAt": "2026-11-21T06:10:46.901884+08:00",
+            "state": "ACKNOWLEDGED",
+            "attempts": 2,
+            "acknowledgedAt": "2026-11-21T06:00:54.947118+08:00",
+            "attemptLog": [
+              {
+                "number": 1,
+                "outcome": "RECEIVER_REJECTED",
+                "completedAt": "2026-11-20T22:00:49.944726Z"
+              },
+              {
+                "number": 2,
+                "outcome": "ACKNOWLEDGED",
+                "completedAt": "2026-11-20T22:00:54.947259Z"
+              }
+            ]
+          },
+          {
+            "notificationId": "a924c7ad-3481-4107-aa30-10d174aa94b7",
+            "actionId": "719ad46b-f7b0-450f-b5df-f36fb18884a1",
+            "recipientId": "20000000-0000-4000-8000-000000000001",
+            "channel": "FEISHU",
+            "event": "APPROVED",
+            "expiresAt": "2026-11-21T06:03:54.984395+08:00",
+            "state": "ACKNOWLEDGED",
+            "attempts": 2,
+            "acknowledgedAt": "2026-11-21T06:01:04.942576+08:00",
+            "attemptLog": [
+              {
+                "number": 1,
+                "outcome": "RECEIVER_REJECTED",
+                "completedAt": "2026-11-20T22:00:59.945706Z"
+              },
+              {
+                "number": 2,
+                "outcome": "ACKNOWLEDGED",
+                "completedAt": "2026-11-20T22:01:04.942683Z"
+              }
+            ]
+          }
+        ]
+      },
+      "concurrentCodeReceipts": [
+        {
+          "transport": "stdio",
+          "harnessVersion": "0.2.2-rc.3",
+          "sdkVersion": "2.2.0",
+          "actionId": "523e65ff-acc2-4331-b44c-777a841d8d6b",
+          "requestId": "e35f520f-19ff-425b-8959-365a5c7af4d9",
+          "outcome": "RESULT_RETURNED",
+          "actionState": "SUCCEEDED",
+          "dispatchState": "DISPATCHED",
+          "executionStatus": "SUCCEEDED",
+          "errorCode": null,
+          "rejected": false
+        },
+        {
+          "transport": "stdio",
+          "harnessVersion": "0.2.2-rc.3",
+          "sdkVersion": "2.2.0",
+          "actionId": "523e65ff-acc2-4331-b44c-777a841d8d6b",
+          "requestId": "34ba7363-78ce-4c45-867a-6d2313672dc3",
+          "outcome": null,
+          "actionState": null,
+          "dispatchState": null,
+          "executionStatus": null,
+          "errorCode": "ACCESS_DENIED",
+          "rejected": true
+        }
+      ],
+      "checkedAt": "2026-11-20T22:02:13.447665+00:00",
+      "sha256": {
+        "mcpguard": "210ae37278f2f9fd5d54eb3cab9c303e7a22afe758d69b09689311bafe1afab6",
+        "mcpguard-connect": "a3eeb57f692304401fa0b49a367c61a5c597073e828e71ef698b6e17a1ec9132",
+        "mcpguard-http-helper": "a7842dcf85533865c13ae067fda0b7887dc1abe698e76c4616e6773b52405a1e",
+        "w2_high_risk_orders.sql": "f15eef262746dbcd17cc67fe125b055af7098b0c29a4ed14bd5002c082ee21fe",
+        "dsh-private-resume.mjs": "be87c30e563ed7f08bdadd27848cb3195dfc3126e5590427192b5e1a00be8a2d",
+        "dsh-tool-host.mjs": "6db2166fceb76addebe87d644d63d986d1cebf922a9beb6a026e8d3a74f25c85",
+        "dsh_client.py": "3ca53992c36b63499038fc4389d4bc7690d56fa4cf641a01bfb5f18ccc8c0c34",
+        "high_risk_notification_receiver.py": "a28364388122a5bc94ecf2781533a9851341eaedeabc2a8790b50cd35d5c8a3c",
+        "ra18_client_fixture.py": "d468ac4dd5abe8a0304b89ea88b3057114bc8a5dc50f784bc8a559e54ccd9244",
+        "wave2_high_risk_fixture.py": "56896a387cf5d2bb217616e6611b9dd7ab1f3abd055b604b8af458e4fc5280df",
+        "wave2-stdio-same-session.py": "6a0a0c1f2b4f3e9f7e19991fc4ae53e1404c004c300e452583245e19f719a1b9",
+        "wave2-stdio-same-session.mjs": "ef3acad2c45549dc1dab061305a58281758ae5c37bd980c71e691a978592f16f"
+      },
+      "status": "PASS"
+    }
+  },
+  "verifiedLocal": {
+    "status": "PASS",
+    "sharedBuildFingerprints": {
+      "mcpguard": "210ae37278f2f9fd5d54eb3cab9c303e7a22afe758d69b09689311bafe1afab6",
+      "mcpguard-connect": "a3eeb57f692304401fa0b49a367c61a5c597073e828e71ef698b6e17a1ec9132",
+      "mcpguard-http-helper": "a7842dcf85533865c13ae067fda0b7887dc1abe698e76c4616e6773b52405a1e",
+      "w2_high_risk_orders.sql": "f15eef262746dbcd17cc67fe125b055af7098b0c29a4ed14bd5002c082ee21fe",
+      "dsh-private-resume.mjs": "be87c30e563ed7f08bdadd27848cb3195dfc3126e5590427192b5e1a00be8a2d",
+      "dsh-tool-host.mjs": "6db2166fceb76addebe87d644d63d986d1cebf922a9beb6a026e8d3a74f25c85",
+      "dsh_client.py": "3ca53992c36b63499038fc4389d4bc7690d56fa4cf641a01bfb5f18ccc8c0c34",
+      "high_risk_notification_receiver.py": "a28364388122a5bc94ecf2781533a9851341eaedeabc2a8790b50cd35d5c8a3c",
+      "ra18_client_fixture.py": "d468ac4dd5abe8a0304b89ea88b3057114bc8a5dc50f784bc8a559e54ccd9244",
+      "wave2_high_risk_fixture.py": "56896a387cf5d2bb217616e6611b9dd7ab1f3abd055b604b8af458e4fc5280df"
+    },
+    "httpFixture": "5271fe0cba",
+    "httpAssertions": 145,
+    "stdioFixture": "79db11b152",
+    "stdioAssertions": 118,
+    "stdioReportSha256": "4051c8ff4f1986cccb12bb6fee9022ee26ecbf2b53431d310c16c2180e5cc675",
+    "stdioExpiryFixture": "d3a3a7ae63",
+    "stdioExpiryActionId": "19adea6c-6058-435b-8572-83412c0da22d",
+    "positiveOperations": 6,
+    "notificationChannels": [
+      "WECOM",
+      "FEISHU"
+    ],
+    "scope": "installed DeepSeek Harness native MCP tool executor and packaged private SDK in independent local fixtures"
+  },
+  "faultAcceptance": {
+    "status": "PASS",
+    "environment": "isolated PostgreSQL 16.14 RA-12 fixture with Go race detection",
+    "initialFixture": "ac8ee792ab",
+    "auditWriteFailure": {
+      "test": "TestHighRiskAuditWriteFailure",
+      "exitCode": 0,
+      "actionId": "8712b72d-2561-4b9c-9587-08de4a8059fb",
+      "observedAt": "2026-11-21T09:18:13+08:00",
+      "faultAttempts": 1,
+      "stateAfterFault": "APPROVED",
+      "codeConsumedAfterFault": false,
+      "dispatchIntentsBeforeExplicitRetry": 0,
+      "nativePoolsBeforeExplicitRetry": 0,
+      "rowsUnchangedBeforeExplicitRetry": true,
+      "recoveryAutomaticallyDispatched": false,
+      "explicitRetryDispatchIntents": 1,
+      "explicitRetryAffectedRows": 1,
+      "nativeAmountAfterExplicitRetry": 120,
+      "nativeVersionAfterExplicitRetry": 2
+    },
+    "postgresCommitOutcomeUnknown": {
+      "test": "TestHighRiskFaultCommitOutcomeUnknownNeverRetries",
+      "exitCode": 0,
+      "actionId": "1a188b34-61ea-4b7d-bd14-f87f8ceabe8c",
+      "observedAt": "2026-11-21T09:19:02+08:00",
+      "serverCommitAcknowledged": true,
+      "pgxObserved": "EOF",
+      "gatewayState": "OUTCOME_UNKNOWN",
+      "auditReason": "NATIVE_COMMIT_UNCONFIRMED",
+      "gatewayRecordedSuccess": false,
+      "targetBefore": {
+        "amount": 100,
+        "version": 1
+      },
+      "targetAfter": {
+        "amount": 120,
+        "version": 2
+      },
+      "comparisonAfter": {
+        "amount": 100,
+        "version": 1
+      },
+      "serviceRecreated": true,
+      "recoveryPasses": 2,
+      "replayDecision": "ALREADY_CONSUMED",
+      "nativeExecutions": 1,
+      "nativeCommits": 1,
+      "dispatchIntents": 1,
+      "codeConsumptions": 1
+    },
+    "candidateRetest": {
+      "fixture": "469cd90ed6",
+      "exitCode": 0,
+      "passedTestsIncludingLegacyWrites": 12,
+      "auditFailureActionId": "68512194-8f79-4bdb-b5f0-54726e8dd9d6",
+      "auditFailure": {
+        "faultAttempts": 1,
+        "state": "APPROVED",
+        "codeUnconsumed": true,
+        "dispatchIntentsBeforeExplicitRetry": 0,
+        "nativePoolsBeforeExplicitRetry": 0,
+        "nativeRowsUnchangedBeforeExplicitRetry": true,
+        "explicitRetryDispatchIntents": 1,
+        "explicitRetryAffectedRows": 1
+      },
+      "unknownCommitActionId": "dda351ef-7b61-467a-8d19-225cab378357",
+      "unknownCommit": {
+        "serverCommitAcknowledged": true,
+        "state": "OUTCOME_UNKNOWN",
+        "nativeExecutions": 1,
+        "nativeCommits": 1,
+        "dispatchIntents": 1,
+        "codeConsumptions": 1,
+        "recoveryPasses": 2,
+        "replayDecision": "ALREADY_CONSUMED",
+        "target": {
+          "amount": 120,
+          "version": 2
+        },
+        "comparison": {
+          "amount": 100,
+          "version": 1
+        }
+      }
+    }
+  },
+  "releaseCandidateRegression": {
+    "baseCommit": "3ba48b03165b363b2cfe71d3e66039fb3e48e5af",
+    "writeAndFaults": {
+      "runId": "469cd90ed6",
+      "exitCode": 0,
+      "passed": 12,
+      "skips": 0
+    },
+    "revocation": {
+      "runId": "d26f9885ef",
+      "exitCode": 0,
+      "passed": 10,
+      "skips": 0
+    },
+    "migrationAndRollback": {
+      "runId": "cb4d452aec",
+      "exitCode": 0,
+      "passed": 22,
+      "protectedReadChecks": 116
+    },
+    "generatedContractsVerified": 5,
+    "regular": {
+      "runId": "7a3e556fc4",
+      "exitCode": 0,
+      "passed": 309,
+      "coveredBySeparateFixtures": 22
+    },
+    "uniqueRaceTestsPassed": 331,
+    "remainingSkipped": 0,
+    "sourceFilesMatchingWslSnapshot": 329
+  }
+}

@@ -6,13 +6,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/xielforever/MCPGuard/internal/clientadapter"
-	v02 "github.com/xielforever/MCPGuard/internal/contracts/v02"
 	"net"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
+
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/xielforever/MCPGuard/internal/clientadapter"
+	v02 "github.com/xielforever/MCPGuard/internal/contracts/v02"
 )
 
 const Profile = "2025-11-25"
@@ -27,6 +29,44 @@ func (t bearerTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	c.Header = r.Header.Clone()
 	c.Header.Set("Authorization", "Bearer "+t.token)
 	return t.base.RoundTrip(c)
+}
+
+type upstreamSession struct {
+	mu      sync.Mutex
+	session *mcp.ClientSession
+	active  int
+	connect func(context.Context) (*mcp.ClientSession, error)
+}
+
+func (u *upstreamSession) acquire(ctx context.Context) (*mcp.ClientSession, func(), error) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	// Probe the upstream between groups of calls. An expired HTTP session may
+	// outlive its local stdio connection. Reconnect before forwarding caller
+	// requests, and keep concurrent requests on their original session.
+	if u.active == 0 && u.session.Ping(ctx, nil) != nil {
+		if err := ctx.Err(); err != nil {
+			return nil, nil, err
+		}
+		next, err := u.connect(ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+		_ = u.session.Close()
+		u.session = next
+	}
+	u.active++
+	return u.session, func() {
+		u.mu.Lock()
+		u.active--
+		u.mu.Unlock()
+	}, nil
+}
+
+func (u *upstreamSession) close() {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	_ = u.session.Close()
 }
 
 func Run(ctx context.Context, endpoint, token string, allowLoopbackHTTP bool, transport mcp.Transport) error {
@@ -69,24 +109,41 @@ func run(ctx context.Context, endpoint, token string, allowLoopbackHTTP bool, tr
 		hc.Transport = private.Transport(http.DefaultTransport.(*http.Transport).Clone())
 	}
 	client := mcp.NewClient(&mcp.Implementation{Name: "mcpguard-connect", Version: version}, &mcp.ClientOptions{Capabilities: clientCaps})
-	boot, cancel := context.WithTimeout(ctx, 8*time.Second)
-	defer cancel()
-	remote, e := client.Connect(boot, &mcp.StreamableClientTransport{Endpoint: endpoint, HTTPClient: hc, MaxRetries: -1, DisableStandaloneSSE: true, MaxEventSize: 128 << 10}, &mcp.ClientSessionOptions{ProtocolVersion: Profile})
+	connect := func(ctx context.Context) (*mcp.ClientSession, error) {
+		boot, cancel := context.WithTimeout(ctx, 8*time.Second)
+		defer cancel()
+		remote, err := client.Connect(boot, &mcp.StreamableClientTransport{Endpoint: endpoint, HTTPClient: hc, MaxRetries: -1, DisableStandaloneSSE: true, MaxEventSize: 128 << 10}, &mcp.ClientSessionOptions{ProtocolVersion: Profile})
+		if err != nil {
+			return nil, errors.New("gateway connection or employee authentication failed")
+		}
+		if remote.InitializeResult().ProtocolVersion != Profile {
+			_ = remote.Close()
+			return nil, errors.New("gateway did not negotiate the required profile")
+		}
+		return remote, nil
+	}
+	remote, e := connect(ctx)
 	if e != nil {
-		return errors.New("gateway connection or employee authentication failed")
+		return e
 	}
-	defer remote.Close()
-	if remote.InitializeResult().ProtocolVersion != Profile {
-		return errors.New("gateway did not negotiate the required profile")
-	}
+	upstream := upstreamSession{session: remote, connect: connect}
+	defer upstream.close()
 	server := mcp.NewServer(&mcp.Implementation{Name: "mcpguard-connect", Version: version}, &mcp.ServerOptions{SupportedProtocolVersions: []string{Profile}, Capabilities: serverCaps})
 	server.AddReceivingMiddleware(func(next mcp.MethodHandler) mcp.MethodHandler {
 		return func(c context.Context, method string, req mcp.Request) (mcp.Result, error) {
-			if private != nil && (method == "tools/list" || method == "tools/call") {
+			if method != "tools/list" && method != "tools/call" {
+				return next(c, method, req)
+			}
+			if private != nil {
 				if _, e := private.Step(c, true); e != nil {
 					return nil, errors.New("private client unavailable; refresh identity or repair Context privately")
 				}
 			}
+			remote, release, e := upstream.acquire(c)
+			if e != nil {
+				return nil, e
+			}
+			defer release()
 			switch method {
 			case "tools/list":
 				out, e := remote.ListTools(c, req.(*mcp.ListToolsRequest).Params)

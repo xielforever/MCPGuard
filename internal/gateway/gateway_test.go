@@ -26,6 +26,19 @@ func TestStrictArgumentsAndContract(t *testing.T) {
 	}
 	validateResult(t, failure("ACCESS_DENIED", "AUTHORIZATION", "Denied"))
 }
+
+func TestActionControlOutputSchemaDeclaresObject(t *testing.T) {
+	var schema struct {
+		Type string
+	}
+	if err := json.Unmarshal(controlledActionSchema, &schema); err != nil {
+		t.Fatal(err)
+	}
+	if schema.Type != "object" {
+		t.Fatalf("MCP action tool outputSchema type = %q, want object", schema.Type)
+	}
+}
+
 func validateResult(t *testing.T, r Result) {
 	t.Helper()
 	var s jsonschema.Schema

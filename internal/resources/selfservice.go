@@ -2,8 +2,8 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -15,10 +15,10 @@ import (
 // It only returns metadata needed by the pages: never native secrets, package
 // ciphertext, plan bodies or tokens.
 type SelfServiceConsole struct {
-	Catalog     *Catalog
-	Access      *AccessService
-	Writes      *WriteService
-	Revoker     *RevocationService
+	Catalog *Catalog
+	Access  *AccessService
+	Writes  *WriteService
+	Revoker *RevocationService
 }
 
 // ConsoleResource is one row of the resource page.
@@ -158,7 +158,11 @@ func (s *SelfServiceConsole) WriteQueue(ctx context.Context, p metadata.Principa
 	if e := s.requireReviewer(ctx, p); e != nil {
 		return nil, e
 	}
-	rows, e := s.Catalog.Store.Pool.Query(ctx, `SELECT request_id::text FROM mcpguard_ra.write_requests w WHERE w.org_id=$1 AND w.state='DEFERRED' AND EXISTS(SELECT FROM mcpguard_ra.access_reviewers r WHERE r.org_id=w.org_id AND r.resource_id=w.resource_id AND r.principal_id=$2 AND r.can_approve) ORDER BY created_at`, p.OrgID, p.ID)
+	query := `SELECT request_id::text FROM mcpguard_ra.write_requests w WHERE w.org_id=$1 AND w.state='DEFERRED' AND EXISTS(SELECT FROM mcpguard_ra.access_reviewers r WHERE r.org_id=w.org_id AND r.resource_id=w.resource_id AND r.principal_id=$2 AND r.can_approve)`
+	if s.Writes != nil && s.Writes.HighRisk != nil {
+		query += ` AND NOT EXISTS(SELECT FROM mcpguard_ra.high_risk_writes h WHERE h.org_id=w.org_id AND h.action_id=w.request_id AND h.reviewer_id<>$2)`
+	}
+	rows, e := s.Catalog.Store.Pool.Query(ctx, query+` ORDER BY created_at`, p.OrgID, p.ID)
 	if e != nil {
 		return nil, ErrUnavailable
 	}
@@ -262,6 +266,21 @@ func (s *SelfServiceConsole) ServeHTTP(w http.ResponseWriter, r *http.Request, p
 			return fail(e, "")
 		}
 		return write(http.StatusOK, map[string]any{"writeRequests": out})
+	case r.Method == "GET" && strings.HasPrefix(path, "write-requests/") && strings.HasSuffix(path, "/authorization-code"):
+		id := strings.TrimSuffix(strings.TrimPrefix(path, "write-requests/"), "/authorization-code")
+		code, expiry, e := s.Writes.ClaimHighRiskCode(r.Context(), p, id)
+		if e != nil {
+			return fail(e, "")
+		}
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		return write(http.StatusOK, map[string]any{"authorizationCode": code, "expiresAt": expiry})
+	case r.Method == "GET" && strings.HasPrefix(path, "write-requests/") && strings.HasSuffix(path, "/evidence"):
+		id := strings.TrimSuffix(strings.TrimPrefix(path, "write-requests/"), "/evidence")
+		out, e := s.Writes.HighRiskEvidence(r.Context(), p, id)
+		if e != nil {
+			return fail(e, "")
+		}
+		return write(http.StatusOK, out)
 	case r.Method == "POST" && strings.HasPrefix(path, "write-requests/"):
 		rest := strings.TrimPrefix(path, "write-requests/")
 		if !strings.HasSuffix(rest, "/decisions") {

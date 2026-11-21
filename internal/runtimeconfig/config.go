@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"time"
 )
 
 type Config struct {
@@ -29,6 +30,10 @@ type Config struct {
 	ResourceReads                                                     bool
 	ResourceWrites                                                    bool
 	NativeSecrets                                                     string
+	HighRiskWrites                                                    bool
+	HighRiskResourceID, HighRiskReviewerID, HighRiskChannel           string
+	HighRiskWeComURL, HighRiskFeishuURL                               string
+	HighRiskCodeTTL                                                   time.Duration
 }
 
 func Load() (Config, error) {
@@ -65,6 +70,24 @@ func Load() (Config, error) {
 		}
 	default:
 		return c, errors.New("explicit MCPGUARD_AUTH_MODE=dev-tokens or oauth-fixture is required; enterprise SSO is not implemented")
+	}
+	if value := os.Getenv("MCPGUARD_HIGH_RISK_WRITES"); value != "" && value != "disabled" {
+		if value != "enabled" || !c.ResourceWrites || c.ConsoleConfig == "" || c.AuthMode != "dev-tokens" {
+			return c, errors.New("MCPGUARD_HIGH_RISK_WRITES=enabled requires local dev tokens, resource writes and the browser console")
+		}
+		c.HighRiskWrites = true
+		c.HighRiskResourceID = os.Getenv("MCPGUARD_HIGH_RISK_RESOURCE_ID")
+		c.HighRiskReviewerID = os.Getenv("MCPGUARD_HIGH_RISK_REVIEWER_ID")
+		c.HighRiskChannel = os.Getenv("MCPGUARD_HIGH_RISK_CHANNEL")
+		c.HighRiskWeComURL = os.Getenv("MCPGUARD_HIGH_RISK_WECOM_URL")
+		c.HighRiskFeishuURL = os.Getenv("MCPGUARD_HIGH_RISK_FEISHU_URL")
+		c.HighRiskCodeTTL = 5 * time.Minute
+		if value := os.Getenv("MCPGUARD_HIGH_RISK_CODE_TTL"); value != "" {
+			c.HighRiskCodeTTL, err = time.ParseDuration(value)
+			if err != nil || c.HighRiskCodeTTL < time.Second || c.HighRiskCodeTTL > 15*time.Minute {
+				return c, errors.New("MCPGUARD_HIGH_RISK_CODE_TTL must be between 1s and 15m")
+			}
+		}
 	}
 	if c.MetadataDSN == "" || c.LegacyDemo && c.BusinessDSN == "" {
 		return c, errors.New("metadata DSN and, when legacy demo is enabled, business DSN are required")
