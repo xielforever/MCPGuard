@@ -168,7 +168,7 @@ class Scenario:
         return fixture.query(self.cfg if pg is None else self.cfg['raPgAdmins'][pg], database or default, sql)
 
     @contextmanager
-    def gateway(self, restored=None):
+    def gateway(self, restored=None, *, startup_timeout=12):
         env = self.env.copy()
         if restored:
             for name in ('MCPGUARD_METADATA_DSN', 'MCPGUARD_DELIVERY_DSN', 'MCPGUARD_CONTEXT_DSN',
@@ -185,7 +185,7 @@ class Scenario:
                         return self.wire.http(self.port, '/healthz', method='GET')[0] == 200
                     except OSError:
                         return False
-                self.wire.until(ready, 12)
+                self.wire.until(ready, startup_timeout)
                 yield
             finally:
                 process.terminate()

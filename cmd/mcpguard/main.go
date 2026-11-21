@@ -192,6 +192,15 @@ func run() error {
 					if cfg.ResourceWrites {
 						writes := resources.NewWriteService(catalog, credentials, manager)
 						writes.Fence = fence
+						if cfg.HighRiskWrites {
+							notifier, err := resources.OpenHighRiskNotifier(contextStore, cfg.HighRiskWeComURL, cfg.HighRiskFeishuURL)
+							if err != nil || console == nil || writes.EnableFixtureHighRisk(resources.HighRiskPolicy{
+								ResourceID: cfg.HighRiskResourceID, ReviewerID: cfg.HighRiskReviewerID,
+								Channel: cfg.HighRiskChannel, CodeTTL: cfg.HighRiskCodeTTL, Notifier: notifier,
+							}) != nil {
+								return errors.New("high-risk fixture writes require migrated storage, a reviewer, and both local notice receivers")
+							}
+						}
 						g.AttachWrites(writes)
 						g.AttachSelfService(console)
 					}

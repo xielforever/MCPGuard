@@ -474,7 +474,14 @@
     try { ({writeRequests: writes} = await api('api/v2/self-service/write-requests')); } catch (error) {}
     parent.append(listPanel('资源与用量', '计数为当前真实状态；停用资源不影响历史记录。', ['资源', '类型', '状态', '套餐', '绑定', '授予', '凭据', '待批写'], resources.map(row => [row.resourceId, row.kind, boolBadge(row.enabled, '启用', '停用'), String(row.profiles), String(row.bindings), String(row.activeGrants), String(row.activeCredentials), String(row.pendingWrites)])));
     parent.append(listPanel('凭据', '只显示状态与到期；不含包内容或原生秘密。', ['凭据', '主体', '资源', '状态', '到期'], credentials.map(row => [ui.shortID(row.credentialId), ui.shortID(row.subjectId), ui.shortID(row.resourceId), stateBadge(row.state), row.expiresAt])));
-    parent.append(listPanel('待批写', '申请人不能自批；重复决定返回明确的版本冲突。', ['计划', '状态', '资源', '操作'], writes.map(row => [ui.shortID(row.requestId), stateBadge(row.state), ui.shortID(row.resourceId), row.state === 'DEFERRED' ? button('批准', trigger => decideWrite(row.requestId, true, trigger), {small: true}) : '—'])));
+    const writePreview = plan => {
+      if (!plan) return '备注更新';
+      if (plan.indexDefinition) return plan.indexDefinition;
+      const target = `${plan.schema}.${plan.table} / ${plan.tenantId} / ${plan.target}（版本 ${plan.expectedVersion}，${plan.expectedStatus}）`;
+      if (plan.newAmount) return `订单 ${target}，金额 ${plan.oldAmount} → ${plan.newAmount}，预计 ${plan.affectedRows} 行`;
+      return `删除订单 ${target}，预计 ${plan.affectedRows} 行`;
+    };
+    parent.append(listPanel('待批写', '申请人不能自批；重复决定返回明确的版本冲突。', ['计划', '状态', '资源', '预览', '操作'], writes.map(row => [ui.shortID(row.requestId), stateBadge('action', row.state === 'DEFERRED' ? 'PENDING_APPROVAL' : row.state), ui.shortID(row.resourceId), writePreview(row.highRisk), row.state === 'DEFERRED' ? button('批准', trigger => decideWrite(row.requestId, true, trigger), {small: true}) : '—'])));
     parent.append(listPanel('撤销记录', '每次撤销的影响计数来自服务端审计。', ['序号', '级别', '目标', '主体', '资源', '授予', '凭据', '时间'], revocations.map(row => [row.seq, row.kind, ui.shortID(row.targetId), row.subjectId ? ui.shortID(row.subjectId) : '—', row.resourceId ? ui.shortID(row.resourceId) : '—', String(row.grants), String(row.credentials), row.createdAt])));
     let kind, target, reason;
     const form = ui.form('执行撤销', '撤销先提交即生效；影响计数随后出现在上方记录。', '确认撤销', async trigger => {

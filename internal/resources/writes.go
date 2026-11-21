@@ -17,24 +17,27 @@ import (
 // WriteStatus is the safe view of one controlled resource write. It never
 // carries package bytes, native secrets or the frozen plan.
 type WriteStatus struct {
-	SchemaVersion   string       `json:"schemaVersion"`
-	RequestID       string       `json:"requestId"`
-	State           string       `json:"state"`
-	ResourceID      string       `json:"resourceId"`
-	CredentialID    string       `json:"credentialId"`
-	ItemID          string       `json:"itemId"`
-	ExpectedVersion v02.Version  `json:"expectedVersion"`
-	DecidedBy       *string      `json:"decidedBy"`
-	Result          *WriteResult `json:"result"`
-	CreatedAt       time.Time    `json:"-"`
-	ExpiresAt       time.Time    `json:"-"`
-	PlanHash        string       `json:"-"`
-	HasResult       bool         `json:"-"`
+	SchemaVersion   string               `json:"schemaVersion"`
+	RequestID       string               `json:"requestId"`
+	State           string               `json:"state"`
+	ResourceID      string               `json:"resourceId"`
+	CredentialID    string               `json:"credentialId"`
+	ItemID          string               `json:"itemId"`
+	ExpectedVersion v02.Version          `json:"expectedVersion"`
+	DecidedBy       *string              `json:"decidedBy"`
+	Result          *WriteResult         `json:"result"`
+	HighRisk        *HighRiskPlanPreview `json:"highRisk,omitempty"`
+	CreatedAt       time.Time            `json:"-"`
+	ExpiresAt       time.Time            `json:"-"`
+	PlanHash        string               `json:"-"`
+	HasResult       bool                 `json:"-"`
+	DispatchIntent  bool                 `json:"-"`
 }
 
 type WriteResult struct {
-	Outcome    string `json:"outcome"`
-	NewVersion string `json:"newVersion"`
+	Outcome    string                `json:"outcome"`
+	NewVersion string                `json:"newVersion"`
+	Native     *HighRiskNativeResult `json:"native,omitempty"`
 }
 
 // WriteService owns one fixed resource write. Resource authorization is not a
@@ -45,6 +48,7 @@ type WriteService struct {
 	Credentials *CredentialService
 	Manager     *ReadManager
 	Fence       *RestoreFence
+	HighRisk    *HighRiskPolicy
 }
 
 func NewWriteService(c *Catalog, credentials *CredentialService, m *ReadManager) *WriteService {
@@ -73,8 +77,20 @@ const writeColumns = `subject_id::text,resource_id::text,credential_id::text,ite
 
 // Plan freezes one write and records it as DEFERRED for another person.
 func (s *WriteService) Plan(ctx context.Context, p metadata.Principal, in v02.UpdateNoteInput, requestKey string) (WriteStatus, error) {
+	return s.plan(ctx, p, in, requestKey, nil)
+}
+
+type frozenWritePlan struct {
+	Principal string
+	Snapshot  Snapshot
+	Input     v02.UpdateNoteInput
+	Revision  int64
+	HighRisk  *HighRiskPlanInput `json:",omitempty"`
+}
+
+func (s *WriteService) plan(ctx context.Context, p metadata.Principal, in v02.UpdateNoteInput, requestKey string, highRisk *HighRiskPlanInput) (WriteStatus, error) {
 	out := WriteStatus{SchemaVersion: "0.2"}
-	if !valid("UpdateNoteInput", in) || requestKey == "" || len(requestKey) > 128 {
+	if (highRisk == nil && !valid("UpdateNoteInput", in)) || requestKey == "" || len(requestKey) > 128 {
 		return out, ErrInput
 	}
 	tx, epoch, e := s.Catalog.begin(ctx, p)
@@ -99,21 +115,25 @@ func (s *WriteService) Plan(ctx context.Context, p metadata.Principal, in v02.Up
 		}
 	}
 	id := uuid.NewString()
-	plan, _ := json.Marshal(struct {
-		Principal string
-		Snapshot  Snapshot
-		Input     v02.UpdateNoteInput
-		Revision  int64
-	}{p.ID, snap, in, row.revision})
+	plan, e := json.Marshal(frozenWritePlan{p.ID, snap, in, row.revision, highRisk})
+	if e != nil {
+		return out, ErrUnavailable
+	}
+	planHash := s.Catalog.Store.Vault.Hash(plan)
 	expected, _ := strconv.ParseInt(string(in.ExpectedVersion), 10, 64)
 	_, e = tx.Exec(ctx, `INSERT INTO mcpguard_ra.write_requests(org_id,request_id,subject_id,resource_id,resource_version,binding_id,binding_version,credential_id,credential_revision,native_identity,secret_version,item_id,expected_version,auth_epoch,plan_hash,plan_ciphertext,state,request_key)
  VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'DEFERRED',$17)`,
-		p.OrgID, id, p.ID, in.ResourceID, snap.Resource.Version, snap.Binding.BindingID, snap.Binding.BindingVersion, in.CredentialID, row.revision, snap.Binding.NativeIdentity, snap.Binding.SecretVersion, in.ItemID, expected, epoch, s.Catalog.Store.Vault.Hash(plan), s.Catalog.Store.Vault.Seal(plan, writeAAD(p, id)), requestKey)
+		p.OrgID, id, p.ID, in.ResourceID, snap.Resource.Version, snap.Binding.BindingID, snap.Binding.BindingVersion, in.CredentialID, row.revision, snap.Binding.NativeIdentity, snap.Binding.SecretVersion, in.ItemID, expected, epoch, planHash, s.Catalog.Store.Vault.Seal(plan, writeAAD(p, id)), requestKey)
 	if e != nil {
 		return out, fmt.Errorf("plan insert: %w", e)
 	}
 	if e = writeAudit(ctx, tx, p, id, "PLANNED"); e != nil {
 		return out, fmt.Errorf("plan audit: %w", e)
+	}
+	if highRisk != nil {
+		if e = s.recordHighRiskPlan(ctx, tx, p, id, *highRisk, planHash); e != nil {
+			return out, e
+		}
 	}
 	if e = commit(ctx, tx); e != nil {
 		return out, fmt.Errorf("plan commit: %w", e)
@@ -133,8 +153,8 @@ func (s *WriteService) Approve(ctx context.Context, p metadata.Principal, id str
 		return out, fmt.Errorf("approve begin2: %w", e)
 	}
 	defer rollback(tx)
-	var subject, resource string
-	if tx.QueryRow(ctx, `SELECT subject_id::text,resource_id::text FROM mcpguard_ra.write_requests WHERE org_id=$1 AND request_id=$2`, p.OrgID, id).Scan(&subject, &resource) != nil {
+	var subject, resource, planHash, state string
+	if tx.QueryRow(ctx, `SELECT subject_id::text,resource_id::text,plan_hash,state FROM mcpguard_ra.write_requests WHERE org_id=$1 AND request_id=$2 FOR UPDATE`, p.OrgID, id).Scan(&subject, &resource, &planHash, &state) != nil {
 		return out, fmt.Errorf("approve load: %w", ErrDenied)
 	}
 	if subject == p.ID {
@@ -153,6 +173,12 @@ func (s *WriteService) Approve(ctx context.Context, p metadata.Principal, id str
 	reasonValue := any(nil)
 	if reason != "" {
 		reasonValue = reason
+	}
+	if state != "DEFERRED" {
+		return out, ErrConflict
+	}
+	if e = s.recordHighRiskDecision(ctx, tx, p, id, subject, resource, planHash, approve); e != nil {
+		return out, e
 	}
 	tag, e := tx.Exec(ctx, `UPDATE mcpguard_ra.write_requests SET state=$3,decided_by=$4,decided_at=clock_timestamp(),decision_reason=$5 WHERE org_id=$1 AND request_id=$2 AND state='DEFERRED' AND subject_id<>$4`, p.OrgID, id, next, p.ID, reasonValue)
 	if e != nil {
@@ -211,6 +237,13 @@ func (s *WriteService) ResumeInContext(ctx context.Context, p metadata.Principal
 
 func (s *WriteService) resume(ctx context.Context, p metadata.Principal, id string, contexts *ContextService, proof ContextProof) (WriteStatus, error) {
 	out := WriteStatus{SchemaVersion: "0.2"}
+	protected, e := s.IsHighRisk(ctx, p, id)
+	if e != nil {
+		return out, e
+	}
+	if protected {
+		return s.ResumeHighRisk(ctx, p, id, "", contexts, proof)
+	}
 	if contexts != nil {
 		row, e := s.row(ctx, p, id)
 		if e != nil || row.SubjectID != p.ID {
@@ -243,13 +276,8 @@ func (s *WriteService) resume(ctx context.Context, p metadata.Principal, id stri
 		return out, fmt.Errorf("resume row: %w", e)
 	}
 	plan, e := s.Catalog.Store.Vault.Open(row.PlanCipher, writeAAD(p, id))
-	var frozen struct {
-		Principal string
-		Snapshot  Snapshot
-		Input     v02.UpdateNoteInput
-		Revision  int64
-	}
-	if e != nil || json.Unmarshal(plan, &frozen) != nil {
+	var frozen frozenWritePlan
+	if e != nil || json.Unmarshal(plan, &frozen) != nil || frozen.HighRisk != nil {
 		s.finish(p, id, "FAILED", nil)
 		return out, fmt.Errorf("resume plan: %w", ErrUnavailable)
 	}
@@ -436,10 +464,26 @@ func (s *WriteService) Status(ctx context.Context, p metadata.Principal, id stri
 		}
 		out.Result = &result
 	}
+	if s.HighRisk != nil {
+		var preview HighRiskPlanPreview
+		err := s.Catalog.Store.Pool.QueryRow(ctx, `SELECT a.detail->'plan',h.dispatch_at IS NOT NULL
+ FROM mcpguard_ra.high_risk_audit a JOIN mcpguard_ra.high_risk_writes h USING(org_id,action_id)
+ WHERE a.org_id=$1 AND a.action_id=$2 AND a.event_kind='PLANNED'`, p.OrgID, id).Scan(&preview, &out.DispatchIntent)
+		switch {
+		case err == nil:
+			out.HighRisk = &preview
+		case !errors.Is(err, pgx.ErrNoRows):
+			return WriteStatus{}, ErrUnavailable
+		}
+	}
 	return out, nil
 }
 
 func (s *WriteService) finish(p metadata.Principal, id, state string, result []byte) error {
+	return s.finishWrite(p, id, state, result, nil)
+}
+
+func (s *WriteService) finishWrite(p metadata.Principal, id, state string, result []byte, highRiskDetail map[string]any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	tx, e := s.Catalog.Store.Pool.Begin(ctx)
@@ -460,6 +504,11 @@ func (s *WriteService) finish(p metadata.Principal, id, state string, result []b
 	}
 	if e = writeAudit(ctx, tx, p, id, state); e != nil {
 		return ErrUnavailable
+	}
+	if highRiskDetail != nil {
+		if e := highRiskAudit(ctx, tx, p, id, state, highRiskDetail); e != nil {
+			return e
+		}
 	}
 	return commit(ctx, tx)
 }

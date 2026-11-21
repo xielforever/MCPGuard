@@ -281,6 +281,17 @@ func main() {
 		}
 		if err == nil && os.Args[1] == "grant-write-runtime" {
 			_, err = c.Exec(ctx, "GRANT SELECT,INSERT ON mcpguard_ra.write_requests,mcpguard_ra.write_audit TO "+role+";GRANT UPDATE(state,decided_by,decided_at,decision_reason,result_ciphertext) ON mcpguard_ra.write_requests TO "+role)
+			var hasHighRisk bool
+			if err == nil {
+				err = c.QueryRow(ctx, "SELECT to_regclass('mcpguard_ra.high_risk_writes') IS NOT NULL").Scan(&hasHighRisk)
+			}
+			if err == nil && hasHighRisk {
+				_, err = c.Exec(ctx, `
+ GRANT SELECT,INSERT ON mcpguard_ra.high_risk_writes,mcpguard_ra.high_risk_audit,
+  mcpguard_ra.high_risk_notifications,mcpguard_ra.high_risk_notification_attempts TO `+role+`;
+ GRANT UPDATE(code_id,code_digest,code_ciphertext,expires_at,consumed_at,dispatch_at) ON mcpguard_ra.high_risk_writes TO `+role+`;
+ GRANT UPDATE(state,attempts,next_at,lease_until,acknowledged_at,last_failure) ON mcpguard_ra.high_risk_notifications TO `+role)
+			}
 		}
 	case "migrate":
 		switch {
