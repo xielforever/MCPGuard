@@ -22,7 +22,8 @@
   ];
   const tools = ['pg.update_demo_note', 'redis.get_demo_note', 'redis.set_demo_note', 'directory.get_demo_office', 'inventory.reserve_demo'];
   const connectorTypes = [
-    {value: 'postgresql', label: 'PostgreSQL'}, {value: 'redis', label: 'Redis'},
+    {value: 'postgresql', label: 'PostgreSQL', port: 5432}, {value: 'mysql', label: 'MySQL', port: 3306},
+    {value: 'redis', label: 'Redis', port: 6379},
     {value: 'jenkins', label: 'Jenkins'}, {value: 'kubernetes', label: 'Kubernetes'}
   ];
   const connectorTestStates = {
@@ -413,7 +414,8 @@
       catch (error) { if (!error.silent) showMessage('已保存连接器，请刷新列表后测试。', 'warning'); }
     });
     const name = field(form.fields, '连接器名称', 'text', {required: true, maxLength: 100});
-    const type = field(form.fields, '连接器类型', 'select', {choices: connectorTypes});
+    const choices = connectorTypes.filter(item => item.value !== 'mysql' || snapshot.mysqlAvailable === true);
+    const type = field(form.fields, '连接器类型', 'select', {choices});
     const fields = el('div', null, 'connector-fields');
     form.fields.append(fields);
     const audience = el('fieldset', null, 'connector-audience');
@@ -443,11 +445,11 @@
       list.push([key, control]);
       return control;
     }
-    const network = type === 'postgresql' || type === 'redis';
+    const defaultPort = connectorTypes.find(item => item.value === type)?.port;
     let tls;
-    if (network) {
+    if (defaultPort) {
       input(config, 'host', '主机', 'text', {required: true, maxLength: 253});
-      const port = input(config, 'port', '端口', 'number', {required: true, value: type === 'postgresql' ? 5432 : 6379});
+      const port = input(config, 'port', '端口', 'number', {required: true, value: defaultPort});
       port.min = '1';
       port.max = '65535';
       port.step = '1';
@@ -458,6 +460,9 @@
     if (type === 'postgresql') {
       input(config, 'database', '数据库', 'text', {required: true, maxLength: 63});
       input(config, 'schema', 'Schema', 'text', {required: true, maxLength: 63});
+    } else if (type === 'mysql') {
+      input(config, 'database', '数据库', 'text', {required: true, maxLength: 64,
+        hint: '只开放该数据库的表目录和字段结构。'});
     } else if (type === 'redis') {
       input(config, 'keyPrefix', '允许的键前缀', 'text', {required: true, maxLength: 256});
       input(config, 'probeKey', '用于测试的键', 'text', {required: true, maxLength: 1024, hint: '使用已存在且符合允许前缀的键。'});
@@ -471,7 +476,7 @@
       const user = input(credentials, 'username', '服务账号', 'text', {required: true, maxLength: 256});
       user.autocomplete = 'off';
     }
-    const secretLabel = network ? '密码' : type === 'jenkins' ? 'API Token' : 'Bearer Token';
+    const secretLabel = defaultPort ? '密码' : type === 'jenkins' ? 'API Token' : 'Bearer Token';
     const secret = input(credentials, 'secret', secretLabel, 'password', {required: true, maxLength: type === 'jenkins' ? 1024 : 8192});
     secret.autocomplete = 'new-password';
     const certificate = input(config, 'caCertificate', 'CA 证书（可选）', 'textarea', {hint: '仅在使用私有 CA 时填写 PEM 证书。', maxLength: 16384});

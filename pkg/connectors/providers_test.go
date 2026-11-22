@@ -33,6 +33,11 @@ func TestProviderValidation(t *testing.T) {
 		want        error
 	}{
 		{"normalized PG port", PostgreSQL, Config{Host: " 127.0.0.1 ", Database: "orders", Schema: "public"}, credentials, nil},
+		{"normalized MySQL port", MySQL, Config{Host: " 127.0.0.1 ", Database: "orders"}, credentials, nil},
+		{"qualified MySQL database", MySQL, Config{Host: "127.0.0.1", Database: "other.orders"}, credentials, ErrInput},
+		{"extra MySQL schema", MySQL, Config{Host: "127.0.0.1", Database: "orders", Schema: "public"}, credentials, ErrInput},
+		{"MySQL database name above identifier limit", MySQL, Config{Host: "127.0.0.1", Database: strings.Repeat("库", 65)}, credentials, ErrInput},
+		{"non-loopback MySQL without TLS", MySQL, Config{Host: "192.0.2.1", Database: "orders"}, credentials, ErrInput},
 		{"Redis probe outside prefix", Redis, Config{Host: "127.0.0.1", KeyPrefix: "orders:", ProbeKey: "shipping:1"}, credentials, ErrInput},
 		{"build permission for Redis", Redis, Config{Host: "127.0.0.1", KeyPrefix: "orders:", ProbeKey: "orders:1", AllowBuilds: true}, credentials, ErrInput},
 		{"DNS name without TLS", Redis, Config{Host: "localhost", KeyPrefix: "orders:", ProbeKey: "orders:1"}, credentials, ErrInput},
@@ -51,8 +56,39 @@ func TestProviderValidation(t *testing.T) {
 			if err == nil && tt.kind == PostgreSQL && (config.Host != "127.0.0.1" || config.Port != 5432) {
 				t.Fatal("PostgreSQL endpoint was not normalized")
 			}
+			if err == nil && tt.kind == MySQL && (config.Host != "127.0.0.1" || config.Port != 3306) {
+				t.Fatal("MySQL endpoint was not normalized")
+			}
 			if err == nil && tt.kind == Kubernetes && (!config.TLS || config.BaseURL != "https://127.0.0.1") {
 				t.Fatal("Kubernetes TLS endpoint was not normalized")
+			}
+		})
+	}
+}
+
+func TestMySQLReadScope(t *testing.T) {
+	providers := testProviders(t)
+	def := Definition{
+		Type: MySQL, Config: Config{Host: "192.0.2.1", Port: 3306, TLS: true, Database: "orders"},
+		Credentials: Credentials{Username: "reader", Secret: "fixture-credential"},
+	}
+	tests := []struct {
+		name      string
+		operation string
+		args      ReadInput
+		want      error
+	}{
+		{"list validates egress at dial", ListTables, ReadInput{}, ErrDenied},
+		{"columns validates egress at dial", ListColumns, ReadInput{Table: "orders"}, ErrDenied},
+		{"qualified table rejected before dialing", ListColumns, ReadInput{Table: "other.orders"}, ErrInput},
+		{"extra selector rejected before dialing", ListColumns, ReadInput{Table: "orders", Key: "unexpected"}, ErrInput},
+		{"arbitrary query rejected before dialing", "query", ReadInput{Table: "orders"}, ErrInput},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := providers.Read(context.Background(), def, tt.operation, tt.args)
+			if !errors.Is(err, tt.want) {
+				t.Fatalf("Read error = %v, want %v", err, tt.want)
 			}
 		})
 	}

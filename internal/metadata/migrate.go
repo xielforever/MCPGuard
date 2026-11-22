@@ -26,9 +26,12 @@ var jenkinsResourceDDL string
 //go:embed migrations/006_connectors.sql
 var connectorsDDL string
 
+//go:embed migrations/007_mysql_connectors.sql
+var mysqlConnectorsDDL string
+
 var schema = pgmigration.Set{
 	Schema:  "mcpguard",
-	Scripts: []string{readSliceDDL, authorizationDDL, controlledDDL, groupAuthorizationDDL, jenkinsResourceDDL, connectorsDDL},
+	Scripts: []string{readSliceDDL, authorizationDDL, controlledDDL, groupAuthorizationDDL, jenkinsResourceDDL, connectorsDDL, mysqlConnectorsDDL},
 }
 
 func PlanMigration(ctx context.Context, dsn string) (pgmigration.Plan, error) {

@@ -36,6 +36,8 @@ type connectorTool struct {
 var connectorTools = []connectorTool{
 	{name: "connector.list", description: "List enabled connectors granted to the current caller. Use their IDs with the matching connector tools."},
 	{name: "connector.pg.list_tables", description: "List accessible tables in a PostgreSQL connector's configured schema.", kind: connector.PostgreSQL, operation: connector.ListTables},
+	{name: "connector.mysql.list_tables", description: "List accessible base tables in the MySQL App's configured database.", kind: connector.MySQL, operation: connector.ListTables},
+	{name: "connector.mysql.list_columns", description: "List fields of one table in the MySQL App's configured database. Use the unqualified table name from list_tables.", kind: connector.MySQL, operation: connector.ListColumns, arg: "table", limit: connector.MaxMySQLIdentifierBytes},
 	{name: "connector.redis.get", description: "Get a key within a Redis connector's configured key prefix.", kind: connector.Redis, operation: connector.GetKey, arg: "key", limit: connector.MaxRedisKeyBytes},
 	{name: "connector.jenkins.list_jobs", description: "List jobs in a Jenkins connector's configured folder.", kind: connector.Jenkins, operation: connector.ListJobs},
 	{name: "connector.jenkins.describe_job", description: "Read the current parameters of a job returned by connector.jenkins.list_jobs.", kind: connector.Jenkins, operation: connector.DescribeJob, arg: "jobRef", limit: 2048},
@@ -68,6 +70,9 @@ func (g *Gateway) AttachConnectors(ctx context.Context, cidrs string) error {
 		return previous != nil && previous(w, r, p)
 	}
 	for _, tool := range connectorTools {
+		if tool.kind == connector.MySQL && !rt.registry.MySQLAvailable() {
+			continue
+		}
 		g.registerConnectorTool(rt, tool)
 	}
 	g.registerJenkins(g.Controlled)
@@ -152,10 +157,13 @@ func (rt *connectorRuntime) call(ctx context.Context, p metadata.Principal, tool
 		if value == "" || len(value) > tool.limit {
 			return nil, connectors.ErrInput
 		}
-		if tool.arg == "key" {
+		switch tool.arg {
+		case "key":
 			input.Key = value
-		} else {
+		case "jobRef":
 			input.JobRef = value
+		case "table":
+			input.Table = value
 		}
 	}
 	entry, err := rt.registry.GetUsable(ctx, p, id)
@@ -227,6 +235,9 @@ func (rt *connectorRuntime) consoleCommand(ctx context.Context, w http.ResponseW
 		var data connectors.CreateInput
 		if err := decodeConnectorBody(w, r, &data); err != nil {
 			return nil, err
+		}
+		if data.Type == connector.MySQL && !rt.registry.MySQLAvailable() {
+			return nil, connectors.ErrUnavailable
 		}
 		config, err := rt.providers.Validate(ctx, data.Type, data.Config, data.Credentials)
 		if err != nil {

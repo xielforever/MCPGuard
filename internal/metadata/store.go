@@ -54,7 +54,7 @@ func Open(ctx context.Context, dsn string, vault *Vault) (*Store, error) {
 	if e == nil {
 		var version int
 		e = p.QueryRow(ctx, "SELECT max(version) FROM mcpguard.schema_versions").Scan(&version)
-		if e == nil && (version < 4 || version > 6) {
+		if e == nil && (version < 4 || version > 7) {
 			e = errors.New("unsupported metadata schema")
 		}
 	}

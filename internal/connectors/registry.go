@@ -23,20 +23,25 @@ const (
 )
 
 type Registry struct {
-	store *metadata.Store
+	store          *metadata.Store
+	mysqlAvailable bool
 }
 
 func NewRegistry(s *metadata.Store) *Registry { return &Registry{store: s} }
+
+// MySQLAvailable reports the capability established by the startup check.
+func (r *Registry) MySQLAvailable() bool { return r.mysqlAvailable }
 
 func (r *Registry) Check(ctx context.Context) error {
 	if r == nil || r.store == nil || r.store.Pool == nil || r.store.Vault == nil {
 		return ErrUnavailable
 	}
-	var ready bool
-	err := r.store.Pool.QueryRow(ctx, `SELECT coalesce(max(version)=6,false) FROM mcpguard.schema_versions`).Scan(&ready)
-	if err != nil || !ready {
+	var version int
+	err := r.store.Pool.QueryRow(ctx, `SELECT coalesce(max(version),0) FROM mcpguard.schema_versions`).Scan(&version)
+	if err != nil || (version != 6 && version != 7) {
 		return ErrUnavailable
 	}
+	var ready bool
 	err = r.store.Pool.QueryRow(ctx, `SELECT
 		current_setting('transaction_read_only')='off'
 		AND has_table_privilege('mcpguard.connectors','SELECT')
@@ -56,6 +61,7 @@ func (r *Registry) Check(ctx context.Context) error {
 	if err != nil || !ready {
 		return ErrUnavailable
 	}
+	r.mysqlAvailable = version == 7
 	return nil
 }
 
@@ -318,7 +324,7 @@ func (r *Registry) Create(ctx context.Context, p metadata.Principal, input Creat
 		return Summary{}, ErrInput
 	}
 	switch input.Type {
-	case connector.PostgreSQL, connector.Redis, connector.Jenkins, connector.Kubernetes:
+	case connector.PostgreSQL, connector.MySQL, connector.Redis, connector.Jenkins, connector.Kubernetes:
 	default:
 		return Summary{}, ErrInput
 	}
