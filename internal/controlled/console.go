@@ -305,6 +305,7 @@ func (c *Console) serveAPI(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			out["connectors"] = list
+			out["mysqlAvailable"] = c.ConnectorRegistry.MySQLAvailable()
 		}
 		jsonReply(w, out)
 		return

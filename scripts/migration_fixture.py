@@ -126,7 +126,7 @@ def before_catalog(state, cfg):
 
     env = base.dev.runtime_env(cfg) | {'MCPGUARD_MIGRATION_DSN': readonly(cfg['MCPGUARD_MIGRATION_DSN'])}
     metadata_plan = json.loads(invoke(state, 'mcpguard', ['migrate', '--dry-run'], env).stdout)
-    check(metadata_plan['currentVersion'] == 6 and metadata_plan['pendingVersions'] == [], 'metadata migration preflight verifies versions 1–6')
+    check(metadata_plan['currentVersion'] == 7 and metadata_plan['pendingVersions'] == [], 'metadata migration preflight verifies versions 1–7')
     catalog_plan = json.loads(invoke(state, 'mcpguard-catalog', ['migrate', '--dry-run'], env).stdout)
     check(catalog_plan['currentVersion'] == 0 and catalog_plan['pendingVersions'] == list(range(1, 15)), 'catalog preflight lists the pending changes on the legacy database')
     invoke(state, 'mcpguard-catalog', ['migrate'], env, expected=1)

@@ -5,11 +5,15 @@ import "errors"
 // MaxRedisKeyBytes is the connector's limit for both probes and reads.
 const MaxRedisKeyBytes = 1024
 
+// MaxMySQLIdentifierBytes is the maximum UTF-8 size of a 64-character identifier.
+const MaxMySQLIdentifierBytes = 256
+
 // Kind identifies a supported backend.
 type Kind string
 
 const (
 	PostgreSQL Kind = "postgresql"
+	MySQL      Kind = "mysql"
 	Redis      Kind = "redis"
 	Jenkins    Kind = "jenkins"
 	Kubernetes Kind = "kubernetes"
@@ -17,6 +21,7 @@ const (
 
 const (
 	ListTables      = "list_tables"
+	ListColumns     = "list_columns"
 	GetKey          = "get"
 	ListJobs        = "list_jobs"
 	DescribeJob     = "describe_job"
@@ -68,12 +73,33 @@ type Definition struct {
 type ReadInput struct {
 	Key    string `json:"key,omitempty"`
 	JobRef string `json:"jobRef,omitempty"`
+	Table  string `json:"table,omitempty"`
 }
 
 type ListTablesResult struct {
 	Schema    string   `json:"schema"`
 	Tables    []string `json:"tables"`
 	Truncated bool     `json:"truncated"`
+}
+
+type MySQLTablesResult struct {
+	Database  string   `json:"database"`
+	Tables    []string `json:"tables"`
+	Truncated bool     `json:"truncated"`
+}
+
+type MySQLColumnsResult struct {
+	Database  string        `json:"database"`
+	Table     string        `json:"table"`
+	Columns   []MySQLColumn `json:"columns"`
+	Truncated bool          `json:"truncated"`
+}
+
+type MySQLColumn struct {
+	Name            string `json:"name"`
+	DataType        string `json:"dataType"`
+	Nullable        bool   `json:"nullable"`
+	OrdinalPosition int    `json:"ordinalPosition"`
 }
 
 type GetKeyResult struct {

@@ -10,7 +10,7 @@ import {tmpdir} from 'node:os';
 import {isAbsolute, join, relative} from 'node:path';
 import {setTimeout as delay} from 'node:timers/promises';
 
-const kinds = ['postgresql', 'redis', 'jenkins', 'kubernetes'];
+const kinds = ['postgresql', 'mysql', 'redis', 'jenkins', 'kubernetes'];
 const configLabels = {
   host: '主机', port: '端口', tls: '使用 TLS', caCertificate: 'CA 证书（可选）',
   database: '数据库', schema: 'Schema', keyPrefix: '允许的键前缀', probeKey: '用于测试的键',
@@ -42,7 +42,7 @@ async function input() {
   check(url && ['http:', 'https:'].includes(url.protocol) && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) &&
     !url.username && !url.password && !url.search && !url.hash, 'Only a local console URL is allowed');
   check(Array.isArray(fixture.connections) && fixture.connections.length > 0 &&
-    fixture.connections.length <= kinds.length, 'Provide one to four connections');
+    fixture.connections.length <= kinds.length, `Provide one to ${kinds.length} connections`);
   check(fixture.connections.every(item => item && kinds.includes(item.type) && typeof item.name === 'string' && item.name !== '' &&
     item.config && typeof item.config === 'object' && typeof item.credentials?.secret === 'string' &&
     Array.isArray(item.principalIds) && item.principalIds.length > 0 && item.principalIds.every(id => typeof id === 'string')) &&

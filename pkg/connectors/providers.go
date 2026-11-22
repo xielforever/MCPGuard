@@ -114,7 +114,7 @@ func (p *Providers) Validate(ctx context.Context, kind Kind, config Config, cred
 	}
 	var host string
 	switch kind {
-	case PostgreSQL, Redis:
+	case PostgreSQL, MySQL, Redis:
 		if config.BaseURL != "" || config.Folder != "" || config.Namespace != "" {
 			return Config{}, ErrInput
 		}
@@ -124,7 +124,8 @@ func (p *Providers) Validate(ctx context.Context, kind Kind, config Config, cred
 			return Config{}, ErrInput
 		}
 		config.Host = host
-		if kind == PostgreSQL {
+		switch kind {
+		case PostgreSQL:
 			if !validText(config.Database, 63) || !validText(config.Schema, 63) ||
 				config.KeyPrefix != "" || config.ProbeKey != "" {
 				return Config{}, ErrInput
@@ -132,7 +133,14 @@ func (p *Providers) Validate(ctx context.Context, kind Kind, config Config, cred
 			if config.Port == 0 {
 				config.Port = 5432
 			}
-		} else {
+		case MySQL:
+			if !validMySQLTableName(config.Database) || config.Schema != "" || config.KeyPrefix != "" || config.ProbeKey != "" {
+				return Config{}, ErrInput
+			}
+			if config.Port == 0 {
+				config.Port = 3306
+			}
+		case Redis:
 			if !validText(config.KeyPrefix, 256) || !validText(config.ProbeKey, MaxRedisKeyBytes) ||
 				!strings.HasPrefix(config.ProbeKey, config.KeyPrefix) || config.Database != "" || config.Schema != "" {
 				return Config{}, ErrInput
@@ -189,7 +197,7 @@ func (p *Providers) Probe(ctx context.Context, def Definition) error {
 	var operation string
 	arguments := ReadInput{}
 	switch def.Type {
-	case PostgreSQL:
+	case PostgreSQL, MySQL:
 		operation = ListTables
 	case Redis:
 		operation, arguments.Key = GetKey, def.Config.ProbeKey
@@ -216,8 +224,15 @@ func (p *Providers) Read(ctx context.Context, def Definition, operation string, 
 		if operation == ListTables && arguments == (ReadInput{}) {
 			return p.listTables(ctx, def)
 		}
+	case MySQL:
+		if operation == ListTables && arguments == (ReadInput{}) {
+			return p.readMySQLMetadata(ctx, def, "")
+		}
+		if operation == ListColumns && arguments.Key == "" && arguments.JobRef == "" && validMySQLTableName(arguments.Table) {
+			return p.readMySQLMetadata(ctx, def, arguments.Table)
+		}
 	case Redis:
-		if operation == GetKey && arguments.JobRef == "" && validText(arguments.Key, MaxRedisKeyBytes) {
+		if operation == GetKey && arguments.JobRef == "" && arguments.Table == "" && validText(arguments.Key, MaxRedisKeyBytes) {
 			if !strings.HasPrefix(arguments.Key, def.Config.KeyPrefix) || def.Config.KeyPrefix == "" {
 				return nil, ErrDenied
 			}
@@ -225,7 +240,7 @@ func (p *Providers) Read(ctx context.Context, def Definition, operation string, 
 		}
 	case Jenkins:
 		if (operation == ListJobs && arguments == (ReadInput{})) ||
-			(operation == DescribeJob && arguments.Key == "" && validText(arguments.JobRef, 768)) {
+			(operation == DescribeJob && arguments.Key == "" && arguments.Table == "" && validText(arguments.JobRef, 768)) {
 			return p.readJenkins(ctx, def, operation, arguments.JobRef)
 		}
 	case Kubernetes:

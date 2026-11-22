@@ -1,0 +1,79 @@
+{
+  "status": "PASS",
+  "runId": "deeed8542860",
+  "mysqlImage": "mysql@sha256:24989179f58856db763f418010c1169fecc944e3ec1ea7e921572d83eb070f70",
+  "mysqlVersion": "8.4.11",
+  "gatewaySHA256": "0ff125b499b4aaca30fc21e96b87d570bebc7cc29de71d0f5cc09671f360ceb6",
+  "browser": {
+    "status": "PASS",
+    "browser": "Chrome",
+    "connectors": [
+      {
+        "id": "8764c40c-ef65-4080-b902-cfdf00011999",
+        "name": "orders-mysql",
+        "type": "mysql",
+        "revision": 3,
+        "testStatus": "PASSED",
+        "enabled": true,
+        "events": [
+          "\u542f\u7528",
+          "\u6d4b\u8bd5\u901a\u8fc7",
+          "\u65b0\u589e"
+        ]
+      }
+    ]
+  },
+  "dsh": {
+    "transport": "streamable-http",
+    "runtimeVersion": "0.2.2-rc.5",
+    "registeredMySQLTools": [
+      "mcp__mcpguard_ra18__connector_mysql_list_columns_d4262c08572f",
+      "mcp__mcpguard_ra18__connector_mysql_list_tables_81d25a1b7fb9"
+    ],
+    "authorizedTableMetadata": {
+      "database": "commerce_catalog",
+      "tables": [
+        "orders",
+        "products"
+      ],
+      "truncated": false
+    },
+    "authorizedFieldMetadata": {
+      "database": "commerce_catalog",
+      "table": "orders",
+      "columns": [
+        {
+          "name": "id",
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        {
+          "name": "order_status",
+          "dataType": "varchar",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      ],
+      "truncated": false
+    },
+    "negativeChecks": {
+      "siblingDatabaseVisibleToNativeReader": true,
+      "siblingOnlyTableMetadataHidden": true,
+      "caseDistinctDatabaseMetadataHidden": true,
+      "caseDistinctTableAliasDenied": true,
+      "viewMetadataDenied": true,
+      "qualifiedTableRejected": "INVALID_ARGUMENTS",
+      "databaseOverrideRejectedByGateway": true,
+      "ungrantedIdentityDenied": "ACCESS_DENIED",
+      "badCredentialsProbeFailedAndActivationRejected": true,
+      "stoppedAppDeniedInSameSession": "ACCESS_DENIED"
+    },
+    "auditEvents": [
+      "DISABLED",
+      "ENABLED",
+      "TEST_PASSED",
+      "CREATED"
+    ]
+  }
+}

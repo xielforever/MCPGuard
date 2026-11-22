@@ -11,7 +11,7 @@ import (
 func (s *Store) CheckReady(ctx context.Context) error {
 	var ready bool
 	err := s.Pool.QueryRow(ctx, `SELECT
-		coalesce((SELECT max(version) IN (4,5,6) FROM mcpguard.schema_versions),false)
+		coalesce((SELECT max(version) IN (4,5,6,7) FROM mcpguard.schema_versions),false)
 		AND current_setting('transaction_read_only')='off'
 		AND NOT (r.rolsuper OR r.rolcreatedb OR r.rolcreaterole)
 		AND NOT has_schema_privilege(current_user,'mcpguard','CREATE')
