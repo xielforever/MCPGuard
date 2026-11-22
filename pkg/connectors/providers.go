@@ -24,7 +24,7 @@ var (
 	bearerToken = regexp.MustCompile(`^[A-Za-z0-9._~+/-]+=*$`)
 )
 
-// Providers only performs bounded operations against stored connector scopes.
+// Providers applies endpoint and egress policy to stored connector scopes.
 type Providers struct {
 	policy *EgressPolicy
 }
@@ -107,6 +107,9 @@ func (p *Providers) Validate(ctx context.Context, kind Kind, config Config, cred
 		return Config{}, ErrInput
 	}
 	if kind != Kubernetes && !validText(credentials.Username, 256) {
+		return Config{}, ErrInput
+	}
+	if config.AllowBuilds && kind != Jenkins {
 		return Config{}, ErrInput
 	}
 	var host string
@@ -233,7 +236,19 @@ func (p *Providers) Read(ctx context.Context, def Definition, operation string, 
 	return nil, ErrInput
 }
 
-func (p *Providers) readJenkins(ctx context.Context, def Definition, operation, jobRef string) (any, error) {
+// JenkinsForBuild gives the controlled executor access to a build-enabled
+// connector. The caller still has to authorize and approve the action.
+func (p *Providers) JenkinsForBuild(def Definition) (*jenkins.Client, error) {
+	if def.Type != Jenkins || !def.Config.AllowBuilds {
+		return nil, ErrDenied
+	}
+	return p.jenkinsClient(def)
+}
+
+func (p *Providers) jenkinsClient(def Definition) (*jenkins.Client, error) {
+	if p == nil || p.policy == nil {
+		return nil, ErrUnavailable
+	}
 	base, host, err := httpEndpoint(def.Config.BaseURL)
 	if err != nil {
 		return nil, err
@@ -256,6 +271,14 @@ func (p *Providers) readJenkins(ctx context.Context, def Definition, operation, 
 	if err != nil {
 		return nil, ErrInput
 	}
+	return client, nil
+}
+
+func (p *Providers) readJenkins(ctx context.Context, def Definition, operation, jobRef string) (any, error) {
+	client, err := p.jenkinsClient(def)
+	if err != nil {
+		return nil, err
+	}
 	if operation == ListJobs {
 		jobs, err := client.ListJobs(ctx)
 		if err != nil {
@@ -271,7 +294,10 @@ func (p *Providers) readJenkins(ctx context.Context, def Definition, operation, 
 	if err != nil {
 		return nil, jenkinsReadError(err)
 	}
-	result := DescribeJobResult{JenkinsJob: JenkinsJob(job.Job), SchemaRevision: job.SchemaRevision}
+	result := DescribeJobResult{
+		JenkinsJob: JenkinsJob(job.Job), SchemaRevision: job.SchemaRevision,
+		CanSubmit: def.Config.AllowBuilds && job.CanSubmit,
+	}
 	if job.Parameters != nil {
 		result.Parameters = make([]JenkinsParameter, len(job.Parameters))
 		for i, parameter := range job.Parameters {

@@ -463,6 +463,7 @@
       input(config, 'probeKey', '用于测试的键', 'text', {required: true, maxLength: 1024, hint: '使用已存在且符合允许前缀的键。'});
     } else if (type === 'jenkins') {
       input(config, 'folder', '任务目录', 'text', {required: true, maxLength: 512, value: '/', hint: '使用 / 表示根目录。'});
+      input(config, 'allowBuilds', '允许提交构建审批', 'checkbox', {hint: '仅具备受控构建权限的 MCP 用户可提交，构建仍需由独立审批人批准。'});
     } else {
       input(config, 'namespace', '只读命名空间', 'text', {required: true, maxLength: 63});
     }

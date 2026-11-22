@@ -207,7 +207,10 @@ func (r *Registry) definition(orgID string, summary Summary, ciphertext []byte) 
 	if err := json.Unmarshal(account, &plain); err != nil {
 		return connector.Definition{}, ErrUnavailable
 	}
-	return connector.Definition{ID: summary.ID, OrgID: orgID, Type: summary.Type, Config: plain.Config, Credentials: plain.Credentials}, nil
+	return connector.Definition{
+		ID: summary.ID, OrgID: orgID, Type: summary.Type, Revision: summary.Revision,
+		Config: plain.Config, Credentials: plain.Credentials,
+	}, nil
 }
 
 func (r *Registry) GetUsable(ctx context.Context, p metadata.Principal, id string) (connector.Definition, error) {
@@ -219,7 +222,18 @@ func (r *Registry) GetUsable(ctx context.Context, p metadata.Principal, id strin
 		return connector.Definition{}, err
 	}
 	defer rollback(tx)
-	if !canRead {
+	p.CanRead = canRead
+	return r.GetUsableInTx(ctx, tx, p, id)
+}
+
+// GetUsableInTx shares the authorization snapshot of an action creation or
+// execution claim. The caller must hold the organization's auth epoch lock
+// and pass a principal whose identity and read privilege were verified there.
+func (r *Registry) GetUsableInTx(ctx context.Context, tx pgx.Tx, p metadata.Principal, id string) (connector.Definition, error) {
+	if uuid.Validate(id) != nil {
+		return connector.Definition{}, ErrInput
+	}
+	if !p.CanRead {
 		return connector.Definition{}, ErrNotFound
 	}
 	var ciphertext []byte

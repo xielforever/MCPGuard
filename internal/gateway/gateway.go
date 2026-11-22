@@ -50,6 +50,7 @@ type Gateway struct {
 	Reads                  *resources.ReadService
 	Writes                 *resources.WriteService
 	actionResumeRegistered bool
+	jenkinsRegistered      bool
 }
 
 func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
@@ -133,9 +134,16 @@ func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
 						return nil, safeProtocolError("Jenkins tool authorization is unavailable")
 					}
 					if visible {
-						for _, name := range []string{jenkinsListTool, jenkinsDescribeTool, controlled.JenkinsSubmitTool, jenkinsQueueTool} {
-							allowed[name] = true
-						}
+						allowed[controlled.JenkinsSubmitTool] = true
+						allowed[jenkinsQueueTool] = true
+					}
+					legacy, err := g.Controlled.LegacyJenkinsVisible(c, cur)
+					if err != nil {
+						return nil, safeProtocolError("Jenkins tool authorization is unavailable")
+					}
+					if legacy {
+						allowed[jenkinsListTool] = true
+						allowed[jenkinsDescribeTool] = true
 					}
 				}
 				tools := []*mcp.Tool{}

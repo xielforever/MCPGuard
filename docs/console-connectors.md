@@ -19,7 +19,7 @@
 | Jenkins | 控制器地址、固定文件夹和 API token | `connector.jenkins.list_jobs` 列出任务，`connector.jenkins.describe_job` 返回当前参数。 |
 | Kubernetes | API 地址、单一命名空间、服务账号 token 和所需的 CA 证书 | `connector.k8s.list_deployments` 读取该命名空间的 Deployment 摘要。为账号分配对应命名空间下的 `apps/deployments` 读取权限。 |
 
-从文件配置的 Jenkins 受控构建继续使用 [任务审批和队列回执流程](jenkins-integration.md)。控制台新增的 Jenkins 连接器首版支持任务和参数查询。
+Jenkins 连接器默认只读。新增 Jenkins App 时可开启「允许提交构建审批」，由同一个 App 提供任务查询、参数发现和受控构建。构建还需要独立的提交和审批权限。已有文件配置继续走原入口。[Jenkins App 和受控构建](jenkins-integration.md)
 
 ## 跨项目复用
 

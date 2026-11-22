@@ -22,7 +22,7 @@ from uuid import UUID, uuid4
 from xml.etree import ElementTree
 
 import dev
-from dsh_client import DSHClient, EXECUTABLE, install_path
+from dsh_client import DSHClient, EXECUTABLE, install_path, windows
 
 
 JENKINS_IMAGE = "jenkins/jenkins@sha256:74401de6a6f92e1afe1b02d1c8e3d0c33f263bfb5275dd8813f9150355f2367b"
@@ -271,8 +271,15 @@ class Reviewer:
         check(status == 200, f"Reviewer could not approve action, HTTP {status}")
         return json.loads(body)
 
+    def enable_connector(self, connector, enabled):
+        path = "/console/api/connectors/" + connector["id"]
+        headers = {**self.headers, "If-Match": f'"{connector["revision"]}"', "Idempotency-Key": str(uuid4())}
+        status, _, body = http(self.port, "PATCH", path, headers, json.dumps({"enabled": enabled}))
+        check(status == 200, f"Reviewer could not change the Jenkins App state, HTTP {status}")
+        return json.loads(body)
 
-def start_gateway(stack, scratch, binary, cfg, controller, log):
+
+def start_gateway(stack, scratch, binary, cfg, controller, log, *, prepare_console=None):
     password = secrets.token_urlsafe(32)
     console = scratch / "console.json"
     settings = scratch / "jenkins.json"
@@ -295,7 +302,43 @@ def start_gateway(stack, scratch, binary, cfg, controller, log):
         return status == 200
 
     wait_for(ready, "Isolated gateway did not accept traffic", 30)
+    if prepare_console is not None:
+        prepare_console(port, password)
     return port, Reviewer(port, password)
+
+
+def create_jenkins_apps(port, password, controller, scratch):
+    """Register an executable App and a compatibility read-only App in Chrome."""
+    connection = {
+        "type": "jenkins",
+        "config": {"baseUrl": controller["baseUrl"], "folder": "/"},
+        "credentials": {"username": controller["username"], "secret": controller["apiToken"]},
+        "principalIds": [dev.IDS["alice"]],
+    }
+    browser_input = {
+        "url": f"http://127.0.0.1:{port}/web/",
+        "loginUsername": "visitor",
+        "loginSecret": password,
+        "connections": [
+            {"name": "delivery-ci", **connection, "config": {**connection["config"], "allowBuilds": True},
+             "principalIds": [dev.IDS["alice"], dev.IDS["bob"]]},
+            {"name": "existing-read-only-ci", **connection},
+        ],
+    }
+    node = shutil.which("node.exe") or "/mnt/c/Program Files/nodejs/node.exe"
+    script = windows(dev.ROOT / "scripts/connectors_console_browser.mjs")
+    private_input = scratch / "browser-input.json"
+    dev.write_private(private_input, json.dumps(browser_input))
+    try:
+        with (scratch / "browser.log").open("w") as diagnostics:
+            completed = subprocess.run([node, script, windows(private_input)], cwd="/mnt/c", stdin=subprocess.DEVNULL,
+                                       encoding="utf-8", stdout=subprocess.PIPE, stderr=diagnostics, timeout=120)
+    finally:
+        private_input.unlink(missing_ok=True)
+    check(completed.returncode == 0, "Chrome could not register, test and enable the Jenkins Apps; see browser.log")
+    proof = json.loads(completed.stdout)
+    check(proof["status"] == "PASS" and len(proof["connectors"]) == 2, "Chrome did not report both Jenkins Apps")
+    return proof
 
 
 def call(client, name, arguments, allow_error=False):
@@ -313,17 +356,38 @@ def call(client, name, arguments, allow_error=False):
     return data
 
 
-def exercise(client, reviewer, jenkins, proxy, report):
-    listed = call(client, "jenkins.list_jobs", {})["jobs"]
+def verify_app_grants(client, apps, registered):
+    shared = apps["delivery-ci"]["id"]
+    private = apps["existing-read-only-ci"]["id"]
+    check({row["id"] for row in call(client, "connector.list", {})["connectors"]} == {shared},
+          "Read-only DSH identity did not get exactly its granted Jenkins App")
+    jobs = call(client, "connector.jenkins.list_jobs", {"connectorId": shared})["jobs"]
+    denied = call(client, "connector.jenkins.list_jobs", {"connectorId": private}, allow_error=True)
+    check({job["name"] for job in jobs} == {ORDERS, INVENTORY} and
+          denied.get("error", denied).get("code") == "ACCESS_DENIED", "Shared/private Jenkins App access diverged")
+    check(not any("jenkins_submit_build" in name for name in registered),
+          "App grant exposed the build tool without the separate controlled tool grant")
+    return {"sharedReadAllowed": True, "privateReadDenied": True, "buildToolHidden": True}
+
+
+def exercise(client, reviewer, jenkins, proxy, report, apps=None):
+    targets = {"connectorId": apps["delivery-ci"]["id"]} if apps else {}
+    tool_prefix = "connector.jenkins." if apps else "jenkins."
+    if apps:
+        listed_apps = call(client, "connector.list", {})["connectors"]
+        check({row["id"] for row in listed_apps} == {row["id"] for row in apps.values()},
+              "DSH did not discover both Apps created in the console")
+        report["app"] = {"connectorId": targets["connectorId"], "revision": apps["delivery-ci"]["revision"]}
+    listed = call(client, tool_prefix + "list_jobs", targets)["jobs"]
     check({job["name"] for job in listed} == {ORDERS, INVENTORY}, "Gateway did not discover the two registered Jenkins jobs")
-    jobs = {job["name"]: call(client, "jenkins.describe_job", {"jobRef": job["jobRef"]}) for job in listed}
+    jobs = {job["name"]: call(client, tool_prefix + "describe_job", {**targets, "jobRef": job["jobRef"]}) for job in listed}
     report["parameterNames"] = {name: [item["name"] for item in job["parameters"]] for name, job in jobs.items()}
     check(set(report["parameterNames"][ORDERS]) == {"GIT_REF", "RUN_TESTS"} and set(report["parameterNames"][INVENTORY]) == {"PROFILE", "RELEASE_TAG"}, "Dynamic parameters differ from actual Jenkins definitions")
 
     scenarios = report["scenarios"] = {}
 
     def submission(job, parameters):
-        return {"jobRef": jobs[job]["jobRef"], "schemaRevision": jobs[job]["schemaRevision"],
+        return {**targets, "jobRef": jobs[job]["jobRef"], "schemaRevision": jobs[job]["schemaRevision"],
                 "parameters": parameters, "requestKey": str(uuid4())}
 
     def prepare(args):
@@ -354,6 +418,19 @@ def exercise(client, reviewer, jenkins, proxy, report):
         check(received == parameters, "Jenkins build did not receive the approved values")
         return matching[0]["number"]
 
+    if apps:
+        read_only = {"connectorId": apps["existing-read-only-ci"]["id"]}
+        read_jobs = call(client, tool_prefix + "list_jobs", read_only)["jobs"]
+        read_job = next(job for job in read_jobs if job["name"] == ORDERS)
+        read_definition = call(client, tool_prefix + "describe_job", {**read_only, "jobRef": read_job["jobRef"]})
+        denied = call(client, "jenkins.submit_build", {
+            **read_only, "jobRef": read_job["jobRef"], "schemaRevision": read_definition["schemaRevision"],
+            "parameters": {"GIT_REF": "release/read-only-check", "RUN_TESTS": False}, "requestKey": str(uuid4()),
+        }, allow_error=True)
+        check(denied.get("error", denied).get("code") == "ACCESS_DENIED" and not proxy.receipts(),
+              "Existing read-only connector accepted a build submission")
+        report["readOnlyConnector"] = {"connectorId": read_only["connectorId"], "readAllowed": True, "buildDenied": True}
+
     for job, parameters in ((ORDERS, {"GIT_REF": "release/orders", "RUN_TESTS": False}),
                             (INVENTORY, {"PROFILE": "full", "RELEASE_TAG": "release-2026"})):
         before = len(proxy.receipts())
@@ -379,7 +456,7 @@ def exercise(client, reviewer, jenkins, proxy, report):
     drift_args = submission(INVENTORY, {"PROFILE": "fast", "RELEASE_TAG": "drift-check"})
     drift_id = prepare(drift_args)
     jenkins.change_inventory_choices()
-    description = call(client, "jenkins.describe_job", {"jobRef": drift_args["jobRef"]})
+    description = call(client, tool_prefix + "describe_job", {**targets, "jobRef": drift_args["jobRef"]})
     check(description["schemaRevision"] != drift_args["schemaRevision"], "Native schema change did not change Gateway schema revision")
     reviewer.approve(drift_id)
     drift = after_resume(drift_id)["result"]
@@ -407,6 +484,25 @@ def exercise(client, reviewer, jenkins, proxy, report):
     number = native_build(ORDERS, 2, queue_id, parameters)
     scenarios["lostReply"] = {"actionId": lost_id, "nativeQueueId": queue_id, "nativeBuild": number,
                               "requestStatus": lost["requestStatus"], "dispatchState": lost["dispatchState"], "postCount": 1}
+    if apps:
+        revision_args = submission(ORDERS, {"GIT_REF": "release/revision-check", "RUN_TESTS": False})
+        revision_id = prepare(revision_args)
+        reviewer.approve(revision_id)
+        original = apps["delivery-ci"]
+        disabled = reviewer.enable_connector(original, False)
+        check(not disabled["enabled"], "Jenkins App did not record its disabled state")
+        denied = call(client, "connector.jenkins.list_jobs", targets, allow_error=True)
+        check(denied.get("error", denied).get("code") == "ACCESS_DENIED", "Disabled Jenkins App accepted a read")
+        enabled = reviewer.enable_connector(disabled, True)
+        check(enabled["enabled"] and enabled["revision"] > original["revision"],
+              "Re-enabled App did not acquire a new revision")
+        blocked = call(client, "action.resume", {"actionId": revision_id}, allow_error=True)
+        check(blocked.get("outcome") == "NOT_RESUMABLE" and blocked["action"]["state"] == "CANCELLED"
+              and blocked["action"]["dispatchState"] == "NOT_DISPATCHED" and len(proxy.receipts()) == 3,
+              "Previously approved action reached Jenkins or survived an App revision change")
+        scenarios["appRevision"] = {"actionId": revision_id, "dispatchState": blocked["action"]["dispatchState"],
+                                    "outcome": blocked["outcome"], "postCount": 0, "disabledReadDenied": True,
+                                    "previousRevision": original["revision"], "currentRevision": enabled["revision"]}
     report["nativePosts"] = proxy.receipts()
     report["nativeBuildCounts"] = {ORDERS: len(jenkins.builds(ORDERS)), INVENTORY: len(jenkins.builds(INVENTORY))}
 
@@ -424,9 +520,15 @@ def verify_gateway_audit(cfg, scenarios):
             );
         """).stdout
         audit = json.loads(next(line.strip() for line in output.splitlines() if line.strip().startswith("{")))
-        terminal = {"schemaDrift": "FAILED", "lostReply": "OUTCOME_UNKNOWN"}.get(scenario, "SUCCEEDED")
-        check(audit["events"] == ["ACTION_CREATED", "APPROVAL_APPROVE", "REVIEW_APPROVE", "EXECUTION_INTENT", terminal]
-              and audit["executionCount"] == 1,
+        expected = ["ACTION_CREATED", "APPROVAL_APPROVE", "REVIEW_APPROVE"]
+        if scenario == "appRevision":
+            expected += ["PLAN_INVALIDATED"]
+            execution_count = 0
+        else:
+            terminal = {"schemaDrift": "FAILED", "lostReply": "OUTCOME_UNKNOWN"}.get(scenario, "SUCCEEDED")
+            expected += ["EXECUTION_INTENT", terminal]
+            execution_count = 1
+        check(audit["events"] == expected and audit["executionCount"] == execution_count,
               f"Unexpected audit or execution count for {scenario}: {audit}")
         results[scenario] = audit
     return results
@@ -436,8 +538,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--report", type=Path, help="Destination for sanitized JSON acceptance evidence")
     parser.add_argument("--jenkins-only", action="store_true", help="Verify the disposable Jenkins job fixture can start")
+    parser.add_argument("--app", action="store_true", help="Configure Jenkins through Chrome instead of using a file")
     parser.add_argument("--gateway-binary", type=Path, help="Use an already-built Linux MCPGuard gateway instead of compiling")
     args = parser.parse_args()
+    if args.app and args.jenkins_only:
+        parser.error("--app requires the gateway and installed DSH")
     if not args.jenkins_only:
         harness = install_path()
         check((harness / EXECUTABLE).is_file(), "DeepSeek Harness is missing; set MCPGUARD_DSH_INSTALL to its WSL path")
@@ -457,15 +562,35 @@ def main():
         if not args.jenkins_only:
             binary = args.gateway_binary.resolve(strict=True) if args.gateway_binary else build(scratch, log)
             cfg = prepare_metadata(stack, scratch, binary, run_id, log)
-            port, reviewer = start_gateway(stack, scratch, binary, cfg, controller, log)
+            prepare_console = None
+            if args.app:
+                cfg["MCPGUARD_CONNECTOR_ALLOWED_CIDRS"] = "127.0.0.1/32"
+                operator = dev.IDS["visitor"]
+                dev.psql(cfg, "mcpguard_meta",
+                         f"INSERT INTO mcpguard.control_members VALUES ('{dev.ORG}','{operator}',true)")
+
+                def prepare_console(port, password):
+                    report["browser"] = create_jenkins_apps(port, password, controller, scratch)
+
+            port, reviewer = start_gateway(stack, scratch, binary, cfg, None if args.app else controller, log,
+                                           prepare_console=prepare_console)
             config = {"transport": "streamable-http", "url": f"http://127.0.0.1:{port}/mcp",
-                      "headers": {"Authorization": "Bearer " + cfg["alice_token"]}, "startupTimeoutMs": 35000}
+                      "headers": {"Authorization": "Bearer " + cfg["alice_token"]}, "startupTimeoutMs": 35000,
+                      "reportWorkspace": True}
             dsh_log = stack.enter_context((scratch / "dsh.log").open("w"))
-            client = stack.enter_context(DSHClient(config, dsh_log, install=harness))
+            client = stack.enter_context(DSHClient(config, dsh_log, install=harness, home=scratch / "applicant-dsh"))
             ready = client.receive("ready", timeout=45)
-            report["dsh"] = {"transport": "streamable-http", "registeredTools": [name for name in ready["names"] if "jenkins" in name]}
-            exercise(client, reviewer, jenkins, proxy, report)
+            report["dsh"] = {"transport": "streamable-http", "runtimeVersion": ready["runtimeVersion"],
+                             "registeredTools": [name for name in ready["names"] if "jenkins" in name]}
+            apps = {row["name"]: row for row in report["browser"]["connectors"]} if args.app else None
+            exercise(client, reviewer, jenkins, proxy, report, apps)
             report["gatewayAudit"] = verify_gateway_audit(cfg, report["scenarios"])
+            if apps:
+                read_config = {**config, "headers": {"Authorization": "Bearer " + cfg["bob_token"]}}
+                read_log = stack.enter_context((scratch / "read-only-dsh.log").open("w"))
+                with DSHClient(read_config, read_log, install=harness, home=scratch / "read-only-dsh") as read_client:
+                    ready = read_client.receive("ready", timeout=45)
+                    report["appGrants"] = verify_app_grants(read_client, apps, ready["names"])
     evidence = json.dumps(report, indent=2) + "\n"
     if args.report:
         args.report.write_text(evidence, encoding="utf-8")

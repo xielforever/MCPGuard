@@ -2,14 +2,30 @@
 
 DSH 从 MCPGuard 查询 Jenkins 任务及其当前参数定义，由独立审批人在 MCPGuard 控制台审批。申请人通过 `action.resume` 领取执行结果，通过 `jenkins.get_queue` 按自身动作编号查询 Jenkins 队列。HTTP 直连和 stdio 转发都使用网关的同一套 MCP 工具。
 
-## 启用
+## 从控制台配置 Jenkins App
+
+启用[控制台连接器](console-connectors.md)后，在「资源 → 连接器」选择 Jenkins，填写控制器、任务文件夹和专用凭据，选择获准的调用主体。在新增表单中勾选「允许提交构建审批」，连通测试通过后启用。Jenkins 账号需要在指定文件夹内查看任务及参数、触发构建和读取队列。旧连接器配置继续可用。已有连接器与未勾选本选项的新连接器保留只读能力。
+
+开启构建审批只配置 App 能力。组织仍需有启用的 `jenkins` 受控资源，申请人仍需拥有 `jenkins.submit_build` 和该 App 的调用授权，审批人仍需具有独立的资源审批权限。App 凭据保存在网关。控制台配置的 Jenkins App 可以在没有 `MCPGUARD_JENKINS_CONFIG` 的实例上执行受控构建。
+
+| DSH 操作 | MCP 工具和关键参数 |
+| --- | --- |
+| 选择获准的 Jenkins App | `connector.list {}`，取 `connectorId`。 |
+| 查看任务 | `connector.jenkins.list_jobs`，传 `connectorId`，取目标任务的 `jobRef`。 |
+| 查看当前参数 | `connector.jenkins.describe_job`，传 `connectorId`、`jobRef`，读取 `schemaRevision`、参数和 `canSubmit`。 |
+| 提交构建审批 | `jenkins.submit_build`，传同一 `connectorId`、`jobRef`、`schemaRevision`、`parameters`、`requestKey`，保留返回的 `actionId`。 |
+| 领取执行及查询队列 | 独立审批人批准后，申请人依次调用 `action.resume`、`jenkins.get_queue`，均传原 `actionId`。 |
+
+审批计划绑定 App 标识、配置版本、任务及已确认的参数。任务参数定义在派发前会再检查。App 停用后拒绝新的调用。停用再启用会推进配置版本，原有审批无法用于新的版本。队列查询沿用原动作和原 App。若 App 停用或版本变化，可从原动作历史查看已保存的回执。
+
+## 启用文件配置的既有路径
 
 1. 运行元数据迁移 005，新增可配置的 `jenkins` 资源类型。迁移保留已有资源、授权和数据。现有未启用 Jenkins 的实例可继续使用元数据版本 004。
 2. 由元数据管理员在 `mcpguard.control_resources` 为目标组织登记并启用 `jenkins` 资源。给申请人授予 `jenkins.submit_build`，给独立审批人授予 `jenkins` 资源的审批权限。任务发现和队列查询也受申请人的资源授权约束。
 3. 在运行用户可读的受保护配置文件中设置 `orgId`、`controllerId`、`baseUrl`、`username`、`apiToken` 和 `folders`。用 `MCPGUARD_JENKINS_CONFIG` 指向文件，并配置现有审批控制台。Jenkins 专用账号需要查看配置范围内的文件夹和任务、触发构建以及查看队列项的权限。正式 Jenkins 使用 HTTPS，HTTP 仅允许回环地址。Jenkins API token 留在网关配置文件中。
 4. `folders` 使用 Jenkins 文件夹的完整名称，例如 `["operations/commerce"]`。显式配置 `[""]` 会从根目录查找任务。
 
-## DSH 调用
+## 文件配置的 DSH 调用
 
 | 工具 | 输入与返回 |
 | --- | --- |
@@ -27,4 +43,4 @@ DSH 从 MCPGuard 查询 Jenkins 任务及其当前参数定义，由独立审批
 
 ## 复验
 
-本地验收使用安装的 DeepSeek Harness、独立的 MCPGuard 元数据、官方 Jenkins 容器和两个原生任务。测试脚本 `scripts/jenkins_dsh_fixture.py` 可以写出脱敏报告，并核对 Jenkins 实际队列与构建记录。
+本地验收使用安装的 DeepSeek Harness、独立的 MCPGuard 元数据、官方 Jenkins 容器和两个原生任务。`python3 -B scripts/jenkins_dsh_fixture.py --app --report <脱敏报告路径>` 复验浏览器登记的 App。省略 `--app` 复验文件配置。两种模式都核对 Jenkins 实际队列和构建记录。
