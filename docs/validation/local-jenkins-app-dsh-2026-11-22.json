@@ -1,0 +1,183 @@
+{
+  "runId": "4603907b8969",
+  "jenkinsImage": "jenkins/jenkins@sha256:74401de6a6f92e1afe1b02d1c8e3d0c33f263bfb5275dd8813f9150355f2367b",
+  "jenkinsVersion": "2.580.2",
+  "browser": {
+    "status": "PASS",
+    "browser": "Chrome",
+    "connectors": [
+      {
+        "id": "4e317254-2af7-4b00-8928-4a2e976cc3dd",
+        "name": "delivery-ci",
+        "type": "jenkins",
+        "revision": 3,
+        "testStatus": "PASSED",
+        "enabled": true,
+        "events": [
+          "\u542f\u7528",
+          "\u6d4b\u8bd5\u901a\u8fc7",
+          "\u65b0\u589e"
+        ]
+      },
+      {
+        "id": "ce82dc39-6463-4337-a7a7-ff3e2611e648",
+        "name": "existing-read-only-ci",
+        "type": "jenkins",
+        "revision": 3,
+        "testStatus": "PASSED",
+        "enabled": true,
+        "events": [
+          "\u542f\u7528",
+          "\u6d4b\u8bd5\u901a\u8fc7",
+          "\u65b0\u589e"
+        ]
+      }
+    ]
+  },
+  "dsh": {
+    "transport": "streamable-http",
+    "runtimeVersion": "0.2.2-rc.5",
+    "registeredTools": [
+      "mcp__mcpguard_ra18__connector_jenkins_describe_job_59384f2c219c",
+      "mcp__mcpguard_ra18__connector_jenkins_list_jobs_07b0bd1748a2",
+      "mcp__mcpguard_ra18__jenkins_get_queue_55510e29e503",
+      "mcp__mcpguard_ra18__jenkins_submit_build_7ddc847837be"
+    ]
+  },
+  "app": {
+    "connectorId": "4e317254-2af7-4b00-8928-4a2e976cc3dd",
+    "revision": 3
+  },
+  "parameterNames": {
+    "inventory-verification": [
+      "PROFILE",
+      "RELEASE_TAG"
+    ],
+    "orders-validation": [
+      "GIT_REF",
+      "RUN_TESTS"
+    ]
+  },
+  "scenarios": {
+    "orders-validation": {
+      "actionId": "04e7a941-447f-462d-bf64-6fa4472ef196",
+      "queueId": 1,
+      "nativeBuild": 1,
+      "postCount": 1
+    },
+    "inventory-verification": {
+      "actionId": "2afb3688-c707-4931-8176-df6851c389d5",
+      "queueId": 2,
+      "nativeBuild": 1,
+      "postCount": 1
+    },
+    "schemaDrift": {
+      "actionId": "d5511bdf-8c52-4d07-841a-b886c771445d",
+      "dispatchState": "NOT_DISPATCHED",
+      "errorCode": "JENKINS_SCHEMA_CHANGED",
+      "postCount": 0
+    },
+    "lostReply": {
+      "actionId": "e0487e56-982f-4db9-9bda-48af90751f8e",
+      "nativeQueueId": "3",
+      "nativeBuild": 2,
+      "requestStatus": "OUTCOME_UNKNOWN",
+      "dispatchState": "DISPATCH_UNKNOWN",
+      "postCount": 1
+    },
+    "appRevision": {
+      "actionId": "6e0af58a-e97a-485c-b450-10d2314e0a73",
+      "dispatchState": "NOT_DISPATCHED",
+      "outcome": "NOT_RESUMABLE",
+      "postCount": 0,
+      "disabledReadDenied": true,
+      "previousRevision": 3,
+      "currentRevision": 5
+    }
+  },
+  "readOnlyConnector": {
+    "connectorId": "ce82dc39-6463-4337-a7a7-ff3e2611e648",
+    "readAllowed": true,
+    "buildDenied": true
+  },
+  "nativePosts": [
+    {
+      "path": "/job/orders-validation/buildWithParameters",
+      "status": 201,
+      "queuePath": "/queue/item/1/",
+      "replyDropped": false
+    },
+    {
+      "path": "/job/inventory-verification/buildWithParameters",
+      "status": 201,
+      "queuePath": "/queue/item/2/",
+      "replyDropped": false
+    },
+    {
+      "path": "/job/orders-validation/buildWithParameters",
+      "status": 201,
+      "queuePath": "/queue/item/3/",
+      "replyDropped": true
+    }
+  ],
+  "nativeBuildCounts": {
+    "orders-validation": 2,
+    "inventory-verification": 1
+  },
+  "gatewayAudit": {
+    "orders-validation": {
+      "events": [
+        "ACTION_CREATED",
+        "APPROVAL_APPROVE",
+        "REVIEW_APPROVE",
+        "EXECUTION_INTENT",
+        "SUCCEEDED"
+      ],
+      "executionCount": 1
+    },
+    "inventory-verification": {
+      "events": [
+        "ACTION_CREATED",
+        "APPROVAL_APPROVE",
+        "REVIEW_APPROVE",
+        "EXECUTION_INTENT",
+        "SUCCEEDED"
+      ],
+      "executionCount": 1
+    },
+    "schemaDrift": {
+      "events": [
+        "ACTION_CREATED",
+        "APPROVAL_APPROVE",
+        "REVIEW_APPROVE",
+        "EXECUTION_INTENT",
+        "FAILED"
+      ],
+      "executionCount": 1
+    },
+    "lostReply": {
+      "events": [
+        "ACTION_CREATED",
+        "APPROVAL_APPROVE",
+        "REVIEW_APPROVE",
+        "EXECUTION_INTENT",
+        "OUTCOME_UNKNOWN"
+      ],
+      "executionCount": 1
+    },
+    "appRevision": {
+      "events": [
+        "ACTION_CREATED",
+        "APPROVAL_APPROVE",
+        "REVIEW_APPROVE",
+        "PLAN_INVALIDATED"
+      ],
+      "executionCount": 0
+    }
+  },
+  "appGrants": {
+    "sharedReadAllowed": true,
+    "privateReadDenied": true,
+    "buildToolHidden": true
+  }
+}

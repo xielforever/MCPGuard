@@ -29,7 +29,7 @@ var (
 	ErrUnavailable = errors.New("connector unavailable")
 )
 
-// Config contains the endpoint and fixed read scope for one backend kind.
+// Config contains the endpoint, resource scope and capabilities for one backend kind.
 type Config struct {
 	Host          string `json:"host,omitempty"`
 	Port          int    `json:"port,omitempty"`
@@ -41,6 +41,7 @@ type Config struct {
 	ProbeKey      string `json:"probeKey,omitempty"`
 	BaseURL       string `json:"baseUrl,omitempty"`
 	Folder        string `json:"folder,omitempty"`
+	AllowBuilds   bool   `json:"allowBuilds,omitempty"`
 	Namespace     string `json:"namespace,omitempty"`
 }
 
@@ -58,6 +59,7 @@ type Definition struct {
 	ID          string
 	OrgID       string
 	Type        Kind
+	Revision    int64       `json:"-"`
 	Config      Config      `json:"-"`
 	Credentials Credentials `json:"-"`
 }

@@ -444,10 +444,14 @@ func (s *Service) Decide(ctx context.Context, p metadata.Principal, id, vote, ha
 	if old != nil {
 		return old, nil
 	}
-	if !revisionMatches(match, a.Revision) || a.State != "PENDING_APPROVAL" || hash != a.Hash || !a.Expires.After(time.Now()) || a.Config != v || a.Binding != s.resourceBinding(a.Resource) {
+	if !revisionMatches(match, a.Revision) || a.State != "PENDING_APPROVAL" || hash != a.Hash || !a.Expires.After(time.Now()) || a.Config != v {
 		return nil, ErrConflict
 	}
-	if _, e = s.plan(a); e != nil {
+	args, e := s.plan(a)
+	if e != nil {
+		return nil, e
+	}
+	if e = s.checkReviewBinding(ctx, tx, a, args); e != nil {
 		return nil, e
 	}
 	// A decision is data only. It never consumes an execution qualification.

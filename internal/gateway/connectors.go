@@ -12,9 +12,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/xielforever/MCPGuard/internal/connectors"
 	"github.com/xielforever/MCPGuard/internal/controlled"
+	"github.com/xielforever/MCPGuard/internal/jenkins"
 	"github.com/xielforever/MCPGuard/internal/metadata"
 	connector "github.com/xielforever/MCPGuard/pkg/connectors"
 )
@@ -41,7 +43,7 @@ var connectorTools = []connectorTool{
 }
 
 func (g *Gateway) AttachConnectors(ctx context.Context, cidrs string) error {
-	if g.Console == nil || g.connectors != nil {
+	if g.Console == nil || g.Controlled == nil || g.connectors != nil {
 		return errors.New("connector management requires a single configured console")
 	}
 	policy, err := connector.NewEgressPolicy(cidrs)
@@ -53,6 +55,9 @@ func (g *Gateway) AttachConnectors(ctx context.Context, cidrs string) error {
 		return err
 	}
 	rt := &connectorRuntime{registry, connector.NewProviders(policy)}
+	if err := g.Controlled.AttachJenkinsApps(rt.jenkinsForBuild); err != nil {
+		return err
+	}
 	g.connectors = rt
 	g.Console.ConnectorRegistry = registry
 	previous := g.Console.APIExtension
@@ -65,7 +70,21 @@ func (g *Gateway) AttachConnectors(ctx context.Context, cidrs string) error {
 	for _, tool := range connectorTools {
 		g.registerConnectorTool(rt, tool)
 	}
+	g.registerJenkins(g.Controlled)
+	g.registerActionControl(g.Controlled, "RESUME")
 	return nil
+}
+
+func (rt *connectorRuntime) jenkinsForBuild(ctx context.Context, tx pgx.Tx, p metadata.Principal, id string) (*jenkins.Client, int64, error) {
+	entry, err := rt.registry.GetUsableInTx(ctx, tx, p, id)
+	if err != nil {
+		return nil, 0, connectorManagedError(err)
+	}
+	if entry.Type != connector.Jenkins || !entry.Config.AllowBuilds {
+		return nil, 0, controlled.ErrDenied
+	}
+	client, err := rt.providers.JenkinsForBuild(entry)
+	return client, entry.Revision, connectorManagedError(err)
 }
 
 func (g *Gateway) registerConnectorTool(rt *connectorRuntime, tool connectorTool) {
@@ -150,15 +169,20 @@ func (rt *connectorRuntime) call(ctx context.Context, p metadata.Principal, tool
 }
 
 func connectorToolError(err error) *mcp.CallToolResult {
+	return managedResult(map[string]any{"error": managedError(connectorManagedError(err))}, true)
+}
+
+func connectorManagedError(err error) error {
 	switch {
 	case errors.Is(err, connectors.ErrInput):
-		err = controlled.ErrInput
+		return controlled.ErrInput
 	case errors.Is(err, connectors.ErrDenied), errors.Is(err, connectors.ErrNotFound):
-		err = controlled.ErrDenied
+		return controlled.ErrDenied
 	case errors.Is(err, connectors.ErrConflict):
-		err = controlled.ErrConflict
+		return controlled.ErrConflict
+	default:
+		return err
 	}
-	return managedResult(map[string]any{"error": managedError(err)}, true)
 }
 
 var connectorRequestKey = regexp.MustCompile(`^[A-Za-z0-9._-]{16,128}$`)

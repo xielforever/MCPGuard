@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/xielforever/MCPGuard/internal/jenkins"
 	"github.com/xielforever/MCPGuard/internal/metadata"
 )
 
@@ -229,7 +230,7 @@ func (s *Service) Create(ctx context.Context, p metadata.Principal, name string,
 	if e != nil {
 		return nil, e
 	}
-	a, e := s.recordAction(ctx, tx, cur, t, v, approval, args)
+	a, e := s.recordAction(ctx, tx, cur, t, v, approval, s.resourceBinding(t.Resource), args)
 	if e != nil {
 		return nil, e
 	}
@@ -249,9 +250,9 @@ func (s *Service) Create(ctx context.Context, p metadata.Principal, name string,
 	return res, nil
 }
 
-func (s *Service) recordAction(ctx context.Context, tx pgx.Tx, p metadata.Principal, t Tool, config int64, approval bool, args map[string]any) (action, error) {
+func (s *Service) recordAction(ctx context.Context, tx pgx.Tx, p metadata.Principal, t Tool, config int64, approval bool, binding string, args map[string]any) (action, error) {
 	now := time.Now().UTC().Truncate(time.Microsecond)
-	a := action{Org: p.OrgID, ID: uuid.NewString(), Owner: p.ID, Attempt: uuid.NewString(), Tool: t.Name, Resource: t.Resource, Scope: p.ScopeID, Config: config, Revision: 1, Approval: approval, Binding: s.resourceBinding(t.Resource), State: "READY", Created: now, Expires: now.Add(15 * time.Minute)}
+	a := action{Org: p.OrgID, ID: uuid.NewString(), Owner: p.ID, Attempt: uuid.NewString(), Tool: t.Name, Resource: t.Resource, Scope: p.ScopeID, Config: config, Revision: 1, Approval: approval, Binding: binding, State: "READY", Created: now, Expires: now.Add(15 * time.Minute)}
 	if approval {
 		a.State = "PENDING_APPROVAL"
 	}
@@ -368,6 +369,7 @@ func (s *Service) control(ctx context.Context, p metadata.Principal, id, op stri
 	}
 	outcome := "STATE_RETURNED"
 	run := false
+	var jenkinsClient *jenkins.Client
 	if (a.State == "PENDING_APPROVAL" || a.State == "READY") && !a.Expires.After(time.Now()) {
 		if e = s.state(ctx, tx, &a, "EXPIRED", "ACTION_EXPIRED"); e != nil {
 			return nil, e
@@ -401,7 +403,19 @@ func (s *Service) control(ctx context.Context, p metadata.Principal, id, op stri
 			t, ok := s.Tool(a.Tool)
 			args, pe := s.plan(a)
 			_, ae := s.authorize(ctx, tx, cur, t, args)
-			valid := ok && pe == nil && ae == nil && cur.ScopeID == a.Scope && v == a.Config && a.Binding == s.resourceBinding(a.Resource)
+			valid := ok && pe == nil && ae == nil && cur.ScopeID == a.Scope && v == a.Config
+			if valid {
+				if a.Tool == JenkinsSubmitTool {
+					target, targetErr := s.jenkinsPlanTarget(ctx, tx, cur, a, args)
+					if targetErr != nil && !errors.Is(targetErr, ErrDenied) && !errors.Is(targetErr, ErrConflict) && !errors.Is(targetErr, ErrInput) {
+						return nil, targetErr
+					}
+					valid = targetErr == nil
+					jenkinsClient = target.client
+				} else {
+					valid = a.Binding == s.resourceBinding(a.Resource)
+				}
+			}
 			if valid && a.Approval {
 				var reviewerOK bool
 				pe = tx.QueryRow(ctx, `SELECT p.enabled AND p.expires_at>clock_timestamp() AND mcpguard.has_reviewer_grant(a.org_id,d.reviewer_id,a.resource_name) AND d.reviewer_id<>a.principal_id AND d.plan_hash=a.plan_hash AND d.vote='APPROVE' FROM mcpguard.managed_decisions d JOIN mcpguard.managed_actions a ON (a.org_id,a.id)=(d.org_id,d.action_id) JOIN mcpguard.principals p ON (p.org_id,p.id)=(d.org_id,d.reviewer_id) WHERE a.org_id=$1 AND a.id=$2`, a.Org, a.ID).Scan(&reviewerOK)
@@ -436,7 +450,7 @@ func (s *Service) control(ctx context.Context, p metadata.Principal, id, op stri
 		return nil, e
 	}
 	if run {
-		if e = s.execute(ctx, a); e != nil {
+		if e = s.execute(ctx, a, jenkinsClient); e != nil {
 			return nil, e
 		}
 		a, e = scan(s.Store.Pool.QueryRow(ctx, actionSelect+` WHERE a.org_id=$1 AND a.id=$2 AND a.principal_id=$3`, p.OrgID, id, p.ID))
@@ -501,7 +515,7 @@ func final(a action, o Outcome) map[string]any {
 	}
 	return map[string]any{"kind": "FINAL", "actionId": a.ID, "attemptId": a.Attempt, "executionId": a.Execution, "requestStatus": status, "dispatchState": o.Dispatch, "sideEffectStatus": o.SideEffect, "data": o.Data, "error": safe, "metadata": map[string]any{"encoding": "json", "truncated": false, "observedAt": time.Now().UTC()}}
 }
-func (s *Service) execute(ctx context.Context, a action) error {
+func (s *Service) execute(ctx context.Context, a action, jenkinsClient *jenkins.Client) error {
 	ctx, cancel := context.WithDeadline(ctx, a.Deadline)
 	defer cancel()
 	done := make(chan struct{})
@@ -530,8 +544,8 @@ func (s *Service) execute(ctx context.Context, a action) error {
 	if e == nil {
 		t, _ := s.Tool(a.Tool)
 		nctx, done := context.WithTimeout(ctx, time.Duration(t.Limits.Timeout)*time.Millisecond)
-		if a.Tool == JenkinsSubmitTool && s.jenkinsForOrg(a.Org) {
-			o = s.executeJenkins(nctx, args)
+		if a.Tool == JenkinsSubmitTool && jenkinsClient != nil {
+			o = executeJenkins(nctx, jenkinsClient, args)
 		} else if t.Resource != jenkinsResource && s.Native != nil {
 			o = s.Native.Execute(nctx, t, a.Scope, args)
 		}

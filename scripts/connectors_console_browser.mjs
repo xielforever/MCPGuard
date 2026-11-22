@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 // Exercise the real local console without placing fixture credentials in command
-// arguments, files produced by this runner, or evidence. Supply input on stdin.
+// arguments, files produced by this runner, or evidence. Supply input on stdin
+// or point at an existing private fixture file when launched across WSL.
 import {spawn} from 'node:child_process';
 import {once} from 'node:events';
+import {createReadStream} from 'node:fs';
 import {mkdtemp, readFile, realpath, rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {isAbsolute, join, relative} from 'node:path';
@@ -13,6 +15,7 @@ const configLabels = {
   host: '主机', port: '端口', tls: '使用 TLS', caCertificate: 'CA 证书（可选）',
   database: '数据库', schema: 'Schema', keyPrefix: '允许的键前缀', probeKey: '用于测试的键',
   baseUrl: '服务地址', folder: '任务目录', namespace: '只读命名空间',
+  allowBuilds: '允许提交构建审批',
 };
 let phase = 'reading fixture input';
 
@@ -25,7 +28,8 @@ function check(condition, message) {
 async function input() {
   let size = 0;
   const blocks = [];
-  for await (const block of process.stdin) {
+  const source = process.argv[2] ? createReadStream(process.argv[2]) : process.stdin;
+  for await (const block of source) {
     size += block.length;
     check(size <= 256 * 1024, 'Browser fixture input exceeds 256 KiB');
     blocks.push(block);
@@ -37,12 +41,12 @@ async function input() {
   const url = URL.parse(fixture.url);
   check(url && ['http:', 'https:'].includes(url.protocol) && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) &&
     !url.username && !url.password && !url.search && !url.hash, 'Only a local console URL is allowed');
-  check(Array.isArray(fixture.connections) && fixture.connections.length === kinds.length, 'Provide one connection for each of the four kinds');
+  check(Array.isArray(fixture.connections) && fixture.connections.length > 0 &&
+    fixture.connections.length <= kinds.length, 'Provide one to four connections');
   check(fixture.connections.every(item => item && kinds.includes(item.type) && typeof item.name === 'string' && item.name !== '' &&
     item.config && typeof item.config === 'object' && typeof item.credentials?.secret === 'string' &&
     Array.isArray(item.principalIds) && item.principalIds.length > 0 && item.principalIds.every(id => typeof id === 'string')) &&
-    new Set(fixture.connections.map(item => item.type)).size === kinds.length &&
-    new Set(fixture.connections.map(item => item.name)).size === kinds.length, 'Invalid or duplicate connection fixture');
+    new Set(fixture.connections.map(item => item.name)).size === fixture.connections.length, 'Invalid or duplicate connection fixture');
   return {...fixture, url: url.href, loginUsername: fixture.loginUsername || 'operator'};
 }
 

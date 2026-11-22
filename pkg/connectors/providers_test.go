@@ -34,6 +34,7 @@ func TestProviderValidation(t *testing.T) {
 	}{
 		{"normalized PG port", PostgreSQL, Config{Host: " 127.0.0.1 ", Database: "orders", Schema: "public"}, credentials, nil},
 		{"Redis probe outside prefix", Redis, Config{Host: "127.0.0.1", KeyPrefix: "orders:", ProbeKey: "shipping:1"}, credentials, ErrInput},
+		{"build permission for Redis", Redis, Config{Host: "127.0.0.1", KeyPrefix: "orders:", ProbeKey: "orders:1", AllowBuilds: true}, credentials, ErrInput},
 		{"DNS name without TLS", Redis, Config{Host: "localhost", KeyPrefix: "orders:", ProbeKey: "orders:1"}, credentials, ErrInput},
 		{"destination outside egress policy", PostgreSQL, Config{Host: "192.0.2.1", TLS: true, Database: "orders", Schema: "public"}, credentials, ErrDenied},
 		{"embedded URL credentials", Jenkins, Config{BaseURL: "https://reader:secret@127.0.0.1", Folder: "/"}, credentials, ErrInput},

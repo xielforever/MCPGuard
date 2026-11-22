@@ -3,6 +3,7 @@ package connectors_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -88,5 +89,22 @@ func TestJenkinsReadReturnsPublicResultTypes(t *testing.T) {
 		if fields[name] == nil {
 			t.Fatalf("missing existing Jenkins result field %s", name)
 		}
+	}
+	if _, err := providers.JenkinsForBuild(definition); !errors.Is(err, connectors.ErrDenied) {
+		t.Fatalf("existing read-only connector allowed build: %v", err)
+	}
+	definition.Config.AllowBuilds = true
+	described, err = providers.Read(ctx, definition, connectors.DescribeJob, connectors.ReadInput{JobRef: job.JobRef})
+	buildJob, ok := described.(connectors.DescribeJobResult)
+	if err != nil || !ok || !buildJob.CanSubmit || buildJob.SchemaRevision != job.SchemaRevision {
+		t.Fatalf("unexpected build-enabled description: %T, err=%v", described, err)
+	}
+	client, err := providers.JenkinsForBuild(definition)
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan, err := client.Prepare(ctx, buildJob.JobRef, buildJob.SchemaRevision, map[string]any{"REF": "release"})
+	if err != nil || plan.FullName != job.FullName || plan.Parameters["REF"] != "release" {
+		t.Fatalf("build plan did not use the same job definition: %v", err)
 	}
 }

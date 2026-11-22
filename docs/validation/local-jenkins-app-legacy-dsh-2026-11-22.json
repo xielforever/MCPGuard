@@ -1,0 +1,119 @@
+{
+  "runId": "45f842fe7b78",
+  "jenkinsImage": "jenkins/jenkins@sha256:74401de6a6f92e1afe1b02d1c8e3d0c33f263bfb5275dd8813f9150355f2367b",
+  "jenkinsVersion": "2.580.2",
+  "dsh": {
+    "transport": "streamable-http",
+    "runtimeVersion": "0.2.2-rc.5",
+    "registeredTools": [
+      "mcp__mcpguard_ra18__jenkins_describe_job_aa91f4733628",
+      "mcp__mcpguard_ra18__jenkins_get_queue_55510e29e503",
+      "mcp__mcpguard_ra18__jenkins_list_jobs_537dbfa3ca5c",
+      "mcp__mcpguard_ra18__jenkins_submit_build_7ddc847837be"
+    ]
+  },
+  "parameterNames": {
+    "inventory-verification": [
+      "PROFILE",
+      "RELEASE_TAG"
+    ],
+    "orders-validation": [
+      "GIT_REF",
+      "RUN_TESTS"
+    ]
+  },
+  "scenarios": {
+    "orders-validation": {
+      "actionId": "30569b2d-92da-4a1b-a76a-69b9eb3ecb3e",
+      "queueId": 1,
+      "nativeBuild": 1,
+      "postCount": 1
+    },
+    "inventory-verification": {
+      "actionId": "4b7f9a54-7e93-4c70-b8dc-c505fce38601",
+      "queueId": 2,
+      "nativeBuild": 1,
+      "postCount": 1
+    },
+    "schemaDrift": {
+      "actionId": "c51ea990-fc61-4bfb-b585-20d2c8e5f3e3",
+      "dispatchState": "NOT_DISPATCHED",
+      "errorCode": "JENKINS_SCHEMA_CHANGED",
+      "postCount": 0
+    },
+    "lostReply": {
+      "actionId": "8bf55189-2abc-4c3a-ad2d-de56f6055a86",
+      "nativeQueueId": "3",
+      "nativeBuild": 2,
+      "requestStatus": "OUTCOME_UNKNOWN",
+      "dispatchState": "DISPATCH_UNKNOWN",
+      "postCount": 1
+    }
+  },
+  "nativePosts": [
+    {
+      "path": "/job/orders-validation/buildWithParameters",
+      "status": 201,
+      "queuePath": "/queue/item/1/",
+      "replyDropped": false
+    },
+    {
+      "path": "/job/inventory-verification/buildWithParameters",
+      "status": 201,
+      "queuePath": "/queue/item/2/",
+      "replyDropped": false
+    },
+    {
+      "path": "/job/orders-validation/buildWithParameters",
+      "status": 201,
+      "queuePath": "/queue/item/3/",
+      "replyDropped": true
+    }
+  ],
+  "nativeBuildCounts": {
+    "orders-validation": 2,
+    "inventory-verification": 1
+  },
+  "gatewayAudit": {
+    "orders-validation": {
+      "events": [
+        "ACTION_CREATED",
+        "APPROVAL_APPROVE",
+        "REVIEW_APPROVE",
+        "EXECUTION_INTENT",
+        "SUCCEEDED"
+      ],
+      "executionCount": 1
+    },
+    "inventory-verification": {
+      "events": [
+        "ACTION_CREATED",
+        "APPROVAL_APPROVE",
+        "REVIEW_APPROVE",
+        "EXECUTION_INTENT",
+        "SUCCEEDED"
+      ],
+      "executionCount": 1
+    },
+    "schemaDrift": {
+      "events": [
+        "ACTION_CREATED",
+        "APPROVAL_APPROVE",
+        "REVIEW_APPROVE",
+        "EXECUTION_INTENT",
+        "FAILED"
+      ],
+      "executionCount": 1
+    },
+    "lostReply": {
+      "events": [
+        "ACTION_CREATED",
+        "APPROVAL_APPROVE",
+        "REVIEW_APPROVE",
+        "EXECUTION_INTENT",
+        "OUTCOME_UNKNOWN"
+      ],
+      "executionCount": 1
+    }
+  }
+}

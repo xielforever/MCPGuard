@@ -16,7 +16,11 @@ const (
 )
 
 func (g *Gateway) registerJenkins(s *controlled.Service) {
-	jobRef := map[string]any{"type": "string", "minLength": 1, "maxLength": 2048, "description": "Opaque jobRef returned by jenkins.list_jobs."}
+	if g.jenkinsRegistered {
+		return
+	}
+	g.jenkinsRegistered = true
+	jobRef := map[string]any{"type": "string", "minLength": 1, "maxLength": 2048, "description": "Opaque jobRef returned by the corresponding Jenkins task list."}
 	tools := []struct {
 		name, description string
 		properties        map[string]any
@@ -24,7 +28,8 @@ func (g *Gateway) registerJenkins(s *controlled.Service) {
 	}{
 		{jenkinsListTool, "List Jenkins jobs in the allowed folders of the configured controller. Use the returned jobRef to describe a job.", nil, nil},
 		{jenkinsDescribeTool, "Read the current Jenkins job parameters, choices and defaults. Use the returned schemaRevision when submitting for approval.", map[string]any{"jobRef": jobRef}, []string{"jobRef"}},
-		{controlled.JenkinsSubmitTool, "Freeze one Jenkins build request for independent console approval. Supply a new requestKey for each intended build and reuse that key for any retry of the same request. After approval, explicitly call action.resume with the actionId.", map[string]any{
+		{controlled.JenkinsSubmitTool, "Request independent console approval for a Jenkins build. For a console Jenkins App, use its connectorId and the job definition from connector.jenkins.describe_job. Reuse requestKey only to retry the same build request. After approval, call action.resume with the actionId.", map[string]any{
+			"connectorId":    map[string]any{"type": "string", "format": "uuid", "description": "Jenkins App from connector.list. Omit only for a job discovered via the legacy file-configured Jenkins tools."},
 			"jobRef":         jobRef,
 			"schemaRevision": map[string]any{"type": "string", "minLength": 1, "maxLength": 128},
 			"parameters":     map[string]any{"type": "object", "description": "Parameter values keyed by their names from jenkins.describe_job. Omit individual optional values to use the reviewed defaults."},
