@@ -1,0 +1,60 @@
+{
+  "runId": "43593161eccd",
+  "observedAt": "2026-11-23T15:24:17.117999+08:00",
+  "scope": "LOCAL_LOOPBACK",
+  "endpoint": "http://127.0.0.1:18080/mcp",
+  "sourceCommit": "7e7bb92d51b24233362ab36747d733f230553e98",
+  "gatewaySha256": "85355095ef5f1648d00d8532f53004c2e33aa09bd7d3a9cdf38c9b1fab4dde03",
+  "upgrade": {
+    "rehearsal": "PASS",
+    "cutover": "PASS",
+    "postcheck": "PASS",
+    "metadataBefore": 4,
+    "metadataAfter": 7,
+    "appliedMigrations": [5, 6, 7],
+    "originalDatabaseAndGatewayRetained": true,
+    "preUpgradeBackupVerified": true,
+    "originalRowFingerprintsPreserved": true,
+    "existingConnectionSettingsPreserved": true,
+    "preservedCounts": {
+      "principals": 4,
+      "toolGrants": 5,
+      "reviewerGrants": 4,
+      "historicalAuditEvents": 215,
+      "legacyMcpTools": 13
+    },
+    "existingAdminAndMemberLogins": "PASS",
+    "existingHistoricalResultReadable": true,
+    "healthHttp": 200,
+    "consoleHttp": 200
+  },
+  "liveAcceptance": {
+    "overallStatus": "PARTIAL",
+    "chromeRegistrationAndConnectionTest": "PASS",
+    "singleDatabaseMetadataScope": "PASS",
+    "disabledInSameSession": "ACCESS_DENIED",
+    "secondExistingPrincipalAppGrant": "NOT_VERIFIED_AUTHENTICATION_HTTP_401",
+    "dshVersion": "0.2.2-rc.5",
+    "transport": "streamable-http",
+    "mysqlVersion": "8.4.11",
+    "allowedConnectorCidrs": ["127.0.0.1/32"],
+    "mysqlTools": ["connector.mysql.list_tables", "connector.mysql.list_columns"],
+    "readback": {
+      "database": "commerce_catalog",
+      "tables": ["orders", "products"],
+      "table": "orders",
+      "columns": [
+        {"name": "id", "dataType": "bigint", "nullable": false, "ordinalPosition": 1},
+        {"name": "order_status", "dataType": "varchar", "nullable": true, "ordinalPosition": 2}
+      ]
+    },
+    "nativeReaderCouldSeeOtherDatabases": true,
+    "siblingAndCaseDistinctMetadataDenied": true,
+    "databaseOverrideDenied": true,
+    "qualifiedTableNameDenied": "INVALID_ARGUMENTS",
+    "viewDenied": true,
+    "testAppDisabled": true,
+    "temporaryMysqlRemoved": true,
+    "connectorAuditEvents": ["CREATED", "TEST_PASSED", "ENABLED", "DISABLED"]
+  }
+}
