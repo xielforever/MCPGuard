@@ -1,0 +1,422 @@
+{
+  "schemaVersion": 1,
+  "kind": "zhiqi-cce-isolated-acceptance",
+  "title": "执契 CCE 隔离验收",
+  "date": "2026-11-26",
+  "environment": {
+    "cloud": "Huawei Cloud",
+    "cluster": "xyc",
+    "region": "cn-east-2",
+    "namespace": "zhiqi",
+    "release": "zhiqi",
+    "access": "kubectl port-forward --address 127.0.0.1 deployment/zhiqi 18082:18082",
+    "console": "http://127.0.0.1:18082/console/",
+    "mcp": "http://127.0.0.1:18082/mcp"
+  },
+  "source": {
+    "commit": "d1f18f723ff7b9a8467a9b4339cb1f05b4a9de21",
+    "repository": "https://github.com/xielforever/MCPGuard",
+    "branch": "codex/zhiqi-brand"
+  },
+  "image": {
+    "repository": "swr.cn-east-2.myhuaweicloud.com/dx_x2era/zhiqi",
+    "tag": "zhiqi-d1f18f7",
+    "digest": "sha256:2a7ea20b037f80d0572e8235c203d98ef264bc75062663767159c6f0f23be0a4",
+    "runningImageID": "swr.cn-east-2.myhuaweicloud.com/dx_x2era/zhiqi@sha256:2a7ea20b037f80d0572e8235c203d98ef264bc75062663767159c6f0f23be0a4",
+    "pullSecret": "default-secret"
+  },
+  "helm": {
+    "status": "deployed",
+    "revision": 2,
+    "chart": "zhiqi-0.1.0",
+    "appVersion": "",
+    "replicas": 1,
+    "strategy": {
+      "type": "Recreate"
+    },
+    "pod": "zhiqi-7bdfb459cf-hgznm",
+    "node": "10.240.126.194",
+    "containers": {
+      "jenkins-proxy": {
+        "ready": true,
+        "imageID": "swr.cn-east-2.myhuaweicloud.com/dx_x2era/zhiqi@sha256:2a7ea20b037f80d0572e8235c203d98ef264bc75062663767159c6f0f23be0a4",
+        "restartCount": 0
+      },
+      "zhiqi": {
+        "ready": true,
+        "imageID": "swr.cn-east-2.myhuaweicloud.com/dx_x2era/zhiqi@sha256:2a7ea20b037f80d0572e8235c203d98ef264bc75062663767159c6f0f23be0a4",
+        "restartCount": 0
+      }
+    },
+    "probes": {
+      "startup": "/usr/local/bin/mcpguard probe live",
+      "liveness": "/usr/local/bin/mcpguard probe live",
+      "readiness": "/usr/local/bin/mcpguard probe ready"
+    }
+  },
+  "nacos": {
+    "url": "http://infra-core-nacos.infra.svc.cluster.local:8848/nacos",
+    "namespaceId": "zhiqi",
+    "group": "ZHIQI",
+    "dataId": "metadata-pg.json",
+    "readerUser": "zhiqi-reader",
+    "readerScope": "namespace zhiqi, group ZHIQI, config read only",
+    "startupLog": "metadata connection loaded from Nacos"
+  },
+  "metadata": {
+    "service": "infra-core-postgres",
+    "database": "zhiqi",
+    "runtimeRole": "zhiqi_runtime",
+    "migrationRole": "zhiqi_migrator",
+    "tls": "sslmode=verify-ca with the mounted PostgreSQL instance CA",
+    "roles": [
+      "role|zhiqi_migrator|false|false|false",
+      "role|zhiqi_runtime|false|false|false"
+    ],
+    "ledger": [
+      "ledger|7|7"
+    ]
+  },
+  "migration": {
+    "planJob": "zhiqi-migrate-plan-plan20261126b",
+    "applyJob": "zhiqi-migrate-apply-apply20261126b",
+    "plan": null,
+    "apply": null,
+    "backup": null,
+    "backupFile": "C:\\dev\\projects\\MCPGuard\\.dev\\zhiqi-cce-xyc\\evidence\\zhiqi-pre-migration.dump"
+  },
+  "jenkins": {
+    "service": "infra-jenkins",
+    "scope": "/ (cloudbees-folder plugin absent; root is the approved test scope)",
+    "app": {
+      "id": "26d53122-f733-4fd5-9c6a-9bb638d649c5",
+      "name": "执契 Jenkins 验收",
+      "revision": 5,
+      "enabled": true,
+      "testStatus": "PASSED",
+      "testedAt": "2026-11-26T07:10:51.365561Z"
+    },
+    "appBaseUrl": "http://127.0.0.1:18083 (pod-local loopback proxy to the HTTP Jenkins service)",
+    "jobs": {
+      "zhiqi-orders": {
+        "parameters": [
+          "GIT_REF",
+          "RUN_TESTS"
+        ]
+      },
+      "zhiqi-inventory": {
+        "parameters": [
+          "PROFILE",
+          "RELEASE_TAG"
+        ]
+      }
+    },
+    "builds": {
+      "zhiqi-orders": [
+        {
+          "number": 5,
+          "queueId": 11,
+          "result": "SUCCESS",
+          "parameters": {
+            "GIT_REF": "release/lost-receipt-3",
+            "RUN_TESTS": false
+          }
+        },
+        {
+          "number": 4,
+          "queueId": 10,
+          "result": "SUCCESS",
+          "parameters": {
+            "GIT_REF": "release/lost-receipt-2",
+            "RUN_TESTS": false
+          }
+        },
+        {
+          "number": 3,
+          "queueId": 9,
+          "result": "SUCCESS",
+          "parameters": {
+            "GIT_REF": "release/lost-receipt",
+            "RUN_TESTS": false
+          }
+        },
+        {
+          "number": 2,
+          "queueId": 8,
+          "result": "SUCCESS",
+          "parameters": {
+            "GIT_REF": "release/idempotent",
+            "RUN_TESTS": true
+          }
+        },
+        {
+          "number": 1,
+          "queueId": 6,
+          "result": "SUCCESS",
+          "parameters": {
+            "GIT_REF": "release/orders",
+            "RUN_TESTS": false
+          }
+        }
+      ],
+      "zhiqi-inventory": [
+        {
+          "number": 1,
+          "queueId": 7,
+          "result": "SUCCESS",
+          "parameters": {
+            "PROFILE": "full",
+            "RELEASE_TAG": "release-2026"
+          }
+        }
+      ]
+    }
+  },
+  "dsh": {
+    "client": "installed DeepSeek Harness Desktop tool host",
+    "runtimeVersion": "0.2.2-rc.5",
+    "toolCount": 17,
+    "endpoint": "http://127.0.0.1:18082/mcp",
+    "identities": {
+      "admin": "7a000000-0000-4000-8000-000000000101",
+      "reviewer": "7a000000-0000-4000-8000-000000000102",
+      "applicant": "7a000000-0000-4000-8000-000000000103",
+      "outsider": "7a000000-0000-4000-8000-000000000104"
+    }
+  },
+  "acceptance": {
+    "instanceStartup": {
+      "result": "PASS",
+      "imageDigestMatched": true,
+      "nacosConfigLoaded": true,
+      "metadataTls": true,
+      "migrationVersion": 7,
+      "badConfigBlocked": true,
+      "badConfigLog": "﻿2026/11/26 07:48:59 ERROR Nacos metadata configuration could not be read"
+    },
+    "pageToDSH": {
+      "result": "PASS",
+      "adminConsole": "http://127.0.0.1:18082/console/ (HTTP 200; screenshot attached)",
+      "appTest": "PASSED",
+      "appEnabled": true,
+      "sameConnectorId": "26d53122-f733-4fd5-9c6a-9bb638d649c5",
+      "orders": {
+        "actionId": "0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e",
+        "queueId": 6,
+        "buildNumber": 1,
+        "parameters": {
+          "GIT_REF": "release/orders",
+          "RUN_TESTS": false
+        },
+        "state": "SUCCEEDED"
+      },
+      "inventory": {
+        "actionId": "ff944d12-85dc-4235-b14a-1c07695b4fb8",
+        "queueId": 7,
+        "buildNumber": 1,
+        "parameters": {
+          "PROFILE": "full",
+          "RELEASE_TAG": "release-2026"
+        },
+        "state": "SUCCEEDED"
+      },
+      "zeroDispatchBeforeApproval": true,
+      "approvalRequiresIndependentReviewer": true,
+      "auditCorrelates": [
+        "audit|0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e|ACTION_CREATED",
+        "audit|ff944d12-85dc-4235-b14a-1c07695b4fb8|ACTION_CREATED",
+        "audit|0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e|APPROVAL_APPROVE",
+        "audit|0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e|REVIEW_APPROVE",
+        "audit|ff944d12-85dc-4235-b14a-1c07695b4fb8|APPROVAL_APPROVE",
+        "audit|ff944d12-85dc-4235-b14a-1c07695b4fb8|REVIEW_APPROVE",
+        "audit|0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e|EXECUTION_INTENT",
+        "audit|0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e|SUCCEEDED",
+        "audit|ff944d12-85dc-4235-b14a-1c07695b4fb8|EXECUTION_INTENT",
+        "audit|ff944d12-85dc-4235-b14a-1c07695b4fb8|SUCCEEDED"
+      ]
+    },
+    "permissionsAndRecovery": {
+      "result": "PASS_WITH_LIMITATION",
+      "applicantSelfApprovalDenied": true,
+      "outsiderDenied": true,
+      "idempotency": {
+        "actionId": "8c70c42e-65e7-4939-92be-4eafb039c959",
+        "sameKeyReturnsSameAction": true,
+        "changedParametersConflict": true,
+        "repeatResumeNoSecondBuild": true,
+        "buildNumber": 2
+      },
+      "schemaDrift": {
+        "actionId": "bcf58979-a291-4d09-ba88-6f387f6a3f98",
+        "state": "FAILED",
+        "dispatchState": "NOT_DISPATCHED",
+        "inventoryBuildCount": 1,
+        "configRestored": true
+      },
+      "disableRecovery": {
+        "actionId": "cb95b27d-a49f-4cef-8230-9d085824230c",
+        "state": "CANCELLED",
+        "dispatchState": "NOT_DISPATCHED",
+        "appRevisionAfterReEnable": 5,
+        "ordersBuildCount": 5
+      },
+      "lostReceipt": {
+        "result": "PARTIAL",
+        "attempts": 3,
+        "lastActionId": "0fccd035-96ff-463e-98b8-3e9e2186b590",
+        "abortedClient": true,
+        "firstDispatchObservedBeforeRetry": false,
+        "retryBuilds": 1,
+        "note": "Client aborts canceled the server-side call before dispatch; retries still produced exactly one build. A network drop after dispatch was not reproduced in this harness."
+      },
+      "podReplacement": {
+        "result": "PASS",
+        "newPod": "zhiqi-7bdfb459cf-zmtc9",
+        "newImageID": "swr.cn-east-2.myhuaweicloud.com/dx_x2era/zhiqi@sha256:2a7ea20b037f80d0572e8235c203d98ef264bc75062663767159c6f0f23be0a4",
+        "dshReconnected": true,
+        "appReadback": {
+          "id": "26d53122-f733-4fd5-9c6a-9bb638d649c5",
+          "name": "执契 Jenkins 验收",
+          "type": "jenkins",
+          "revision": 5,
+          "enabled": true,
+          "testStatus": "PASSED",
+          "testedAt": "2026-11-26T07:10:51.365561Z"
+        }
+      },
+      "scaleRecovery": {
+        "result": "PASS",
+        "newPod": "zhiqi-7bdfb459cf-hgznm",
+        "newImageID": "swr.cn-east-2.myhuaweicloud.com/dx_x2era/zhiqi@sha256:2a7ea20b037f80d0572e8235c203d98ef264bc75062663767159c6f0f23be0a4",
+        "dshReconnected": true,
+        "historyCount": 8,
+        "auditCount": 5
+      }
+    },
+    "rollback": {
+      "workloadStop": "PASS: scaled Deployment to 0, verified no ready workload; metadata ledger and backup retained; scaled back to 1 and DSH reconnected.",
+      "imageRollback": "NOT_RUN: the only image change in this acceptance was the architecture-compatible /console/ route fix; the previous digest is recorded for a compatible rollback.",
+      "databaseRestore": "NOT_RUN: the pre-migration backup is retained; an isolated restore drill remains required before any database switch."
+    }
+  },
+  "audit": {
+    "rows": [
+      "ledger|7|7",
+      "role|zhiqi_migrator|false|false|false",
+      "role|zhiqi_runtime|false|false|false",
+      "action|0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e|jenkins.submit_build|SUCCEEDED|4",
+      "action|ff944d12-85dc-4235-b14a-1c07695b4fb8|jenkins.submit_build|SUCCEEDED|4",
+      "action|4019d79d-a4fd-43f6-b934-56ea35e53f91|jenkins.submit_build|DENIED|2",
+      "action|8c70c42e-65e7-4939-92be-4eafb039c959|jenkins.submit_build|SUCCEEDED|4",
+      "action|3fd1e90b-db12-4cec-9d3b-261a35e8204a|jenkins.submit_build|DENIED|2",
+      "action|bcf58979-a291-4d09-ba88-6f387f6a3f98|jenkins.submit_build|FAILED|4",
+      "action|cb95b27d-a49f-4cef-8230-9d085824230c|jenkins.submit_build|CANCELLED|3",
+      "action|82563dbf-4fae-43e8-9e08-2e96e381f0a7|jenkins.submit_build|DENIED|2",
+      "action|48b57f0f-09cb-4472-abd8-75326ac6f3b4|jenkins.submit_build|SUCCEEDED|4",
+      "action|07c81732-1759-4e17-ba09-85587fce4306|jenkins.submit_build|SUCCEEDED|4",
+      "action|0fccd035-96ff-463e-98b8-3e9e2186b590|jenkins.submit_build|SUCCEEDED|4",
+      "execution|0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e|SUCCEEDED|DISPATCHED",
+      "execution|ff944d12-85dc-4235-b14a-1c07695b4fb8|SUCCEEDED|DISPATCHED",
+      "execution|8c70c42e-65e7-4939-92be-4eafb039c959|SUCCEEDED|DISPATCHED",
+      "execution|bcf58979-a291-4d09-ba88-6f387f6a3f98|FAILED|NOT_DISPATCHED",
+      "execution|48b57f0f-09cb-4472-abd8-75326ac6f3b4|SUCCEEDED|DISPATCHED",
+      "execution|07c81732-1759-4e17-ba09-85587fce4306|SUCCEEDED|DISPATCHED",
+      "execution|0fccd035-96ff-463e-98b8-3e9e2186b590|SUCCEEDED|DISPATCHED",
+      "audit|0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e|ACTION_CREATED",
+      "audit|ff944d12-85dc-4235-b14a-1c07695b4fb8|ACTION_CREATED",
+      "audit|0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e|APPROVAL_APPROVE",
+      "audit|0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e|REVIEW_APPROVE",
+      "audit|ff944d12-85dc-4235-b14a-1c07695b4fb8|APPROVAL_APPROVE",
+      "audit|ff944d12-85dc-4235-b14a-1c07695b4fb8|REVIEW_APPROVE",
+      "audit|0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e|EXECUTION_INTENT",
+      "audit|0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e|SUCCEEDED",
+      "audit|ff944d12-85dc-4235-b14a-1c07695b4fb8|EXECUTION_INTENT",
+      "audit|ff944d12-85dc-4235-b14a-1c07695b4fb8|SUCCEEDED",
+      "audit|4019d79d-a4fd-43f6-b934-56ea35e53f91|ACTION_CREATED",
+      "audit|8c70c42e-65e7-4939-92be-4eafb039c959|ACTION_CREATED",
+      "audit|8c70c42e-65e7-4939-92be-4eafb039c959|APPROVAL_APPROVE",
+      "audit|8c70c42e-65e7-4939-92be-4eafb039c959|REVIEW_APPROVE",
+      "audit|8c70c42e-65e7-4939-92be-4eafb039c959|EXECUTION_INTENT",
+      "audit|8c70c42e-65e7-4939-92be-4eafb039c959|SUCCEEDED",
+      "audit|3fd1e90b-db12-4cec-9d3b-261a35e8204a|ACTION_CREATED",
+      "audit|bcf58979-a291-4d09-ba88-6f387f6a3f98|ACTION_CREATED",
+      "audit|bcf58979-a291-4d09-ba88-6f387f6a3f98|APPROVAL_APPROVE",
+      "audit|bcf58979-a291-4d09-ba88-6f387f6a3f98|REVIEW_APPROVE",
+      "audit|4019d79d-a4fd-43f6-b934-56ea35e53f91|APPROVAL_REJECT",
+      "audit|4019d79d-a4fd-43f6-b934-56ea35e53f91|REVIEW_REJECT",
+      "audit|3fd1e90b-db12-4cec-9d3b-261a35e8204a|APPROVAL_REJECT",
+      "audit|3fd1e90b-db12-4cec-9d3b-261a35e8204a|REVIEW_REJECT",
+      "audit|bcf58979-a291-4d09-ba88-6f387f6a3f98|EXECUTION_INTENT",
+      "audit|bcf58979-a291-4d09-ba88-6f387f6a3f98|FAILED",
+      "audit|cb95b27d-a49f-4cef-8230-9d085824230c|ACTION_CREATED",
+      "audit|cb95b27d-a49f-4cef-8230-9d085824230c|APPROVAL_APPROVE",
+      "audit|cb95b27d-a49f-4cef-8230-9d085824230c|REVIEW_APPROVE",
+      "audit|cb95b27d-a49f-4cef-8230-9d085824230c|PLAN_INVALIDATED",
+      "audit|82563dbf-4fae-43e8-9e08-2e96e381f0a7|ACTION_CREATED",
+      "audit|82563dbf-4fae-43e8-9e08-2e96e381f0a7|APPROVAL_REJECT",
+      "audit|82563dbf-4fae-43e8-9e08-2e96e381f0a7|REVIEW_REJECT",
+      "audit|48b57f0f-09cb-4472-abd8-75326ac6f3b4|ACTION_CREATED",
+      "audit|48b57f0f-09cb-4472-abd8-75326ac6f3b4|APPROVAL_APPROVE",
+      "audit|48b57f0f-09cb-4472-abd8-75326ac6f3b4|REVIEW_APPROVE",
+      "audit|48b57f0f-09cb-4472-abd8-75326ac6f3b4|EXECUTION_INTENT",
+      "audit|48b57f0f-09cb-4472-abd8-75326ac6f3b4|SUCCEEDED",
+      "audit|07c81732-1759-4e17-ba09-85587fce4306|ACTION_CREATED",
+      "audit|07c81732-1759-4e17-ba09-85587fce4306|APPROVAL_APPROVE",
+      "audit|07c81732-1759-4e17-ba09-85587fce4306|REVIEW_APPROVE",
+      "audit|07c81732-1759-4e17-ba09-85587fce4306|EXECUTION_INTENT",
+      "audit|07c81732-1759-4e17-ba09-85587fce4306|SUCCEEDED",
+      "audit|0fccd035-96ff-463e-98b8-3e9e2186b590|ACTION_CREATED",
+      "audit|0fccd035-96ff-463e-98b8-3e9e2186b590|APPROVAL_APPROVE",
+      "audit|0fccd035-96ff-463e-98b8-3e9e2186b590|REVIEW_APPROVE",
+      "audit|0fccd035-96ff-463e-98b8-3e9e2186b590|EXECUTION_INTENT",
+      "audit|0fccd035-96ff-463e-98b8-3e9e2186b590|SUCCEEDED",
+      "connector|CREATED|1",
+      "connector|TEST_PASSED|2",
+      "connector|ENABLED|3",
+      "connector|DISABLED|4",
+      "connector|ENABLED|5"
+    ],
+    "managedActions": [
+      "action|0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e|jenkins.submit_build|SUCCEEDED|4",
+      "action|ff944d12-85dc-4235-b14a-1c07695b4fb8|jenkins.submit_build|SUCCEEDED|4",
+      "action|4019d79d-a4fd-43f6-b934-56ea35e53f91|jenkins.submit_build|DENIED|2",
+      "action|8c70c42e-65e7-4939-92be-4eafb039c959|jenkins.submit_build|SUCCEEDED|4",
+      "action|3fd1e90b-db12-4cec-9d3b-261a35e8204a|jenkins.submit_build|DENIED|2",
+      "action|bcf58979-a291-4d09-ba88-6f387f6a3f98|jenkins.submit_build|FAILED|4",
+      "action|cb95b27d-a49f-4cef-8230-9d085824230c|jenkins.submit_build|CANCELLED|3",
+      "action|82563dbf-4fae-43e8-9e08-2e96e381f0a7|jenkins.submit_build|DENIED|2",
+      "action|48b57f0f-09cb-4472-abd8-75326ac6f3b4|jenkins.submit_build|SUCCEEDED|4",
+      "action|07c81732-1759-4e17-ba09-85587fce4306|jenkins.submit_build|SUCCEEDED|4",
+      "action|0fccd035-96ff-463e-98b8-3e9e2186b590|jenkins.submit_build|SUCCEEDED|4"
+    ],
+    "executions": [
+      "execution|0e43ba6e-d9b7-4bb2-9222-95aaf4a78d6e|SUCCEEDED|DISPATCHED",
+      "execution|ff944d12-85dc-4235-b14a-1c07695b4fb8|SUCCEEDED|DISPATCHED",
+      "execution|8c70c42e-65e7-4939-92be-4eafb039c959|SUCCEEDED|DISPATCHED",
+      "execution|bcf58979-a291-4d09-ba88-6f387f6a3f98|FAILED|NOT_DISPATCHED",
+      "execution|48b57f0f-09cb-4472-abd8-75326ac6f3b4|SUCCEEDED|DISPATCHED",
+      "execution|07c81732-1759-4e17-ba09-85587fce4306|SUCCEEDED|DISPATCHED",
+      "execution|0fccd035-96ff-463e-98b8-3e9e2186b590|SUCCEEDED|DISPATCHED"
+    ],
+    "connectorAudit": [
+      "connector|CREATED|1",
+      "connector|TEST_PASSED|2",
+      "connector|ENABLED|3",
+      "connector|DISABLED|4",
+      "connector|ENABLED|5"
+    ]
+  },
+  "limitations": [
+    "Jenkins cloudbees-folder plugin is absent; the approved test scope is the Jenkins root rather than a folder.",
+    "Jenkins is HTTP in-cluster; the connector's HTTPS-or-loopback rule is satisfied by a pod-local 127.0.0.1 proxy, which is not a production ingress pattern.",
+    "The client-abort lost-receipt test canceled the server call before dispatch; a true post-dispatch network-drop injection was not reproduced.",
+    "The shared infra release was replaced by infra-core during execution; the zhiqi database and Nacos data survived, and the Nacos host, TLS and service names were updated and re-verified.",
+    "No Wave 3 production approval or production release is claimed; #24 and #25 remain open."
+  ],
+  "evidenceFiles": [
+    "docs/validation/zhiqi-cce-isolated-acceptance-2026-11-26.md",
+    "docs/validation/zhiqi-cce-isolated-acceptance-2026-11-26.json",
+    "docs/validation/zhiqi-cce-2026-11-26-admin-console.png",
+    "docs/validation/zhiqi-cce-2026-11-26-reviewer-actions.png"
+  ]
+}

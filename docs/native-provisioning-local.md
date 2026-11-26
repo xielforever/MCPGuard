@@ -83,7 +83,7 @@ python3 scripts/provision_fixture.py smoke
 python3 scripts/provision_fixture.py contracts
 ```
 
-prepare 每次创建新场景，不覆盖旧场景，私有状态保留在 `~/.local/state/mcpguard-ra05/`，指针和构建位于忽略提交的 `.dev/ra05-*`。test 先于 smoke 执行，避免实际激活改变夹具的初始绑定。此脚本不会加载或重启现有本地 MCPGuard 服务。
+prepare 每次创建新场景，不覆盖旧场景，私有状态保留在 `~/.local/state/mcpguard-ra05/`，指针和构建位于忽略提交的 `.dev/ra05-*`。test 先于 smoke 执行，避免实际激活改变夹具的初始绑定。此脚本不会加载或重启现有本地执契服务。
 
 
 ## 后续 RA-06 状态（2026-10-26）

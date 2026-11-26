@@ -2,7 +2,8 @@
   <el-container class="app-container">
     <el-aside width="200px" class="app-aside">
       <div class="logo">
-        <h2>MCPGuard</h2>
+        <img src="/zhiqi-seal-mark.png" width="36" height="36" alt="" />
+        <h2>执契</h2>
       </div>
       <el-menu
         :default-active="activeMenu"
@@ -37,7 +38,7 @@
     <el-container>
       <el-header class="app-header">
         <div class="header-content">
-          <span>Safety Authorization Gateway</span>
+          <span>企业应用连接器</span>
           <el-dropdown>
             <span class="el-dropdown-link">
               Admin<el-icon class="el-icon--right"><arrow-down /></el-icon>
@@ -75,8 +76,10 @@ const activeMenu = computed(() => route.path)
 }
 .logo {
   height: 60px;
-  line-height: 60px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   color: #fff;
   border-bottom: 1px solid #1f2d3d;
 }

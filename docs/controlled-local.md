@@ -51,7 +51,7 @@
 
 配置文件内容见 [Telegram 模板](../deploy/local/telegram.example.json)。把填写后的文件保存在私有目录 `.dev/local-service/controlled-runtime/telegram.json`，再将 `.dev/env.json` 的 `MCPGUARD_NOTIFICATION_CONFIG` 设置为该文件的 WSL 绝对路径，并重新运行 `scripts/local_controlled.py setup` 更新网关运行配置；无需重启 Codex。此步骤应由本机操作员完成，密钥不要发在聊天中。
 
-Telegram 手机端的 `127.0.0.1` 链接指向手机本身；审批需在运行 MCPGuard 的电脑上打开控制台。本批不引入公网入口。协议实现参考 [Redis RESP](https://redis.io/docs/latest/develop/reference/protocol-spec/) 和 [Telegram Bot API](https://core.telegram.org/bots/api#sendmessage)。本地接收器测试通过不等于真实 Telegram 已送达。
+Telegram 手机端的 `127.0.0.1` 链接指向手机本身；审批需在运行执契的电脑上打开控制台。本批不引入公网入口。协议实现参考 [Redis RESP](https://redis.io/docs/latest/develop/reference/protocol-spec/) 和 [Telegram Bot API](https://core.telegram.org/bots/api#sendmessage)。本地接收器测试通过不等于真实 Telegram 已送达。
 
 ## 本地测试与运行
 

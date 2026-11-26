@@ -1,0 +1,140 @@
+{{- if not .Values.migration.mode }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "zhiqi.selector" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "zhiqi.selector" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "zhiqi.selector" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 20
+      securityContext:
+        {{- include "zhiqi.podSecurityContext" . | nindent 8 }}
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: zhiqi
+          image: {{ include "zhiqi.image" . | quote }}
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "zhiqi.containerSecurityContext" . | nindent 12 }}
+          ports:
+            - name: loopback
+              containerPort: 18082
+              protocol: TCP
+          env:
+            - name: MCPGUARD_LISTEN
+              value: "127.0.0.1:18082"
+            - name: MCPGUARD_AUTH_MODE
+              value: "dev-tokens"
+            - name: MCPGUARD_LEGACY_DEMO
+              value: "disabled"
+            - name: MCPGUARD_RESOURCE_CATALOG
+              value: "disabled"
+            - name: MCPGUARD_CONSOLE_CONFIG
+              value: "/etc/zhiqi/console/console.json"
+            - name: MCPGUARD_CONNECTOR_ALLOWED_CIDRS
+              value: {{ required "connectorAllowedCIDRs must contain the approved Jenkins destinations" .Values.connectorAllowedCIDRs | quote }}
+            - name: MCPGUARD_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "runtimeSecret is required" .Values.runtimeSecret | quote }}
+                  key: encryptionKey
+            - name: MCPGUARD_PLAN_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret | quote }}
+                  key: planKey
+            - name: ZHIQI_METADATA_SOURCE
+              value: "nacos"
+            - name: ZHIQI_METADATA_DATABASE
+              value: {{ required "metadata.database is required" .Values.metadata.database | quote }}
+            - name: ZHIQI_METADATA_PORT
+              value: {{ .Values.metadata.port | quote }}
+            - name: ZHIQI_METADATA_CA_FILE
+              value: "/etc/zhiqi/postgres/ca.crt"
+            - name: ZHIQI_NACOS_URL
+              value: {{ required "nacos.url is required" .Values.nacos.url | quote }}
+            - name: ZHIQI_NACOS_NAMESPACE_ID
+              value: {{ required "nacos.namespaceId is required" .Values.nacos.namespaceId | quote }}
+            - name: ZHIQI_NACOS_GROUP
+              value: {{ required "nacos.group is required" .Values.nacos.group | quote }}
+            - name: ZHIQI_NACOS_DATA_ID
+              value: {{ required "nacos.dataId is required" .Values.nacos.dataId | quote }}
+            - name: ZHIQI_NACOS_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "nacos.authSecret is required" .Values.nacos.authSecret | quote }}
+                  key: username
+            - name: ZHIQI_NACOS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.nacos.authSecret | quote }}
+                  key: password
+          volumeMounts:
+            - name: console
+              mountPath: /etc/zhiqi/console
+              readOnly: true
+            - name: postgres-ca
+              mountPath: /etc/zhiqi/postgres
+              readOnly: true
+          startupProbe:
+            exec:
+              command: ["/usr/local/bin/mcpguard", "probe", "live"]
+            timeoutSeconds: 4
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            exec:
+              command: ["/usr/local/bin/mcpguard", "probe", "live"]
+            timeoutSeconds: 4
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command: ["/usr/local/bin/mcpguard", "probe", "ready"]
+            timeoutSeconds: 4
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        {{- if .Values.jenkinsProxy.enabled }}
+        - name: jenkins-proxy
+          image: {{ include "zhiqi.image" . | quote }}
+          imagePullPolicy: IfNotPresent
+          args:
+            - proxy
+            - --listen
+            - {{ required "jenkinsProxy.listen is required" .Values.jenkinsProxy.listen | quote }}
+            - --target
+            - {{ required "jenkinsProxy.target is required" .Values.jenkinsProxy.target | quote }}
+          securityContext:
+            {{- include "zhiqi.containerSecurityContext" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.jenkinsProxy.resources | nindent 12 }}
+        {{- end }}
+      volumes:
+        - name: console
+          secret:
+            secretName: {{ required "consoleSecret is required" .Values.consoleSecret | quote }}
+            items:
+              - key: console.json
+                path: console.json
+        - name: postgres-ca
+          secret:
+            secretName: {{ required "metadata.caSecret is required" .Values.metadata.caSecret | quote }}
+            items:
+              - key: ca.crt
+                path: ca.crt
+{{- end }}

@@ -1,6 +1,6 @@
 # Jenkins 受控构建
 
-DSH 从 MCPGuard 查询 Jenkins 任务及其当前参数定义，由独立审批人在 MCPGuard 控制台审批。申请人通过 `action.resume` 领取执行结果，通过 `jenkins.get_queue` 按自身动作编号查询 Jenkins 队列。HTTP 直连和 stdio 转发都使用网关的同一套 MCP 工具。
+DSH 从执契查询 Jenkins 任务及其当前参数定义，由独立审批人在执契控制台审批。申请人通过 `action.resume` 领取执行结果，通过 `jenkins.get_queue` 按自身动作编号查询 Jenkins 队列。HTTP 直连和 stdio 转发都使用网关的同一套 MCP 工具。
 
 ## 从控制台配置 Jenkins App
 
@@ -39,8 +39,8 @@ DSH 从 MCPGuard 查询 Jenkins 任务及其当前参数定义，由独立审批
 
 参数版本覆盖 Jenkins API 返回的任务可构建状态、参数名称、类型、固定选项及安全默认值。校验和触发是两个独立的 Jenkins API 请求，配置恰好在两次请求之间改动时仍存在竞争窗口。
 
-同一次申请的重试使用原 `requestKey` 和原参数。相同键与相同请求复用原动作，出现请求内容变更则返回冲突。一次动作最多派发一次。Jenkins 收到请求后回执丢失时，MCPGuard 记录 `OUTCOME_UNKNOWN`，保留原动作及审计记录，需在 Jenkins 核对结果。
+同一次申请的重试使用原 `requestKey` 和原参数。相同键与相同请求复用原动作，出现请求内容变更则返回冲突。一次动作最多派发一次。Jenkins 收到请求后回执丢失时，执契记录 `OUTCOME_UNKNOWN`，保留原动作及审计记录，需在 Jenkins 核对结果。
 
 ## 复验
 
-本地验收使用安装的 DeepSeek Harness、独立的 MCPGuard 元数据、官方 Jenkins 容器和两个原生任务。`python3 -B scripts/jenkins_dsh_fixture.py --app --report <脱敏报告路径>` 复验浏览器登记的 App。省略 `--app` 复验文件配置。两种模式都核对 Jenkins 实际队列和构建记录。
+本地验收使用安装的 DeepSeek Harness、独立的执契元数据、官方 Jenkins 容器和两个原生任务。`python3 -B scripts/jenkins_dsh_fixture.py --app --report <脱敏报告路径>` 复验浏览器登记的 App。省略 `--app` 复验文件配置。两种模式都核对 Jenkins 实际队列和构建记录。

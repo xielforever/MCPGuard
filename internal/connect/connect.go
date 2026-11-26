@@ -128,7 +128,7 @@ func run(ctx context.Context, endpoint, token string, allowLoopbackHTTP bool, tr
 	}
 	upstream := upstreamSession{session: remote, connect: connect}
 	defer upstream.close()
-	server := mcp.NewServer(&mcp.Implementation{Name: "mcpguard-connect", Version: version}, &mcp.ServerOptions{SupportedProtocolVersions: []string{Profile}, Capabilities: serverCaps})
+	server := mcp.NewServer(&mcp.Implementation{Name: "mcpguard-connect", Title: "执契连接器", Version: version}, &mcp.ServerOptions{SupportedProtocolVersions: []string{Profile}, Capabilities: serverCaps})
 	server.AddReceivingMiddleware(func(next mcp.MethodHandler) mcp.MethodHandler {
 		return func(c context.Context, method string, req mcp.Request) (mcp.Result, error) {
 			if method != "tools/list" && method != "tools/call" {

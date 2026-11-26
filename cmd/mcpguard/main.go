@@ -32,6 +32,12 @@ func main() {
 func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	if len(os.Args) == 3 && os.Args[1] == "probe" {
+		return probe(ctx, os.Args[2])
+	}
+	if len(os.Args) >= 2 && os.Args[1] == "proxy" {
+		return runProxy(ctx, os.Args[2:])
+	}
 	if len(os.Args) >= 2 && os.Args[1] == "migrate" {
 		dryRun := len(os.Args) == 3 && os.Args[2] == "--dry-run"
 		if len(os.Args) != 2 && !dryRun {
@@ -57,9 +63,9 @@ func run() error {
 		return nil
 	}
 	if len(os.Args) != 1 {
-		return errors.New("usage: mcpguard [migrate [--dry-run]]; configuration uses MCPGUARD_* environment variables")
+		return errors.New("usage: mcpguard [migrate [--dry-run] | probe live|ready | proxy --listen ADDR --target ADDR]")
 	}
-	cfg, e := runtimeconfig.Load()
+	cfg, e := runtimeconfig.LoadContext(ctx)
 	if e != nil {
 		return e
 	}
@@ -240,6 +246,9 @@ func run() error {
 	go func() { serveErr <- srv.Serve(ln) }()
 	recoveryDone := make(chan struct{})
 	go func() { defer close(recoveryDone); g.RunRecovery(ctx) }()
+	if os.Getenv("ZHIQI_METADATA_SOURCE") == "nacos" {
+		slog.Info("metadata connection loaded from Nacos")
+	}
 	slog.Info("local test gateway ready", "listen", cfg.Listen, "profile", gateway.Profile, "auth", cfg.AuthMode)
 	select {
 	case e = <-serveErr:

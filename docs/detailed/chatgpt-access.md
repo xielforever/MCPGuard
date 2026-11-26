@@ -4,7 +4,7 @@
 首批产品候选已确定为 ChatGPT；网页/桌面、账号套餐、workspace 及管理员角色尚未明确，IdP 和通知平台未定。
 已确认采用受控工具目录：获授权读取自动放行、受控写由他人审批、高危默认禁止。
 本文只细化 ChatGPT 接入，不将 Codex CLI 或 Responses API 偷换为已选客户端。
-系统边界仍为 ChatGPT → MCPGuard MCP Server → 原生 PG/RESP/HTTP，详见[传输设计](transport-connector.md)。
+系统边界仍为 ChatGPT → 执契 MCP 服务 → 原生 PG/RESP/HTTP，详见[传输设计](transport-connector.md)。
 
 ## 1 先确认产品面与账户资格
 

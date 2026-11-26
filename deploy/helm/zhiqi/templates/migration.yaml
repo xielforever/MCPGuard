@@ -1,0 +1,59 @@
+{{- with .Values.migration.mode }}
+{{- if not (has . (list "plan" "apply")) }}
+{{- fail "migration.mode must be empty, plan or apply" }}
+{{- end }}
+{{- $runID := required "migration.runId is required" $.Values.migration.runId }}
+{{- if not (regexMatch "^[a-z0-9]{1,20}$" $runID) }}
+{{- fail "migration.runId must contain 1 to 20 lowercase letters or digits" }}
+{{- end }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ printf "%s-migrate-%s-%s" ($.Release.Name | trunc 22 | trimSuffix "-") . $runID }}
+  labels:
+    {{- include "zhiqi.selector" $ | nindent 4 }}
+    app.kubernetes.io/component: migration
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 60
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      securityContext:
+        {{- include "zhiqi.podSecurityContext" $ | nindent 8 }}
+      {{- with $.Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: migrate
+          image: {{ include "zhiqi.image" $ | quote }}
+          imagePullPolicy: IfNotPresent
+          {{- if eq . "plan" }}
+          args: ["migrate", "--dry-run"]
+          {{- else }}
+          args: ["migrate"]
+          {{- end }}
+          securityContext:
+            {{- include "zhiqi.containerSecurityContext" $ | nindent 12 }}
+          env:
+            - name: MCPGUARD_MIGRATION_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "migration.dsnSecret is required" $.Values.migration.dsnSecret | quote }}
+                  key: dsn
+          volumeMounts:
+            - name: postgres-ca
+              mountPath: /etc/zhiqi/postgres
+              readOnly: true
+          resources:
+            {{- toYaml $.Values.resources | nindent 12 }}
+      volumes:
+        - name: postgres-ca
+          secret:
+            secretName: {{ required "metadata.caSecret is required" $.Values.metadata.caSecret | quote }}
+            items:
+              - key: ca.crt
+                path: ca.crt
+{{- end }}

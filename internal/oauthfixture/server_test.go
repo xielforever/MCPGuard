@@ -83,6 +83,10 @@ func (f *fixture) pending(t *testing.T) (*http.Cookie, string) {
 	if !strings.Contains(w.Header().Get("Content-Security-Policy"), "form-action 'self' https://chatgpt.com;") {
 		t.Fatal("browser would block the configured OAuth callback")
 	}
+	if !strings.Contains(w.Header().Get("Content-Security-Policy"), "img-src 'self';") ||
+		!strings.Contains(w.Body.String(), `src="/oauth/zhiqi-seal-mark.png"`) {
+		t.Fatal("consent page is missing the same-origin brand image")
+	}
 	cookies := w.Result().Cookies()
 	if len(cookies) != 1 || !cookies[0].HttpOnly || !cookies[0].Secure || cookies[0].SameSite != http.SameSiteLaxMode {
 		t.Fatal("insecure consent cookie")
@@ -149,6 +153,11 @@ func TestAuthorizationBindings(t *testing.T) {
 }
 func TestConsentCSRFAndCredentials(t *testing.T) {
 	f := setup(t)
+	mark := f.request("GET", "/oauth/zhiqi-seal-mark.png", nil, nil, "")
+	if mark.Code != http.StatusOK || mark.Header().Get("Content-Type") != "image/png" ||
+		mark.Header().Get("Cache-Control") != "no-store" || !strings.HasPrefix(mark.Body.String(), "\x89PNG\r\n\x1a\n") {
+		t.Fatal("consent page brand image is not served as a public PNG")
+	}
 	c, csrf := f.pending(t)
 	v := url.Values{"csrf": {csrf}, "username": {"alice"}, "password": {f.password}, "decision": {"allow"}}
 	if f.request("POST", "/oauth/authorize", v, c, "https://attacker.example").Code != 403 {

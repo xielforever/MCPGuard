@@ -58,7 +58,11 @@ class HTTPMCP:
     def __init__(self, port, employee):
         self.port, self.token = port, CFG[employee + "_token"]
         status, headers, body = http(port, "/mcp", self.token, {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": PROFILE, "capabilities": {}, "clientInfo": {"name": "python-independent", "version": "1"}}})
-        check(status == 200 and json.loads(body)["result"]["protocolVersion"] == PROFILE, "HTTP initialize: " + employee)
+        check(status == 200, "HTTP initialize: " + employee)
+        initialized = json.loads(body)["result"]
+        check(initialized["protocolVersion"] == PROFILE, "HTTP protocol profile")
+        info = initialized["serverInfo"]
+        check(info["name"] == "MCPGuard" and info["title"] == "执契", "HTTP server identity and display title")
         self.sid = next(v for k, v in headers.items() if k.lower() == "mcp-session-id")
         self.headers = {"Mcp-Session-Id": self.sid, "MCP-Protocol-Version": PROFILE}
         status, _, _ = http(port, "/mcp", self.token, {"jsonrpc": "2.0", "method": "notifications/initialized"}, self.headers)
@@ -94,12 +98,20 @@ class StdioMCP:
             if k.startswith("MCPGUARD_"):
                 env.pop(k)
         env["MCPGUARD_TOKEN"] = CFG[employee + "_token"]
-        self.p = subprocess.Popen([os.environ.get("MCPGUARD_TEST_CONNECT_BINARY", str(ROOT / "bin/mcpguard-connect")), "-gateway", f"http://127.0.0.1:{port}/mcp", "-allow-loopback-http"], cwd=ROOT, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
+        self.p = subprocess.Popen(
+            [os.environ.get("MCPGUARD_TEST_CONNECT_BINARY", str(ROOT / "bin/mcpguard-connect")),
+             "-gateway", f"http://127.0.0.1:{port}/mcp", "-allow-loopback-http"],
+            cwd=ROOT, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            encoding="utf-8", bufsize=1,
+        )
         self.q, self.pending, self.lines = queue.Queue(), {}, []
         self.thread = threading.Thread(target=self._reader, daemon=True)
         self.thread.start()
         self.send("initialize", {"protocolVersion": PROFILE, "capabilities": {}, "clientInfo": {"name": "python-stdio", "version": "1"}}, "init")
-        check(self.receive("init")["result"]["protocolVersion"] == PROFILE, "stdio initialize: " + employee)
+        initialized = self.receive("init")["result"]
+        check(initialized["protocolVersion"] == PROFILE, "stdio initialize: " + employee)
+        info = initialized["serverInfo"]
+        check(info["name"] == "mcpguard-connect" and info["title"] == "执契连接器", "stdio server identity and display title")
         self.send("notifications/initialized", {})
 
     def _reader(self):

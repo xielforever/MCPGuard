@@ -12,13 +12,15 @@ func TestConsoleDAssets(t *testing.T) {
 	mux := http.NewServeMux()
 	console.Register(mux)
 	for _, asset := range []struct{ path, mime, marker string }{
-		{"/web/", "text/html", "星舰控制台"},
+		{"/console/", "text/html", "<title>执契控制台</title>"},
+		{"/web/", "text/html", "<title>执契控制台</title>"},
 		{"/web/console.js", "text/javascript", "MCPGuardUI"},
 		{"/web/console.css", "text/css", "--mg-color-separator"},
 		{"/web/ui/tokens.css", "text/css", "--mg-color-primary: #83f2ed"},
 		{"/web/ui/components.css", "text/css", ".mg-dialog"},
 		{"/web/ui/state-labels.js", "text/javascript", "MCPGuardUIStateLabels"},
 		{"/web/ui/components.js", "text/javascript", "globalThis.MCPGuardUI"},
+		{"/web/ui/zhiqi-seal-mark.png", "image/png", "\x89PNG\r\n\x1a\n"},
 	} {
 		t.Run(asset.path, func(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, "http://127.0.0.1:18080"+asset.path, nil)
@@ -28,7 +30,7 @@ func TestConsoleDAssets(t *testing.T) {
 				t.Fatalf("missing or invalid public UI asset %s", asset.path)
 			}
 			policy := response.Header().Get("Content-Security-Policy")
-			if !strings.Contains(policy, "style-src 'self'") || strings.Contains(policy, "unsafe-inline") || !strings.Contains(policy, "frame-ancestors 'none'") {
+			if !strings.Contains(policy, "style-src 'self'") || !strings.Contains(policy, "img-src 'self'") || strings.Contains(policy, "unsafe-inline") || !strings.Contains(policy, "frame-ancestors 'none'") {
 				t.Fatal("public console asset has weakened content policy")
 			}
 			if response.Header().Get("Cache-Control") != "no-store" || response.Header().Get("X-Content-Type-Options") != "nosniff" {

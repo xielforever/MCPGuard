@@ -1,6 +1,18 @@
-# MCPGuard
+# 执契 · 企业应用连接器
 
-企业集中 MCP 网关。客户端通过 HTTP 直连，或经本地 stdio 接入同一网关；网关使用 PostgreSQL 等后端的原生协议执行受控操作。
+<img src="design-system/mcpguard/brand/zhiqi-seal-concept.png" width="400" alt="执契的白文方印与碑刻字标">
+
+执契（原 MCPGuard）让 AI 客户端按授权访问企业应用，对敏感操作提供审批和审计。管理员在[执契控制台](docs/console-connectors.md)登记 PostgreSQL、MySQL、Redis、Jenkins 和 Kubernetes 等应用，再按身份授予调用权限。
+
+[华为云 xyc CCE 隔离验收](deploy/helm/zhiqi/README.md)提供 Helm 发布包、Nacos 元库配置和本机 DSH Desktop 的接入流程。
+
+## 客户端接入
+
+标准 MCP 客户端可通过 `/mcp` 使用 Streamable HTTP，支持 stdio 的客户端可通过 `mcpguard-connect` 接入同一个网关。DeepSeek Harness（DSH）可在内置 MCP 设置中添加该入口，按[接入说明](docs/console-connectors.md#客户端接入)发现获准应用，或复用 [Jenkins 受控构建流程](docs/jenkins-integration.md)。
+
+MCP 握手通过 `serverInfo.title` 提供展示名。已有接入可继续使用原服务标识 `serverInfo.name`、`mcpguard-*` 命令、`MCPGUARD_*` 环境变量及原有工具和路径。
+
+## 本机运行记录
 
 当前本机演示批次已实现六个固定业务工具、持久他人审批、操作控制/历史、规则、资源、用户组和受保护控制台；Telegram Outbox 已完成本地接收器测试，真实 Bot/收件人待配置，企业 SSO 由用户暂缓选型。当前聊天原生验收与服务端测试分别记录，见 [本批检查清单](docs/local-batch-checklist.md)、[受控本机配置](docs/controlled-local.md) 和 [本批证据](docs/validation/local-controlled-batch-2026-10-23.json)。
 
@@ -115,3 +127,7 @@ RA-10 已补齐原生 HTTP 私有头 helper、有界同步 worker、可选 stdio
 ## 2026-11-16：RA-16 控制台自助访问页面
 
 内嵌控制台新增「自助访问」页：资源与用量、凭据状态、吊销记录与四级撤销、写审批队列与决定，全部走真实服务端 API（浏览器会话 + CSRF 之后）。申请人自批返回 403，重复决定返回 409；响应不含秘密/包内容。标准场景 299 Go race、写场景 10 项、吊销场景 9 项用例通过，见[验收](docs/validation/local-ra16-2026-11-16.md)。派发仍需申请人 resume；真实客户端与生产未验收。
+
+## 2026-11-26：执契 CCE 隔离验收
+
+在华为云 xyc CCE 的 `zhiqi` 命名空间以单副本 `Recreate` 发布 `zhiqi` Helm release，启动时从 Nacos 读取 `zhiqi / ZHIQI / metadata-pg.json` 的 PostgreSQL 元数据库配置，并以 `verify-ca` 连接执契专库。管理员在 `/console/` 创建、测试、启用并授权 Jenkins App；已安装的 DSH Desktop（`0.2.2-rc.5`）以独立申请人身份对同一 `connectorId` 完成订单/库存两次受控构建、独立审批、申请人恢复及 Jenkins 队列/构建回执。权限、停用、参数漂移、重复提交、Pod 替换和缩容恢复通过；回执丢失只完成部分验证。镜像 `zhiqi-d1f18f7@sha256:2a7e...3e0a4`，源码提交 `d1f18f7`。全部脱敏记录、截图和边界见[执契 CCE 隔离验收](docs/validation/zhiqi-cce-isolated-acceptance-2026-11-26.md)。生产发布仍由 [#24](https://github.com/xielforever/MCPGuard/issues/24) 与 [#25](https://github.com/xielforever/MCPGuard/issues/25) 批准和现场验收。

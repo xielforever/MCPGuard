@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [ValidateSet('Install','Start','Stop','Restart','Status','Supervise','EnableAutoRenew')]
     [string]$Action = 'Start',
@@ -23,7 +23,7 @@ function Invoke-LocalController([string]$ControllerAction) {
     $taskLinuxRoot = (& wsl.exe -d $Distro -- wslpath -a ($taskRoot.Replace('\','/')) | Out-String).Trim()
     if ($LASTEXITCODE -ne 0 -or -not $taskLinuxRoot.StartsWith('/')) { throw 'Cannot resolve repository path in WSL.' }
     & wsl.exe -d $Distro --cd $taskLinuxRoot -- python3 scripts/local_service.py $ControllerAction --database-port $DatabasePort
-    if ($LASTEXITCODE -ne 0) { throw "MCPGuard controller failed: $ControllerAction" }
+    if ($LASTEXITCODE -ne 0) { throw "执契控制程序失败，操作 $ControllerAction" }
 }
 
 function Get-SupervisorProcess {
@@ -55,12 +55,12 @@ function Start-LocalService {
         if (Get-LocalHealth) {
             # A healthy gateway alone does not prove its enrolled identity is current.
             Invoke-LocalController 'renew'
-            Write-Output 'MCPGuard local service ready: http://127.0.0.1:18080/mcp'
+            Write-Output '执契本机服务已就绪 http://127.0.0.1:18080/mcp'
             return
         }
         Start-Sleep -Milliseconds 500
     }
-    throw 'MCPGuard local service did not become healthy; inspect .dev/local-service/heartbeat.json and supervisor logs.'
+    throw '执契本机服务未通过健康检查，请查看 .dev/local-service/heartbeat.json 和监督进程日志。'
 }
 
 function Stop-LocalService {
@@ -69,7 +69,7 @@ function Stop-LocalService {
         if (-not (Get-SupervisorProcess)) { return }
         Start-Sleep -Milliseconds 500
     }
-    throw 'MCPGuard supervisor has not stopped; no unrelated WSL processes were terminated.'
+    throw '执契监督进程尚未停止，请查看监督进程日志。'
 }
 
 function Install-LocalStartup {
@@ -82,7 +82,7 @@ function Install-LocalStartup {
         $taskPrincipal = New-ScheduledTaskPrincipal -UserId $taskUser -LogonType Interactive -RunLevel Limited
         $taskSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
         $taskTaskAction = New-ScheduledTaskAction -Execute $taskPowerShell -Argument $taskArgs -WorkingDirectory $taskRoot
-        Register-ScheduledTask -TaskName $taskName -Action $taskTaskAction -Trigger $taskTrigger -Principal $taskPrincipal -Settings $taskSettings -Description 'Keep the loopback MCPGuard service available through WSL; no public ingress.' -Force | Out-Null
+        Register-ScheduledTask -TaskName $taskName -Action $taskTaskAction -Trigger $taskTrigger -Principal $taskPrincipal -Settings $taskSettings -Description '通过 WSL 运行仅回环访问的执契本机服务。' -Force | Out-Null
         @{kind='scheduled-task';name=$taskName;user=$taskUser;script=$taskScript} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $taskState 'windows-startup.json') -Encoding UTF8
     } catch [Microsoft.Management.Infrastructure.CimException] {
         # A current-user Startup entry works without granting elevated rights.
@@ -94,7 +94,7 @@ function Install-LocalStartup {
         $taskShortcut.Arguments = $taskArgs
         $taskShortcut.WorkingDirectory = $taskRoot
         $taskShortcut.WindowStyle = 7
-        $taskShortcut.Description = 'MCPGuard loopback service; no public ingress'
+        $taskShortcut.Description = '执契本机服务（仅回环访问）'
         $taskShortcut.Save()
         @{kind='startup-shortcut';path=$taskStartupPath;user=$taskUser;script=$taskScript} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $taskState 'windows-startup.json') -Encoding UTF8
     }
@@ -122,7 +122,7 @@ switch ($Action) {
             if (-not $taskOwnsMutex) { return }
             @{pid=$PID;startedAt=[DateTime]::UtcNow.ToString('o');distro=$Distro} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $taskState 'windows-supervisor.json') -Encoding UTF8
             while (-not (Test-Path -LiteralPath (Join-Path $taskState 'stopped'))) {
-                try { Invoke-LocalController 'serve' } catch { Write-Warning 'MCPGuard WSL supervision interrupted; retrying locally.' }
+                try { Invoke-LocalController 'serve' } catch { Write-Warning '执契的 WSL 监督已中断，正在本机重试。' }
                 if (-not (Test-Path -LiteralPath (Join-Path $taskState 'stopped'))) { Start-Sleep -Seconds 3 }
             }
         } finally {

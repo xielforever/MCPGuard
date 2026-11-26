@@ -2,7 +2,7 @@
 
 状态：拟议实现与验收契约，尚未实现或通过真实 IDE 验证。日期：2026-10-22。
 依据：[协议边界](../mcp-protocol-design.md)、[IDE 接入](../ide-access-compatibility.md)与[领域契约](../contracts.md)。
-HTTP 直连和本地 stdio 转 HTTP 都属于产品目标，进入同一个 MCPGuard 服务；PG、Redis、API 只由网关原生适配器访问。
+HTTP 直连和本地 stdio 转 HTTP 都属于产品目标，进入同一个执契服务；PG、Redis、API 只由网关原生适配器访问。
 首发ChatGPT、风险分级与受控写他人审批已确认；账号/工作区、身份源、通知渠道和等待预算仍需落实。ChatGPT按HTTP接入设计，stdio另选实际支持客户端验收。
 
 ## 1 模块边界与调用上下文

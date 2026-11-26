@@ -1,0 +1,28 @@
+# 按 xyc 的实测配置替换 REPLACE 字段。凭据填写到对应 Secret。
+image:
+  repository: swr.REPLACE_REGION.myhuaweicloud.com/REPLACE_ORG/zhiqi
+  digest: "REPLACE_SHA256_DIGEST"
+  pullSecrets:
+    - name: default-secret
+
+nacos:
+  url: http://infra-test-nacos.infra.svc.cluster.local:8848/nacos
+  # 填 Nacos 控制台显示的实际 Namespace ID。此处预置执契的配置命名。
+  namespaceId: zhiqi
+  group: ZHIQI
+  dataId: metadata-pg.json
+  authSecret: zhiqi-nacos
+
+metadata:
+  database: REPLACE_ZHIQI_PG_DATABASE
+  port: 5432
+  caSecret: zhiqi-postgres-ca
+
+runtimeSecret: zhiqi-runtime
+consoleSecret: zhiqi-console
+
+# 填获准的 Jenkins 控制器地址所对应的网段或单 IP CIDR，可用逗号分隔。
+connectorAllowedCIDRs: "192.0.2.27/32"
+
+migration:
+  dsnSecret: zhiqi-migration

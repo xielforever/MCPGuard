@@ -32,11 +32,13 @@ def resolve(value, tokens, seen=()):
 
 
 def generate():
-    tokens = json.loads(TOKENS.read_text(encoding='utf-8'))
-    labels = json.loads(LABELS.read_text(encoding='utf-8'))
+    token_source = TOKENS.read_text(encoding='utf-8')
+    label_source = LABELS.read_text(encoding='utf-8')
+    tokens = json.loads(token_source)
+    labels = json.loads(label_source)
     if tokens['theme'] != 'starship-d':
         raise ValueError('The runtime console requires the selected D theme')
-    fingerprint = hashlib.sha256(TOKENS.read_bytes() + LABELS.read_bytes()).hexdigest()
+    fingerprint = hashlib.sha256((token_source + label_source).encode('utf-8')).hexdigest()
     variables = []
 
     def add(name, value, unit=''):
@@ -97,7 +99,7 @@ def main():
     for name, content in output.items():
         path = DESTINATION / name
         if args.check:
-            if not path.exists() or path.read_bytes() != content.encode('utf-8'):
+            if not path.exists() or path.read_text(encoding='utf-8') != content:
                 stale.append(name)
         else:
             path.parent.mkdir(parents=True, exist_ok=True)

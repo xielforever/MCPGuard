@@ -1,0 +1,49 @@
+image:
+  repository: ""
+  digest: ""
+  pullSecrets: []
+
+nacos:
+  url: ""
+  namespaceId: ""
+  group: ""
+  dataId: ""
+  authSecret: ""
+
+metadata:
+  database: ""
+  port: 5432
+  caSecret: ""
+
+runtimeSecret: ""
+consoleSecret: ""
+connectorAllowedCIDRs: ""
+
+# The connector intentionally refuses plain HTTP to a non-loopback Jenkins
+# endpoint. The isolated CCE acceptance therefore exposes the cluster-internal
+# Jenkins HTTP port only on the pod's loopback interface. The Jenkins App
+# entered in the console uses http://127.0.0.1:18083; the proxy never has a
+# Service and is not reachable outside the pod network namespace.
+jenkinsProxy:
+  enabled: true
+  listen: 127.0.0.1:18083
+  target: infra-jenkins.infra.svc.cluster.local:8080
+  resources:
+    requests:
+      cpu: 10m
+      memory: 16Mi
+    limits:
+      memory: 64Mi
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
+
+# Set mode to plan or apply when rendering a standalone migration Job.
+migration:
+  mode: ""
+  runId: ""
+  dsnSecret: ""

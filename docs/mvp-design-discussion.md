@@ -1,8 +1,8 @@
-# MCPGuard 系统总体设计 v0.1
+# 执契 系统总体设计 v0.1
 
 状态：设计初稿，待评审；不是已实现能力清单。日期：2026-10-22。源码基线：ad0a685cf39e48cf4abe72a6d8b6f0a8f0e89bac。
 
-MCPGuard 是企业集中 MCP 网关。IDE 通过 MCP 调用网关提供的工具，网关统一完成员工身份、资源权限、策略、人类授权、原生执行与审计。**MCP Server 与企业网关是同一个服务；后端服务使用各自原生协议。**
+执契使用企业集中 MCP 网关。IDE 通过 MCP 调用网关提供的工具，网关统一完成员工身份、资源权限、策略、人类授权、原生执行与审计。**MCP Server 与企业网关是同一个服务；后端服务使用各自原生协议。**
 
 需求状态和验收编号见[产品需求](requirements.md)；领域、输入输出和管理接口见[调用契约](contracts.md)。本文负责解释系统如何组成、调用如何流转及哪些约束必须同时成立。可实施的模块、DDL、策略、连接器与故障方案见[详细设计](detailed/README.md)。
 
@@ -34,7 +34,7 @@ flowchart TB
     Connector -->|HTTPS MCP| MCP
     IdP["企业身份与授权服务（待选）"] -. 签发并验证访问身份 .-> MCP
 
-    subgraph Gateway["MCPGuard 企业集中网关（同一服务）"]
+    subgraph Gateway["执契企业集中网关（同一服务）"]
         MCP["MCP Server /mcp"] --> Access["可信主体、工具与资源权限"]
         Access --> Plan["不可变操作计划与策略"]
         Plan -->|允许| Gate["执行资格检查与单次领取"]

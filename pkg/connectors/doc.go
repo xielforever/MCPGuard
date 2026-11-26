@@ -1,5 +1,5 @@
-// Package connectors runs bounded reads against configured PostgreSQL, Redis,
-// Jenkins, and Kubernetes backends. Applications manage connector registration,
+// Package connectors runs bounded reads against configured PostgreSQL, MySQL,
+// Redis, Jenkins, and Kubernetes backends. Applications manage connector registration,
 // credentials, authorization, and auditing.
 //
 // Construct an EgressPolicy with NewEgressPolicy, then use Providers.Validate

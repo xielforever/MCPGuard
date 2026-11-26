@@ -13,6 +13,6 @@ try {
       || typeof cfg.alice_token !== 'string' || cfg.alice_token.length < 32) throw new Error('Invalid local identity configuration.');
   process.stdout.write(JSON.stringify({Authorization: 'Bearer ' + cfg.alice_token}) + '\n');
 } catch {
-  process.stderr.write('MCPGuard local startup or private credentials are unavailable; inspect .dev/local-service.\n');
+  process.stderr.write('执契本机服务尚未启动或私有凭据不可用，请检查 .dev/local-service。\n');
   process.exitCode = 1;
 }

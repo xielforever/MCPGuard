@@ -1,8 +1,8 @@
-# MCPGuard MCP 接入与执行边界设计
+# 执契 MCP 接入与执行边界设计
 
 状态：按用户明确的原生后端架构修订，细则待验证。日期：2026-10-22。
 
-**MCP 仅用于 IDE 或 Agent 到 MCPGuard。网关对外是 MCP Server，对内通过原生驱动访问 PostgreSQL、Redis 和 HTTP API。**
+**MCP 仅用于 IDE 或 Agent 到执契。网关对外是 MCP Server，对内通过原生驱动访问 PostgreSQL、Redis 和 HTTP API。**
 
 下游服务不做 MCP 握手、能力协商或工具发现，不存在上下游 MCP 版本转换。本稿保留客户端侧 MCP 约束；实际原生执行见[适配设计](native-adapter-design.md)。
 
