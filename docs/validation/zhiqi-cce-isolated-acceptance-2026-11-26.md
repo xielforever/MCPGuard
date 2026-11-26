@@ -1,5 +1,7 @@
 # 执契 CCE 隔离验收（2026-11-26）
 
+> 后续状态：2026-11-26 已在同一实例上原地拆分控制台前端与 Go 网关，Helm revision 3。本文保留拆分前 revision 2 的单 Deployment 验收记录；当前拓扑、端口转发和健康结果见[控制台/网关拆分记录](zhiqi-cce-console-split-2026-11-26.md)。
+
 ## 结论
 
 在华为云 xyc CCE 的 `zhiqi` 命名空间完成一套隔离验收实例。执契启动时从 Nacos 读取指定 PostgreSQL 元数据库配置，以单副本 `Recreate` 运行；管理员从 `/console/` 创建、测试、启用并授权 Jenkins App，开发者在已安装的 DSH Desktop 中以独立申请人身份操作同一 `connectorId`，完成两次受控构建、独立审批、申请人恢复和 Jenkins 队列/构建回执。权限、停用、参数漂移、重复提交、Pod 替换和缩容恢复均通过；回执丢失只完成部分验证，详见边界。

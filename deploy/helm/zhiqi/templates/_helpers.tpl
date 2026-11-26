@@ -11,6 +11,11 @@ app.kubernetes.io/name: zhiqi
 app.kubernetes.io/instance: {{ .Release.Name | quote }}
 {{- end -}}
 
+{{- define "zhiqi.consoleSelector" -}}
+app.kubernetes.io/name: zhiqi-console
+app.kubernetes.io/instance: {{ .Release.Name | quote }}
+{{- end }}
+
 {{- define "zhiqi.podSecurityContext" -}}
 runAsNonRoot: true
 runAsUser: 65532

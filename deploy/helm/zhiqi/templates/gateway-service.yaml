@@ -1,0 +1,17 @@
+{{- if and (not .Values.migration.mode) .Values.console.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-gateway
+  labels:
+    {{- include "zhiqi.selector" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "zhiqi.selector" . | nindent 4 }}
+  ports:
+    - name: gateway
+      port: {{ .Values.gateway.servicePort }}
+      targetPort: gateway
+      protocol: TCP
+{{- end }}

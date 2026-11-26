@@ -12,6 +12,9 @@ var assets embed.FS
 //go:embed brand/zhiqi-seal-mark.png
 var sealMark []byte
 
+// SealMark returns the approved public brand image for the split console.
+func SealMark() []byte { return sealMark }
+
 // ServeSealMark serves the approved public brand image on an explicitly registered route.
 func ServeSealMark(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "image/png")
