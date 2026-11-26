@@ -127,3 +127,7 @@ RA-10 已补齐原生 HTTP 私有头 helper、有界同步 worker、可选 stdio
 ## 2026-11-16：RA-16 控制台自助访问页面
 
 内嵌控制台新增「自助访问」页：资源与用量、凭据状态、吊销记录与四级撤销、写审批队列与决定，全部走真实服务端 API（浏览器会话 + CSRF 之后）。申请人自批返回 403，重复决定返回 409；响应不含秘密/包内容。标准场景 299 Go race、写场景 10 项、吊销场景 9 项用例通过，见[验收](docs/validation/local-ra16-2026-11-16.md)。派发仍需申请人 resume；真实客户端与生产未验收。
+
+## 2026-11-26：执契 CCE 隔离验收
+
+在华为云 xyc CCE 的 `zhiqi` 命名空间以单副本 `Recreate` 发布 `zhiqi` Helm release，启动时从 Nacos 读取 `zhiqi / ZHIQI / metadata-pg.json` 的 PostgreSQL 元数据库配置，并以 `verify-ca` 连接执契专库。管理员在 `/console/` 创建、测试、启用并授权 Jenkins App；已安装的 DSH Desktop（`0.2.2-rc.5`）以独立申请人身份对同一 `connectorId` 完成订单/库存两次受控构建、独立审批、申请人恢复及 Jenkins 队列/构建回执。权限、停用、参数漂移、重复提交、Pod 替换和缩容恢复通过；回执丢失只完成部分验证。镜像 `zhiqi-d1f18f7@sha256:2a7e...3e0a4`，源码提交 `d1f18f7`。全部脱敏记录、截图和边界见[执契 CCE 隔离验收](docs/validation/zhiqi-cce-isolated-acceptance-2026-11-26.md)。生产发布仍由 [#24](https://github.com/xielforever/MCPGuard/issues/24) 与 [#25](https://github.com/xielforever/MCPGuard/issues/25) 批准和现场验收。
