@@ -2,4 +2,4 @@ apiVersion: v2
 name: zhiqi
 description: 执契 xyc CCE 隔离验收
 type: application
-version: 0.1.0
+version: 0.2.0

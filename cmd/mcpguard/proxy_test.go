@@ -70,6 +70,21 @@ func TestProxyForwardsLoopbackTraffic(t *testing.T) {
 	}
 }
 
+func TestProxyListenerValidation(t *testing.T) {
+	if err := validateProxyListen("127.0.0.1:18083", false); err != nil {
+		t.Fatal("loopback listener rejected")
+	}
+	if err := validateProxyListen("0.0.0.0:18080", false); err == nil {
+		t.Fatal("non-loopback listener accepted without the flag")
+	}
+	if err := validateProxyListen("0.0.0.0:18080", true); err != nil {
+		t.Fatal("explicit non-loopback listener rejected")
+	}
+	if err := validateProxyListen("127.0.0.1:0", false); err == nil {
+		t.Fatal("port zero accepted")
+	}
+}
+
 func TestProxyRejectsNonLoopbackAndMissingTarget(t *testing.T) {
 	ctx := context.Background()
 	if err := runProxy(ctx, []string{"--listen", "0.0.0.0:18083", "--target", "127.0.0.1:8080"}); err == nil {

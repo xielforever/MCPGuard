@@ -1,6 +1,6 @@
 # 执契 xyc CCE 隔离验收
 
-执契在 `zhiqi` 命名空间运行一个副本。控制台和本机 DSH Desktop 使用经 Kubernetes 鉴权的回环端口转发。网关每次启动从 Nacos 3.x 读取指定配置，连接既有 PostgreSQL 专库。浏览器中的 Jenkins App 配置与操作通过这个实例完成。
+执契在 `zhiqi` 命名空间拆分为两个单副本 Deployment：`zhiqi-console` 提供控制台静态页面和同源反向代理，`zhiqi` 运行 Go 网关（MCP、控制台 API、审批、资源与连接器）。网关仍只监听 Pod 回环，`gateway-ingress` sidecar 在集群内暴露一个仅前端可访问的入口；控制台和本机 DSH Desktop 通过经 Kubernetes 鉴权的 port-forward 访问 `zhiqi-console`。网关每次启动从 Nacos 3.x 读取指定配置，连接既有 PostgreSQL 专库。
 
 ## 配置占位文件
 
@@ -18,6 +18,14 @@
 `ZHIQI_METADATA_SOURCE=nacos` 使用 `ZHIQI_NACOS_URL`、`ZHIQI_NACOS_NAMESPACE_ID`、`ZHIQI_NACOS_GROUP`、`ZHIQI_NACOS_DATA_ID` 和 Nacos 登录环境变量读取配置。数据库名、端口和 CA 由 `ZHIQI_METADATA_DATABASE`、`ZHIQI_METADATA_PORT`、`ZHIQI_METADATA_CA_FILE` 装配。PG 使用 `verify-ca` 验证实例证书。应用配置变更后重启 Pod 生效。默认环境变量模式从 `MCPGUARD_METADATA_DSN` 装配本地实例。 [Nacos 3.x 客户端 API](https://nacos.io/docs/latest/manual/user/open-api/)
 
 隔离环境的 Jenkins 仍是集群内 HTTP 服务，而连接器只接受 HTTPS 或回环 HTTP。Chart 因此在同一 Pod 内启动仅监听 `127.0.0.1:18083` 的 TCP 代理，转发到获准的 `infra-jenkins` 服务；页面登记 Jenkins App 时地址填 `http://127.0.0.1:18083`。该代理没有 Service，不能从 Pod 外访问，只用于本次隔离验收，不是生产入口方案。
+
+## 控制台/网关拆分
+
+- `zhiqi-console`：同镜像的 `console` 子命令，提供 `/console/`、`/web/` 静态资源，并把 `/console/login`、`/console/api/`、`/mcp`、`/healthz`、`/readyz` 原样反向代理到 `zhiqi-gateway:18082`；保留浏览器 `Host` 和 `Origin`，因此网关的会话、CSRF 和同源校验不变。
+- `zhiqi`：原 Go 网关，监听 `127.0.0.1:18082`；`gateway-ingress` sidecar 监听集群内 `0.0.0.0:18080`，只转发到该回环端口；`zhiqi-gateway` Service 只暴露给 `zhiqi-console` Pod，NetworkPolicy 拒绝其他来源。
+- `jenkins-proxy` 仍只监听 `127.0.0.1:18083`；它不是服务入口。
+- 本机访问改为转发前端：`deployment/zhiqi-console 18082:8080`。`/console/` 与 `/mcp` 仍在同一 `127.0.0.1:18082` 源上，DSH 配置无需变更。
+- 两个 Deployment 都是单副本 `Recreate`；控制台前端无状态，网关仍持有审批、密钥和审计状态，数据库和 Nacos 仍外置。
 
 ## 发布顺序
 
@@ -42,14 +50,14 @@ helm template zhiqi deploy/helm/zhiqi -n zhiqi -f "$VALUES" |
 ```bash
 helm upgrade --install zhiqi deploy/helm/zhiqi --kube-context "$XYC_CONTEXT" \
   -n zhiqi -f "$VALUES" --wait --timeout 3m
-kubectl --context "$XYC_CONTEXT" -n zhiqi port-forward --address 127.0.0.1 deployment/zhiqi 18082:18082
+kubectl --context "$XYC_CONTEXT" -n zhiqi port-forward --address 127.0.0.1 deployment/zhiqi-console 18082:8080
 ```
 
 ## 验收与回退
 
 - 管理员从 `http://127.0.0.1:18082/console/` 新建、测试、授权并启用 Jenkins App。在 DSH Desktop 登记 MCP 服务 `zhiqi`，地址为 `http://127.0.0.1:18082/mcp`，执契通过握手提供展示名。以申请人身份查询同一 `connectorId` 下两个参数定义不同的任务。
 - 核对待审批时零派发。由独立审批人在控制台批准后，申请人继续原 `actionId`，核对 Jenkins 队列、实际构建和审计。补验越权、参数定义变化、重复请求、丢失队列回执以及停用后原会话调用。
-- 记录 Pod 的运行镜像摘要和元库迁移版本。替换 Pod 后重新建立端口转发，使用同一 DSH 配置读回 App、授权和审计。存活失败与元库未就绪分别通过 `mcpguard probe live` 和 `mcpguard probe ready` 诊断。
+- 记录两个 Deployment 的运行镜像摘要和元库迁移版本。替换 Pod 后重新建立端口转发，使用同一 DSH 配置读回 App、授权和审计。存活失败与元库未就绪分别通过 `mcpguard probe live` 和 `mcpguard probe ready` 诊断；前端存活使用 `/livez`，就绪使用经网关代理的 `/readyz`。
 - 回退时暂停接入并核对在途动作。首次发布失败时将 Deployment 缩为零副本，保留迁移回执与备份。后续升级回退到已核对架构兼容的上一版镜像及配置。数据库恢复先在隔离库演练并检查身份、授权和历史审计，再决定切换。
 
 证据归档包含源提交、镜像 digest、迁移版本、独立角色、页面及 DSH 回执和 Jenkins 队列计数。发布条件和生产验收分别由 [#24](https://github.com/xielforever/MCPGuard/issues/24) 和 [#25](https://github.com/xielforever/MCPGuard/issues/25) 管理。

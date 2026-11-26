@@ -7,25 +7,25 @@ import (
 	"io"
 	"log/slog"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 )
 
-// runProxy exposes one approved TCP destination on a loopback-only address.
-// The isolated CCE acceptance uses it for the cluster-internal Jenkins HTTP
-// endpoint: the connector deliberately refuses plain HTTP to non-loopback
-// destinations, while the proxy keeps that rule intact and never exposes the
-// Jenkins port outside the pod network namespace.
+// runProxy exposes one approved TCP destination. By default it binds only to
+// loopback; the explicit --allow-non-loopback flag is used only for the
+// cluster-internal gateway ingress sidecar, which is restricted by a
+// NetworkPolicy to the console frontend pods.
 func runProxy(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("proxy", flag.ContinueOnError)
-	listen := fs.String("listen", "127.0.0.1:18083", "loopback TCP listen address")
+	listen := fs.String("listen", "127.0.0.1:18083", "TCP listen address")
 	target := fs.String("target", "", "approved upstream TCP address")
+	allowNonLoopback := fs.Bool("allow-non-loopback", false, "allow a cluster-only ingress listener")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	host, _, err := net.SplitHostPort(*listen)
-	if err != nil || host == "" || net.ParseIP(host) == nil || !net.ParseIP(host).IsLoopback() {
-		return errors.New("proxy listen address must be an explicit loopback host and port")
+	if err := validateProxyListen(*listen, *allowNonLoopback); err != nil {
+		return err
 	}
 	if strings.TrimSpace(*target) == "" {
 		return errors.New("proxy target is required")
@@ -35,7 +35,7 @@ func runProxy(ctx context.Context, args []string) error {
 	}
 	listener, err := net.Listen("tcp", *listen)
 	if err != nil {
-		return errors.New("proxy could not listen on the loopback address")
+		return errors.New("proxy could not listen")
 	}
 	defer listener.Close()
 	go func() {
@@ -53,6 +53,22 @@ func runProxy(ctx context.Context, args []string) error {
 		}
 		go proxyConn(ctx, client, *target)
 	}
+}
+
+func validateProxyListen(address string, allowNonLoopback bool) error {
+	host, port, err := net.SplitHostPort(address)
+	if err != nil || host == "" {
+		return errors.New("proxy listen address must be a host and port")
+	}
+	ip := net.ParseIP(host)
+	if ip == nil || (!ip.IsLoopback() && !allowNonLoopback) {
+		return errors.New("proxy listen address must be an explicit loopback host and port unless --allow-non-loopback is set")
+	}
+	n, err := strconv.ParseUint(port, 10, 16)
+	if err != nil || n == 0 {
+		return errors.New("proxy listen address must use a valid TCP port")
+	}
+	return nil
 }
 
 func proxyConn(ctx context.Context, client net.Conn, target string) {

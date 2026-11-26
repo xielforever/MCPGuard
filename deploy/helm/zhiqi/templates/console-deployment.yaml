@@ -1,0 +1,66 @@
+{{- if and (not .Values.migration.mode) .Values.console.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-console
+  labels:
+    {{- include "zhiqi.consoleSelector" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.console.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "zhiqi.consoleSelector" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "zhiqi.consoleSelector" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 20
+      securityContext:
+        {{- include "zhiqi.podSecurityContext" . | nindent 8 }}
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: console
+          image: {{ include "zhiqi.image" . | quote }}
+          imagePullPolicy: IfNotPresent
+          args:
+            - console
+            - --listen
+            - {{ required "console.listen is required" .Values.console.listen | quote }}
+            - --upstream
+            - {{ printf "http://%s-gateway:%v" .Release.Name .Values.gateway.servicePort | quote }}
+            - --allow-non-loopback
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          securityContext:
+            {{- include "zhiqi.containerSecurityContext" . | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: /livez
+              port: http
+            timeoutSeconds: 3
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: http
+            timeoutSeconds: 3
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            timeoutSeconds: 3
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.console.resources | nindent 12 }}
+{{- end }}

@@ -124,6 +124,26 @@ spec:
           resources:
             {{- toYaml .Values.jenkinsProxy.resources | nindent 12 }}
         {{- end }}
+        {{- if .Values.console.enabled }}
+        - name: gateway-ingress
+          image: {{ include "zhiqi.image" . | quote }}
+          imagePullPolicy: IfNotPresent
+          args:
+            - proxy
+            - --listen
+            - {{ required "gateway.ingress.listen is required" .Values.gateway.ingress.listen | quote }}
+            - --target
+            - {{ required "gateway.ingress.target is required" .Values.gateway.ingress.target | quote }}
+            - --allow-non-loopback
+          ports:
+            - name: gateway
+              containerPort: {{ .Values.gateway.ingress.port }}
+              protocol: TCP
+          securityContext:
+            {{- include "zhiqi.containerSecurityContext" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.gateway.ingress.resources | nindent 12 }}
+        {{- end }}
       volumes:
         - name: console
           secret:

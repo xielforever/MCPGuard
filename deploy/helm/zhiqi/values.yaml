@@ -19,6 +19,36 @@ runtimeSecret: ""
 consoleSecret: ""
 connectorAllowedCIDRs: ""
 
+# Split console frontend. The gateway keeps its loopback listener; the
+# frontend Deployment serves the embedded static console and proxies the
+# gateway-owned login/API/MCP paths to a cluster-only Service.
+console:
+  enabled: true
+  replicas: 1
+  listen: 0.0.0.0:8080
+  servicePort: 8080
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 128Mi
+
+# The gateway Service targets the loopback-preserving ingress sidecar. A
+# NetworkPolicy allows only the console frontend pods to reach it.
+gateway:
+  servicePort: 18082
+  ingress:
+    listen: 0.0.0.0:18080
+    port: 18080
+    target: 127.0.0.1:18082
+    resources:
+      requests:
+        cpu: 10m
+        memory: 16Mi
+      limits:
+        memory: 64Mi
+
 # The connector intentionally refuses plain HTTP to a non-loopback Jenkins
 # endpoint. The isolated CCE acceptance therefore exposes the cluster-internal
 # Jenkins HTTP port only on the pod's loopback interface. The Jenkins App

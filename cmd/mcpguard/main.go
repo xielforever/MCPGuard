@@ -35,6 +35,9 @@ func run() error {
 	if len(os.Args) == 3 && os.Args[1] == "probe" {
 		return probe(ctx, os.Args[2])
 	}
+	if len(os.Args) >= 2 && os.Args[1] == "console" {
+		return runConsole(ctx, os.Args[2:])
+	}
 	if len(os.Args) >= 2 && os.Args[1] == "proxy" {
 		return runProxy(ctx, os.Args[2:])
 	}
@@ -63,7 +66,7 @@ func run() error {
 		return nil
 	}
 	if len(os.Args) != 1 {
-		return errors.New("usage: mcpguard [migrate [--dry-run] | probe live|ready | proxy --listen ADDR --target ADDR]")
+		return errors.New("usage: mcpguard [migrate [--dry-run] | probe live|ready | console --listen ADDR --upstream URL | proxy --listen ADDR --target ADDR]")
 	}
 	cfg, e := runtimeconfig.LoadContext(ctx)
 	if e != nil {
