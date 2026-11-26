@@ -12,6 +12,7 @@ func TestConsoleDAssets(t *testing.T) {
 	mux := http.NewServeMux()
 	console.Register(mux)
 	for _, asset := range []struct{ path, mime, marker string }{
+		{"/console/", "text/html", "<title>执契控制台</title>"},
 		{"/web/", "text/html", "<title>执契控制台</title>"},
 		{"/web/console.js", "text/javascript", "MCPGuardUI"},
 		{"/web/console.css", "text/css", "--mg-color-separator"},
