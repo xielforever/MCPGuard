@@ -541,6 +541,9 @@ func TestTelegramOutbox(t *testing.T) {
 			t.Error(e)
 		}
 		text, _ := body["text"].(string)
+		if !strings.HasPrefix(text, "执契") || !strings.Contains(text, "/web/#action=") {
+			t.Error("notification is missing the product title or action link")
+		}
 		if strings.Contains(text, "never leak payload") {
 			t.Error("notification leaked arguments")
 		}

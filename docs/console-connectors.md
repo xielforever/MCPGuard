@@ -1,6 +1,12 @@
-# 控制台连接器
+# 执契控制台连接器
 
-管理员在星舰控制台的「资源 → 连接器」登记 PostgreSQL、MySQL、Redis、Jenkins 或 Kubernetes。保存时选择获准调用的主体。草稿通过真实连通测试后即可启用，停用后新的 MCP 调用会被拒绝。客户端可在已有会话调用 `connector.list` 取得当前可用连接器的 ID。
+管理员在执契控制台的「资源 → 连接器」登记 PostgreSQL、MySQL、Redis、Jenkins 或 Kubernetes。保存时选择获准调用的主体。草稿通过真实连通测试后即可启用，停用后新的 MCP 调用会被拒绝。客户端可在已有会话调用 `connector.list` 取得当前可用连接器的 ID。
+
+## 客户端接入
+
+在 DSH 的内置 MCP 设置中添加执契网关的 `/mcp` 地址，并使用对应用户或项目的访问凭据。采用 stdio 的客户端使用 `mcpguard-connect` 转发到同一网关。连接后先调用 `connector.list`，再用返回的 `connectorId` 操作获准的应用实例。
+
+HTTP 握手的展示名为「执契」，stdio 握手的展示名为「执契连接器」，两者均通过 `serverInfo.title` 返回。已有客户端可继续使用原服务标识及已配置的工具前缀。
 
 ## 启用管理功能
 
@@ -31,7 +37,7 @@ DSH 先调用 `connector.list` 获取获准 App 的 `connectorId`，再用 `conn
 
 ## 跨项目复用
 
-`github.com/xielforever/MCPGuard/pkg/connectors` 提供可导入的类型化适配器、连通测试、限定范围的读取和出站策略。调用方提供已获授权的后端定义。MCPGuard 继续负责连接器登记、凭据封存、身份核验、主体授权和审计，并在同一进程内调用该模块，从统一入口提供 `connector.list` 和各类读取工具。
+`github.com/xielforever/MCPGuard/pkg/connectors` 提供可导入的类型化适配器、连通测试、限定范围的读取和出站策略。调用方提供已获授权的后端定义。执契负责连接器登记、凭据封存、身份核验、主体授权和审计，并在同一进程内调用该模块，从统一入口提供 `connector.list` 和各类读取工具。
 
 给不同项目配置独立的 MCP 访问身份。在控制台为共享连接器授予多个主体，为私有连接器只授予所属主体。实际授权以网关核验的身份为准。连接器停用提交后，原 MCP 会话中的新调用也会被拒绝。
 

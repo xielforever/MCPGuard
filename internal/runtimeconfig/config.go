@@ -3,6 +3,7 @@
 package runtimeconfig
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
 	"net"
@@ -39,7 +40,11 @@ type Config struct {
 }
 
 func Load() (Config, error) {
-	c := Config{Listen: os.Getenv("MCPGUARD_LISTEN"), MetadataDSN: os.Getenv("MCPGUARD_METADATA_DSN"), BusinessDSN: os.Getenv("MCPGUARD_BUSINESS_DSN")}
+	return LoadContext(context.Background())
+}
+
+func LoadContext(ctx context.Context) (Config, error) {
+	c := Config{BusinessDSN: os.Getenv("MCPGUARD_BUSINESS_DSN")}
 	switch os.Getenv("MCPGUARD_LEGACY_DEMO") {
 	case "", "enabled":
 		c.LegacyDemo = true
@@ -63,12 +68,10 @@ func Load() (Config, error) {
 			return c, err
 		}
 	}
-	if c.Listen == "" {
-		c.Listen = "127.0.0.1:8080"
-	}
-	host, _, err := net.SplitHostPort(c.Listen)
-	if err != nil || net.ParseIP(host) == nil || !net.ParseIP(host).IsLoopback() {
-		return c, errors.New("test identity mode requires an explicit loopback listen address")
+	var err error
+	c.Listen, err = ListenAddress()
+	if err != nil {
+		return c, err
 	}
 	c.AuthMode = os.Getenv("MCPGUARD_AUTH_MODE")
 	switch c.AuthMode {
@@ -99,7 +102,7 @@ func Load() (Config, error) {
 			}
 		}
 	}
-	if c.MetadataDSN == "" || c.LegacyDemo && c.BusinessDSN == "" {
+	if c.LegacyDemo && c.BusinessDSN == "" {
 		return c, errors.New("metadata DSN and, when legacy demo is enabled, business DSN are required")
 	}
 	c.EncryptionKey, err = base64.StdEncoding.DecodeString(os.Getenv("MCPGUARD_ENCRYPTION_KEY"))
@@ -113,7 +116,23 @@ func Load() (Config, error) {
 	if string(c.PlanKey) == string(c.EncryptionKey) {
 		return c, errors.New("encryption and plan keys must differ")
 	}
+	c.MetadataDSN, err = loadMetadataDSN(ctx)
+	if err != nil {
+		return c, err
+	}
 	return c, nil
+}
+
+func ListenAddress() (string, error) {
+	address := os.Getenv("MCPGUARD_LISTEN")
+	if address == "" {
+		address = "127.0.0.1:8080"
+	}
+	host, _, err := net.SplitHostPort(address)
+	if err != nil || !net.ParseIP(host).IsLoopback() {
+		return "", errors.New("test identity mode requires an explicit loopback listen address")
+	}
+	return address, nil
 }
 
 func (c *Config) loadResources() error {

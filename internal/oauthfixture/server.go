@@ -24,6 +24,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/go-sdk/auth"
 	"github.com/xielforever/MCPGuard/internal/metadata"
+	"github.com/xielforever/MCPGuard/internal/uitheme"
 )
 
 const Scope = "mcp:read"
@@ -144,7 +145,7 @@ func (s *Server) MetadataURL() string {
 func (s *Server) Register(mux *http.ServeMux) {
 	resource := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		writeJSON(w, 200, map[string]any{"resource": s.Resource(), "authorization_servers": []string{s.Config.PublicOrigin}, "scopes_supported": []string{Scope}, "bearer_methods_supported": []string{"header"}, "resource_name": "MCPGuard local read fixture"})
+		writeJSON(w, 200, map[string]any{"resource": s.Resource(), "authorization_servers": []string{s.Config.PublicOrigin}, "scopes_supported": []string{Scope}, "bearer_methods_supported": []string{"header"}, "resource_name": "执契本地读取测试"})
 	}
 	mux.HandleFunc("GET /.well-known/oauth-protected-resource", resource)
 	mux.HandleFunc("GET /.well-known/oauth-protected-resource/mcp", resource)
@@ -152,6 +153,7 @@ func (s *Server) Register(mux *http.ServeMux) {
 		writeJSON(w, 200, map[string]any{"issuer": s.Config.PublicOrigin, "authorization_endpoint": s.Config.PublicOrigin + "/oauth/authorize", "token_endpoint": s.Config.PublicOrigin + "/oauth/token", "revocation_endpoint": s.Config.PublicOrigin + "/oauth/revoke", "response_types_supported": []string{"code"}, "grant_types_supported": []string{"authorization_code", "refresh_token"}, "token_endpoint_auth_methods_supported": []string{"client_secret_basic", "client_secret_post"}, "code_challenge_methods_supported": []string{"S256"}, "scopes_supported": []string{Scope}, "authorization_response_iss_parameter_supported": true})
 	})
 	mux.HandleFunc("GET /oauth/authorize", s.authorize)
+	mux.HandleFunc("GET /oauth/zhiqi-seal-mark.png", uitheme.ServeSealMark)
 	mux.HandleFunc("POST /oauth/authorize", s.consent)
 	mux.HandleFunc("POST /oauth/token", s.exchange)
 	mux.HandleFunc("POST /oauth/revoke", s.revoke)
@@ -216,7 +218,7 @@ func (s *Server) clean() {
 	}
 }
 
-var login = template.Must(template.New("consent").Parse(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>MCPGuard test authorization</title><style>body{font:18px system-ui;max-width:620px;margin:50px auto;padding:20px;background:#f4f7fb;color:#172438}main{background:white;padding:32px;border-radius:16px}label{display:block;margin:18px 0}input{display:block;padding:10px;width:90%}button{padding:12px 22px;margin:12px 8px 0 0}small{color:#526176}</style><main><h1>MCPGuard test authorization</h1><p>Connect this ChatGPT client to the local demo database with <strong>mcp:read</strong>.</p><p>Available tools are <code>pg.get_demo_item</code> (with business read permission), <code>audit.list</code> (your own audit records), and <code>gateway.health</code> (process and dependency status). The server applies the signed-in test user's scope and records each read in its audit ledger.</p><small>This is a temporary test identity service. Do not enter a company or ChatGPT password.</small>{{if .Error}}<p role="alert">{{.Error}}</p>{{end}}<form method="post" action="/oauth/authorize"><input type="hidden" name="csrf" value="{{.CSRF}}"><label>Test username<input name="username" autocomplete="username" required maxlength="64"></label><label>Generated test password<input name="password" type="password" autocomplete="current-password" required maxlength="128"></label><button name="decision" value="allow">Allow read access</button><button name="decision" value="deny" formnovalidate>Cancel</button></form></main></html>`))
+var login = template.Must(template.New("consent").Parse(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>执契测试授权</title><link rel="icon" type="image/png" href="/oauth/zhiqi-seal-mark.png"><style>body{font:18px system-ui;max-width:620px;margin:50px auto;padding:20px;background:#f4f7fb;color:#172438}main{background:white;padding:32px;border-radius:16px}label{display:block;margin:18px 0}input{display:block;padding:10px;width:90%}button{padding:12px 22px;margin:12px 8px 0 0}small{color:#526176}</style><main><img src="/oauth/zhiqi-seal-mark.png" width="48" height="48" alt=""><h1>执契测试授权</h1><p>Connect this ChatGPT client to the local demo database with <strong>mcp:read</strong>.</p><p>Available tools are <code>pg.get_demo_item</code> (with business read permission), <code>audit.list</code> (your own audit records), and <code>gateway.health</code> (process and dependency status). The server applies the signed-in test user's scope and records each read in its audit ledger.</p><small>This is a temporary test identity service. Do not enter a company or ChatGPT password.</small>{{if .Error}}<p role="alert">{{.Error}}</p>{{end}}<form method="post" action="/oauth/authorize"><input type="hidden" name="csrf" value="{{.CSRF}}"><label>Test username<input name="username" autocomplete="username" required maxlength="64"></label><label>Generated test password<input name="password" type="password" autocomplete="current-password" required maxlength="128"></label><button name="decision" value="allow">Allow read access</button><button name="decision" value="deny" formnovalidate>Cancel</button></form></main></html>`))
 
 func (s *Server) showLogin(w http.ResponseWriter, a authorization, message string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -228,7 +230,7 @@ func (s *Server) showLogin(w http.ResponseWriter, a authorization, message strin
 		u, _ := url.Parse(target)
 		formTargets += " " + u.Scheme + "://" + u.Host
 	}
-	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action "+formTargets+"; frame-ancestors 'none'; base-uri 'none'")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; form-action "+formTargets+"; frame-ancestors 'none'; base-uri 'none'")
 	// no-referrer turns a browser form POST's Origin into "null". Preserve
 	// same-origin POST validation while suppressing referrers on the callback.
 	w.Header().Set("Referrer-Policy", "same-origin")

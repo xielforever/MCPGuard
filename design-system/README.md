@@ -1,4 +1,6 @@
-# MCPGuard 界面设计
+# 执契 界面设计
+
+执契采用[白文篆印](mcpguard/brand/zhiqi-seal-concept.png)。内嵌控制台、测试授权页和 Vue 原型共用同一枚[透明方印](../internal/uitheme/brand/zhiqi-seal-mark.png)。
 
 **当前实现入口（2026-10-29）：**D「星舰 · 审批舰桥」已迁移网关内嵌控制台现有六页，使用统一 token 与共用组件。见[六页迁移记录](mcpguard/implementation-console-d.md)和[规范 MASTER](mcpguard/MASTER.md)。下文为各轮设计记录，保留其历史时点；`web/` Vue 原型继续保留历史定位。
 
@@ -17,6 +19,6 @@
 
 ## 2026-10-29 第三轮更新：D 已选定，UI/UX 规范 v1.0（当前入口）
 
-用户已明确“采用设计D，开始出UIUX设计规范”。当前规范入口为 [MCPGuard UI/UX MASTER](mcpguard/MASTER.md)，数值单源为 [tokens.json](mcpguard/tokens.json)，另有 [共用组件](mcpguard/components.md)、[跨页流程](mcpguard/workflows.md)、[页面与验收](mcpguard/acceptance.md)及[变更记录](mcpguard/CHANGELOG.md)。
+用户已明确“采用设计D，开始出UIUX设计规范”。当前规范入口为 [执契 UI/UX MASTER](mcpguard/MASTER.md)，数值单源为 [tokens.json](mcpguard/tokens.json)，另有 [共用组件](mcpguard/components.md)、[跨页流程](mcpguard/workflows.md)、[页面与验收](mcpguard/acceptance.md)及[变更记录](mcpguard/CHANGELOG.md)。
 
 视觉方向已确认为 D「星舰 · 审批舰桥」。上文各轮“待选”及原候选报告保留其历史时点；A/B/C/E 不再作为当前正式方向。规范交付与数值/文案映射检查不等于主题已接入、RA-16 已完成或业务页面已验收，本次不改运行页面。

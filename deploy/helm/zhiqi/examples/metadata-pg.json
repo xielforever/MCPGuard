@@ -1,0 +1,5 @@
+{
+  "host": "192.0.2.18",
+  "username": "REPLACE_ZHIQI_PG_RUNTIME_USER",
+  "password": "REPLACE_ZHIQI_PG_RUNTIME_PASSWORD"
+}

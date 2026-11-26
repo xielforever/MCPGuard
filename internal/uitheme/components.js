@@ -269,7 +269,7 @@
     dialog.replaceChildren(); dialog.returnValue = '';
     const title = el('h2', options.title); title.id = 'confirm-title'; title.tabIndex = -1;
     dialog.setAttribute('aria-labelledby', title.id);
-    dialog.append(el('p', 'MCPGuard · 操作确认', 'mg-eyebrow'), title, keyValues(options.details || []));
+    dialog.append(el('p', '执契 · 操作确认', 'mg-eyebrow'), title, keyValues(options.details || []));
     if (options.content) dialog.append(options.content);
     if (options.notice) dialog.append(notice(options.notice, options.danger ? 'warning' : 'info'));
     const actions = el('div', null, 'mg-dialog-actions');

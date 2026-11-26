@@ -1,4 +1,4 @@
-# MCPGuard 固定 HTTPS 入口
+# 执契 固定 HTTPS 入口
 
 状态：`NOT_PURSUED_LOCAL_DIRECT_SELECTED`。用户于 2026-10-23 明确改为本机直连，停止推进域名方案。未创建命名隧道、DNS 记录或固定地址插件。以下仅保留之前的准备方案，不作为待执行任务；当前运行入口见 [本机服务](local-service.md)。
 

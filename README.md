@@ -1,6 +1,18 @@
-# MCPGuard
+# 执契 · 企业应用连接器
 
-企业集中 MCP 网关。客户端通过 HTTP 直连，或经本地 stdio 接入同一网关；网关使用 PostgreSQL 等后端的原生协议执行受控操作。
+<img src="design-system/mcpguard/brand/zhiqi-seal-concept.png" width="400" alt="执契的白文方印与碑刻字标">
+
+执契（原 MCPGuard）让 AI 客户端按授权访问企业应用，对敏感操作提供审批和审计。管理员在[执契控制台](docs/console-connectors.md)登记 PostgreSQL、MySQL、Redis、Jenkins 和 Kubernetes 等应用，再按身份授予调用权限。
+
+[华为云 xyc CCE 隔离验收](deploy/helm/zhiqi/README.md)提供 Helm 发布包、Nacos 元库配置和本机 DSH Desktop 的接入流程。
+
+## 客户端接入
+
+标准 MCP 客户端可通过 `/mcp` 使用 Streamable HTTP，支持 stdio 的客户端可通过 `mcpguard-connect` 接入同一个网关。DeepSeek Harness（DSH）可在内置 MCP 设置中添加该入口，按[接入说明](docs/console-connectors.md#客户端接入)发现获准应用，或复用 [Jenkins 受控构建流程](docs/jenkins-integration.md)。
+
+MCP 握手通过 `serverInfo.title` 提供展示名。已有接入可继续使用原服务标识 `serverInfo.name`、`mcpguard-*` 命令、`MCPGUARD_*` 环境变量及原有工具和路径。
+
+## 本机运行记录
 
 当前本机演示批次已实现六个固定业务工具、持久他人审批、操作控制/历史、规则、资源、用户组和受保护控制台；Telegram Outbox 已完成本地接收器测试，真实 Bot/收件人待配置，企业 SSO 由用户暂缓选型。当前聊天原生验收与服务端测试分别记录，见 [本批检查清单](docs/local-batch-checklist.md)、[受控本机配置](docs/controlled-local.md) 和 [本批证据](docs/validation/local-controlled-batch-2026-10-23.json)。
 

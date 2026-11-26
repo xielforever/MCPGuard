@@ -610,7 +610,6 @@
   }
 
   ui.setErrorHandler(handleError);
-  $('brandIcon').append(ui.icon('shield')); $('loginGate').append(ui.icon('shield')); $('footerIcon').append(ui.icon('shield'));
   $('navToggle').append(ui.icon('menu')); $('refresh').prepend(ui.icon('refresh'));
   $('navToggle').addEventListener('click', () => {
     const expanded = document.body.dataset.nav !== 'expanded'; document.body.dataset.nav = expanded ? 'expanded' : 'compact';

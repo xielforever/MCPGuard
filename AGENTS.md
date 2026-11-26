@@ -1,6 +1,6 @@
 # AGENTS.md
 
-本文件约束在本仓库工作的 agent。项目是 MCPGuard：企业集中 MCP 网关，客户端经 HTTP 直连或本地 stdio 接入同一网关。
+本文件约束在本仓库工作的 agent。执契是企业应用连接器，客户端经 HTTP 直连或本地 stdio 接入同一 MCP 网关。
 
 <!-- BEGIN project-github-governance -->
 

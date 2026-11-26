@@ -148,7 +148,7 @@ def _ensure_running():
         if health():
             return
         time.sleep(0.25)
-    raise RuntimeError("Local MCPGuard did not become healthy")
+    raise RuntimeError("执契本机服务未通过健康检查")
 
 
 def ensure():

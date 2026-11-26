@@ -55,7 +55,7 @@ func (n *Notifier) send(ctx context.Context, id string) error {
 	if n.cfg.TestOrigin != "" {
 		base = n.cfg.TestOrigin
 	}
-	body, _ := json.Marshal(map[string]any{"chat_id": n.cfg.ChatID, "text": "MCPGuard: a controlled action is awaiting human review. Action ID: " + id + "\nOpen the local console on the MCPGuard computer: " + n.service.Origin + "/web/#action=" + id, "link_preview_options": map[string]bool{"is_disabled": true}})
+	body, _ := json.Marshal(map[string]any{"chat_id": n.cfg.ChatID, "text": "执契有一笔操作待审批。操作编号 " + id + "\n请在运行执契的电脑上打开控制台 " + n.service.Origin + "/web/#action=" + id, "link_preview_options": map[string]bool{"is_disabled": true}})
 	req, e := http.NewRequestWithContext(ctx, "POST", base+"/bot"+n.cfg.BotToken+"/sendMessage", bytes.NewReader(body))
 	if e != nil {
 		return errors.New("notification request rejected")

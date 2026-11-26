@@ -55,7 +55,7 @@ type Gateway struct {
 
 func New(root context.Context, s *metadata.Store, r *nativepg.Reader) *Gateway {
 	g := &Gateway{Store: s, Reader: r, Root: root, slots: make(chan struct{}, 16)}
-	g.MCP = mcp.NewServer(&mcp.Implementation{Name: "MCPGuard", Version: "0.1.0-read-slice"}, &mcp.ServerOptions{SupportedProtocolVersions: []string{Profile}, Capabilities: &mcp.ServerCapabilities{Tools: &mcp.ToolCapabilities{}}})
+	g.MCP = mcp.NewServer(&mcp.Implementation{Name: "MCPGuard", Title: "执契", Version: "0.1.0-read-slice"}, &mcp.ServerOptions{SupportedProtocolVersions: []string{Profile}, Capabilities: &mcp.ServerCapabilities{Tools: &mcp.ToolCapabilities{}}})
 	if r != nil {
 		f := false
 		g.MCP.AddTool(&mcp.Tool{Name: "pg.get_demo_item", Description: "Read one demo item in your authorized scope. Scope is injected by the gateway.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"itemId": map[string]any{"type": "string", "pattern": itemPattern.String(), "maxLength": 42}}, "required": []string{"itemId"}, "additionalProperties": false}, OutputSchema: resultSchema, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: &f, OpenWorldHint: &f}}, g.call)
@@ -312,6 +312,18 @@ func (g *Gateway) HandlerWithOptions(opts HTTPOptions) http.Handler {
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]string{"status": "up", "auth": opts.AuthMode})
+	})
+	mux.HandleFunc("GET /readyz", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+		ctx, cancel := context.WithTimeout(r.Context(), healthTimeout)
+		defer cancel()
+		stop := context.AfterFunc(g.Root, cancel)
+		defer stop()
+		if g.Root.Err() != nil || g.Store == nil || g.Store.CheckReady(ctx) != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 	})
 	verify := func(ctx context.Context, token string, _ *http.Request) (*auth.TokenInfo, error) {
 		c, cancel := context.WithTimeout(ctx, 2*time.Second)

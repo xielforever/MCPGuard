@@ -1,8 +1,8 @@
-# Windows / WSL 本机 MCPGuard 服务
+# Windows / WSL 本机执契服务
 
 本机 Codex 通过 Streamable HTTP 直接连接 `http://127.0.0.1:18080/mcp`。服务运行在 WSL `Ubuntu-24.04` 的 Docker 中，不需要域名、HTTPS 隧道或云端插件。
 
-当前 MCPGuard 仅使用本机 `mcpguard_local`。两个旧云端插件 `MCPGuard Local Read`、`MCPGuard Local Read Restored` 均已不再安装；移除后本机原生工具直接读取复验通过。[记录](validation/local-only-plugin-cleanup-2026-10-23.json)
+本机执契服务沿用 `mcpguard_local` 接入配置。两个旧云端插件 `MCPGuard Local Read`、`MCPGuard Local Read Restored` 均已不再安装；移除后本机原生工具直接读取复验通过。[记录](validation/local-only-plugin-cleanup-2026-10-23.json)
 
 本运行器接管已有的本地验证夹具：`.dev/env.json` 的容器名为 `mcpguard-local-verified-postgres`、认证为 `dev-tokens`、网关监听为 `127.0.0.1:18080`。不会重新初始化测试数据、执行迁移、生成新身份或覆盖其他项目容器。本机 Alice 凭据已按用户要求单独开启自动续期。
 

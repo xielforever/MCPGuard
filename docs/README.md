@@ -1,4 +1,4 @@
-# MCPGuard 设计文档 v0.1
+# 执契设计文档 v0.1
 
 当前控制台 UI 实施入口：[D 主题与现有六页迁移](../design-system/mcpguard/implementation-console-d.md)。该记录说明统一主题、共用组件、现有真实 API 的保留及本地验证范围；下文原始设计状态保留其历史时点。
 
@@ -8,7 +8,7 @@
 
 后续本地联调入口：[OAuth + HTTPS + ChatGPT](oauth-local-chatgpt.md)。该测试身份服务与原有本地模式隔离，企业 SSO 仍待接入。
 
-**MCPGuard 本身就是企业 MCP 网关。**支持 IDE 通过 HTTP MCP 直连，或通过本地 stdio 转 HTTP 程序连接同一网关；网关再通过 PG、RESP、HTTP/HTTPS 等原生协议访问后端。企业服务器与员工本地资源已可互通。
+**执契为企业应用提供统一的 MCP 接入。**支持 IDE 通过 HTTP MCP 直连，或通过本地 stdio 转 HTTP 程序连接同一网关；网关再通过 PG、RESP、HTTP/HTTPS 等原生协议访问后端。企业服务器与员工本地资源已可互通。
 
 当前评审入口：[详细设计](detailed/README.md)，覆盖模块与API、身份策略、存储DDL、两入口、原生执行和验证。用户决定与剩余平台信息集中在[决策记录](detailed/decisions.md)。
 
@@ -39,7 +39,7 @@
 
 ## 2026-10-24 当前增量入口：多资源自助访问 v0.2
 
-后续开发采用[多资源自助访问设计](revisions/2026-10-24-resource-access/README.md)中明确的增量：统一 MCPGuard 配置、多资源目录、账号权限申请、仅服务端可解密的凭据文件、服务端原生执行和在线吊销。原文按 2026-10-22 的范围保留，历史实现和验收不回写。
+后续开发采用[多资源自助访问设计](revisions/2026-10-24-resource-access/README.md)中明确的增量：统一网关配置、多资源目录、账号权限申请、仅服务端可解密的凭据文件、服务端原生执行和在线吊销。原文按 2026-10-22 的范围保留，历史实现和验收不回写。
 
 | 当前入口 | 内容 |
 |---|---|

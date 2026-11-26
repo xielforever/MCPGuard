@@ -1,6 +1,6 @@
 # ChatGPT HTTPS / OAuth 本地联调
 
-这是隔离测试身份服务，用于验证 ChatGPT → HTTPS → Streamable HTTP → MCPGuard → 原生 PG。企业 IdP、组同步和生产 SSO 仍待接入。原有 `scripts/dev.py` / `make dev-*` 的 `dev-tokens` HTTP、stdio 测试方式继续保留。
+这是隔离测试身份服务，用于验证 ChatGPT → HTTPS → Streamable HTTP → 执契 → 原生 PG。企业 IdP、组同步和生产 SSO 仍待接入。原有 `scripts/dev.py` / `make dev-*` 的 `dev-tokens` HTTP、stdio 测试方式继续保留。
 
 本机实际运行、真实 ChatGPT 读取、审计与当前答复展示阻塞见[2026-10-22 联调记录](validation/chatgpt-oauth-read-2026-10-22.md)。
 
